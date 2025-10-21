@@ -6,53 +6,63 @@ package generated
 
 import (
 	"database/sql"
+	"time"
 )
 
 type Group struct {
-	ID          int32
-	DisplayName interface{}
-	State       interface{}
-	ColorTheme  interface{}
-	AdminUserID int32
-	CreatedAt   sql.NullTime
-	UpdatedAt   interface{}
+	ID          int64
+	DisplayName string
+	State       string
+	ColorTheme  int64
+	AdminUserID int64
+	CreatedAt   time.Time
+	UpdatedAt   time.Time
 }
 
 type GroupExpense struct {
-	ID        int32
-	GroupID   int32
-	UserID    int32
-	Name      interface{}
-	Cost      float32
-	CreatedAt sql.NullTime
-	UpdatedAt interface{}
+	ID        int64
+	GroupID   int64
+	UserID    int64
+	Name      string
+	Cost      float64
+	CreatedAt time.Time
+	UpdatedAt time.Time
 }
 
 type GroupMember struct {
-	GroupID   int32
-	UserID    int32
-	State     interface{}
-	CreatedAt sql.NullTime
-	UpdatedAt interface{}
+	GroupID   int64
+	UserID    int64
+	State     string
+	CreatedAt time.Time
+	UpdatedAt time.Time
 }
 
 type GroupMemberTransaction struct {
-	ID         int32
-	GroupID    int32
-	FromUserID int32
-	ToUserID   int32
-	State      interface{}
-	Cost       float32
-	CreatedAt  sql.NullTime
-	PayedAt    interface{}
+	ID         int64
+	GroupID    int64
+	FromUserID int64
+	ToUserID   int64
+	State      string
+	Cost       float64
+	CreatedAt  time.Time
+	PayedAt    sql.NullString
 }
 
 type User struct {
-	ID          int32
-	FirstName   interface{}
-	LastName    interface{}
-	PhoneNumber interface{}
-	Email       interface{}
-	CreatedAt   sql.NullTime
-	UpdatedAt   interface{}
+	ID          int64
+	FirstName   string
+	LastName    string
+	PhoneNumber string
+	Email       string
+	CreatedAt   time.Time
+	UpdatedAt   time.Time
+	LastSeenAt  time.Time
+}
+
+type UserSession struct {
+	ID        string
+	UserEmail string
+	UserID    sql.NullInt64
+	CreatedAt time.Time
+	ExpiresAt time.Time
 }

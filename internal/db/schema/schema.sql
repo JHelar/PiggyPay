@@ -1,59 +1,70 @@
-create table if not exists "users" (
-    id integer not null primary key generated always as identity,
-    first_name nvarchar(75) not null,
-    last_name nvarchar(75) not null,
-    phone_number nvarchar(13) not null unique,
-    email nvarchar(320) not null unique,
+-- Enable foreign key constraints
+PRAGMA foreign_keys = ON;
 
-    created_at timestamp default current_timestamp,
-    updated_at datetime default current_timestamp
+CREATE TABLE IF NOT EXISTS users (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    first_name TEXT NOT NULL,
+    last_name TEXT NOT NULL,
+    phone_number TEXT NOT NULL UNIQUE,
+    email TEXT NOT NULL UNIQUE,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    last_seen_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
-create table if not exists "groups" (
-    id integer not null primary key generated always as identity,
-
-    display_name nvarchar(75) not null,
-    state nvarchar(10) not null,
-    color_theme tinyint not null,
-    admin_user_id integer not null references "users"(id),
-
-    created_at timestamp default current_timestamp,
-    updated_at datetime default current_timestamp
+CREATE TABLE IF NOT EXISTS user_sessions (
+    id TEXT PRIMARY KEY DEFAULT (lower(hex(randomblob(16)))),
+    user_email TEXT NOT NULL UNIQUE,
+    user_id INTEGER UNIQUE,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    expires_at TIMESTAMP NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES users(id)
 );
 
-create table if not exists "group_expenses" (
-    id integer primary key generated always as identity,
-    group_id integer not null references "groups"(id) on delete cascade,
-    user_id integer not null references "users"(id) on delete cascade,
-
-    name nvarchar(75) not null,
-    cost float(24) not null,
-
-    created_at timestamp default current_timestamp,
-    updated_at datetime default current_timestamp
+CREATE TABLE IF NOT EXISTS groups (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    display_name TEXT NOT NULL,
+    state TEXT NOT NULL,
+    color_theme INTEGER NOT NULL,
+    admin_user_id INTEGER NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (admin_user_id) REFERENCES users(id)
 );
 
-create table if not exists "group_members" (
-    group_id integer not null references "groups"(id) on delete cascade,
-    user_id integer not null references "users"(id) on delete cascade,
-    state nvarchar(10) not null,
-
-    created_at timestamp default current_timestamp,
-    updated_at datetime default current_timestamp,
-
-    primary key (group_id, user_id)
+CREATE TABLE IF NOT EXISTS group_expenses (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    group_id INTEGER NOT NULL,
+    user_id INTEGER NOT NULL,
+    name TEXT NOT NULL,
+    cost REAL NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (group_id) REFERENCES groups(id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
-create table if not exists "group_member_transactions" (
-    id integer primary key generated always as identity,
+CREATE TABLE IF NOT EXISTS group_members (
+    group_id INTEGER NOT NULL,
+    user_id INTEGER NOT NULL,
+    state TEXT NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (group_id, user_id),
+    FOREIGN KEY (group_id) REFERENCES groups(id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
 
-    group_id integer not null references "groups"(id),
-    from_user_id integer not null references "users"(id),
-    to_user_id integer not null references "users"(id),
-
-    state nvarchar(10) not null,
-    cost float(24) not null,
-
-    created_at timestamp default current_timestamp,
-    payed_at datetime default current_timestamp
+CREATE TABLE IF NOT EXISTS group_member_transactions (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    group_id INTEGER NOT NULL,
+    from_user_id INTEGER NOT NULL,
+    to_user_id INTEGER NOT NULL,
+    state TEXT NOT NULL,
+    cost REAL NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    payed_at TEXT DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (group_id) REFERENCES groups(id),
+    FOREIGN KEY (from_user_id) REFERENCES users(id),
+    FOREIGN KEY (to_user_id) REFERENCES users(id)
 );

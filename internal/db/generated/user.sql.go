@@ -7,25 +7,43 @@ package generated
 
 import (
 	"context"
+	"database/sql"
+	"time"
 )
 
-const getUser = `-- name: GetUser :one
-select id, first_name, last_name, phone_number, email, created_at, updated_at 
-from users
-where id = $1
+const createNewUserSession = `-- name: CreateNewUserSession :one
+INSERT INTO user_sessions (user_email, expires_at) VALUES (?, ?)
+    ON CONFLICT (user_email) DO UPDATE SET expires_at=excluded.expires_at
+    RETURNING id
 `
 
-func (q *Queries) GetUser(ctx context.Context, id int32) (User, error) {
-	row := q.db.QueryRowContext(ctx, getUser, id)
-	var i User
-	err := row.Scan(
-		&i.ID,
-		&i.FirstName,
-		&i.LastName,
-		&i.PhoneNumber,
-		&i.Email,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-	)
-	return i, err
+type CreateNewUserSessionParams struct {
+	UserEmail string
+	ExpiresAt time.Time
+}
+
+func (q *Queries) CreateNewUserSession(ctx context.Context, arg CreateNewUserSessionParams) (string, error) {
+	row := q.db.QueryRowContext(ctx, createNewUserSession, arg.UserEmail, arg.ExpiresAt)
+	var id string
+	err := row.Scan(&id)
+	return id, err
+}
+
+const createUserSession = `-- name: CreateUserSession :one
+INSERT INTO user_sessions (user_id, user_email, expires_at) VALUES (?, ?, ?)
+    ON CONFLICT (user_email, user_id) DO UPDATE SET expires_at=excluded.expires_at
+    RETURNING id
+`
+
+type CreateUserSessionParams struct {
+	UserID    sql.NullInt64
+	UserEmail string
+	ExpiresAt time.Time
+}
+
+func (q *Queries) CreateUserSession(ctx context.Context, arg CreateUserSessionParams) (string, error) {
+	row := q.db.QueryRowContext(ctx, createUserSession, arg.UserID, arg.UserEmail, arg.ExpiresAt)
+	var id string
+	err := row.Scan(&id)
+	return id, err
 }
