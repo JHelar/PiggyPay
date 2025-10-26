@@ -1,9 +1,39 @@
--- name: CreateNewUserSession :one
-INSERT INTO user_sessions (user_email, expires_at) VALUES (?, ?)
-    ON CONFLICT (user_email) DO UPDATE SET expires_at=excluded.expires_at
+-- name: CreateSignInToken :one
+INSERT INTO user_sign_in_tokens (email, expires_at) VALUES (?, ?)
+    ON CONFLICT (email) DO UPDATE SET expires_at=excluded.expires_at
     RETURNING id;
 
--- name: CreateUserSession :one
-INSERT INTO user_sessions (user_id, user_email, expires_at) VALUES (?, ?, ?)
-    ON CONFLICT (user_email, user_id) DO UPDATE SET expires_at=excluded.expires_at
+-- name: GetSignInToken :one
+DELETE FROM user_sign_in_tokens
+    WHERE id=?
+    RETURNING email, expires_at;
+
+-- name: CreateNewUserSession :one
+INSERT INTO user_sessions (user_id, email, expires_at) VALUES (?, ?, ?)
+    ON CONFLICT (email) DO UPDATE SET expires_at=excluded.expires_at
+    RETURNING id;
+
+-- name: CreateExistingUserSession :one
+INSERT INTO user_sessions (user_id, email, expires_at) VALUES (?, ?, ?)
+    ON CONFLICT (user_id) DO UPDATE SET expires_at=excluded.expires_at
+    RETURNING id;
+
+-- name: GetUserSessionById :one
+SELECT id, user_id, email, expires_at FROM user_sessions
+    WHERE id=?;
+
+-- name: DeleteUserSessionById :exec
+DELETE FROM user_sessions
+    WHERE id=?;
+
+-- name: GetUserByEmail :one
+SELECT * FROM users
+    WHERE email=?;
+
+-- name: GetUserById :one
+SELECT * FROM users
+    WHERE id=?;
+
+-- name: CreateUser :one
+INSERT INTO users (first_name, last_name, phone_number, email) VALUES (?, ?, ?, ?)
     RETURNING id;

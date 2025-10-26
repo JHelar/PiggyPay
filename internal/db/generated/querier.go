@@ -9,8 +9,19 @@ import (
 )
 
 type Querier interface {
+	CreateExistingUserSession(ctx context.Context, arg CreateExistingUserSessionParams) (string, error)
+	CreateGroup(ctx context.Context, arg CreateGroupParams) (Group, error)
 	CreateNewUserSession(ctx context.Context, arg CreateNewUserSessionParams) (string, error)
-	CreateUserSession(ctx context.Context, arg CreateUserSessionParams) (string, error)
+	CreateSignInToken(ctx context.Context, arg CreateSignInTokenParams) (string, error)
+	CreateUser(ctx context.Context, arg CreateUserParams) (int64, error)
+	DeleteUserSessionById(ctx context.Context, id string) error
+	GetGroupById(ctx context.Context, arg GetGroupByIdParams) (GetGroupByIdRow, error)
+	GetGroupsByUserId(ctx context.Context, userID int64) ([]GetGroupsByUserIdRow, error)
+	GetSignInToken(ctx context.Context, id string) (GetSignInTokenRow, error)
+	GetUserByEmail(ctx context.Context, email string) (User, error)
+	GetUserById(ctx context.Context, id int64) (User, error)
+	GetUserSessionById(ctx context.Context, id string) (GetUserSessionByIdRow, error)
+	UpsertGroupMember(ctx context.Context, arg UpsertGroupMemberParams) error
 }
 
 var _ Querier = (*Queries)(nil)

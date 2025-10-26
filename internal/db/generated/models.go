@@ -10,59 +10,66 @@ import (
 )
 
 type Group struct {
-	ID          int64
-	DisplayName string
-	State       string
-	ColorTheme  int64
-	AdminUserID int64
-	CreatedAt   time.Time
-	UpdatedAt   time.Time
+	ID          int64     `json:"id"`
+	DisplayName string    `json:"display_name"`
+	State       string    `json:"state"`
+	ColorTheme  string    `json:"color_theme"`
+	CreatedAt   time.Time `json:"created_at"`
+	UpdatedAt   time.Time `json:"updated_at"`
 }
 
 type GroupExpense struct {
-	ID        int64
-	GroupID   int64
-	UserID    int64
-	Name      string
-	Cost      float64
-	CreatedAt time.Time
-	UpdatedAt time.Time
+	ID        int64     `json:"id"`
+	GroupID   int64     `json:"group_id"`
+	UserID    int64     `json:"user_id"`
+	Name      string    `json:"name"`
+	Cost      float64   `json:"cost"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
 }
 
 type GroupMember struct {
-	GroupID   int64
-	UserID    int64
-	State     string
-	CreatedAt time.Time
-	UpdatedAt time.Time
+	GroupID   int64     `json:"group_id"`
+	UserID    int64     `json:"user_id"`
+	State     string    `json:"state"`
+	Role      string    `json:"role"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
 }
 
 type GroupMemberTransaction struct {
-	ID         int64
-	GroupID    int64
-	FromUserID int64
-	ToUserID   int64
-	State      string
-	Cost       float64
-	CreatedAt  time.Time
-	PayedAt    sql.NullString
+	ID         int64          `json:"id"`
+	GroupID    int64          `json:"group_id"`
+	FromUserID int64          `json:"from_user_id"`
+	ToUserID   int64          `json:"to_user_id"`
+	State      string         `json:"state"`
+	Cost       float64        `json:"cost"`
+	CreatedAt  time.Time      `json:"created_at"`
+	PayedAt    sql.NullString `json:"payed_at"`
 }
 
 type User struct {
-	ID          int64
-	FirstName   string
-	LastName    string
-	PhoneNumber string
-	Email       string
-	CreatedAt   time.Time
-	UpdatedAt   time.Time
-	LastSeenAt  time.Time
+	ID          int64     `json:"id"`
+	FirstName   string    `json:"first_name"`
+	LastName    string    `json:"last_name"`
+	PhoneNumber string    `json:"phone_number"`
+	Email       string    `json:"email"`
+	CreatedAt   time.Time `json:"created_at"`
+	UpdatedAt   time.Time `json:"updated_at"`
+	LastSeenAt  time.Time `json:"last_seen_at"`
 }
 
 type UserSession struct {
-	ID        string
-	UserEmail string
-	UserID    sql.NullInt64
-	CreatedAt time.Time
-	ExpiresAt time.Time
+	ID        string         `json:"id"`
+	UserID    sql.NullInt64  `json:"user_id"`
+	Email     sql.NullString `json:"email"`
+	CreatedAt time.Time      `json:"created_at"`
+	ExpiresAt time.Time      `json:"expires_at"`
+}
+
+type UserSignInToken struct {
+	ID        string    `json:"id"`
+	Email     string    `json:"email"`
+	CreatedAt time.Time `json:"created_at"`
+	ExpiresAt time.Time `json:"expires_at"`
 }

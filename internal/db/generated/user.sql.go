@@ -11,39 +11,176 @@ import (
 	"time"
 )
 
+const createExistingUserSession = `-- name: CreateExistingUserSession :one
+INSERT INTO user_sessions (user_id, email, expires_at) VALUES (?, ?, ?)
+    ON CONFLICT (user_id) DO UPDATE SET expires_at=excluded.expires_at
+    RETURNING id
+`
+
+type CreateExistingUserSessionParams struct {
+	UserID    sql.NullInt64  `json:"user_id"`
+	Email     sql.NullString `json:"email"`
+	ExpiresAt time.Time      `json:"expires_at"`
+}
+
+func (q *Queries) CreateExistingUserSession(ctx context.Context, arg CreateExistingUserSessionParams) (string, error) {
+	row := q.db.QueryRowContext(ctx, createExistingUserSession, arg.UserID, arg.Email, arg.ExpiresAt)
+	var id string
+	err := row.Scan(&id)
+	return id, err
+}
+
 const createNewUserSession = `-- name: CreateNewUserSession :one
-INSERT INTO user_sessions (user_email, expires_at) VALUES (?, ?)
-    ON CONFLICT (user_email) DO UPDATE SET expires_at=excluded.expires_at
+INSERT INTO user_sessions (user_id, email, expires_at) VALUES (?, ?, ?)
+    ON CONFLICT (email) DO UPDATE SET expires_at=excluded.expires_at
     RETURNING id
 `
 
 type CreateNewUserSessionParams struct {
-	UserEmail string
-	ExpiresAt time.Time
+	UserID    sql.NullInt64  `json:"user_id"`
+	Email     sql.NullString `json:"email"`
+	ExpiresAt time.Time      `json:"expires_at"`
 }
 
 func (q *Queries) CreateNewUserSession(ctx context.Context, arg CreateNewUserSessionParams) (string, error) {
-	row := q.db.QueryRowContext(ctx, createNewUserSession, arg.UserEmail, arg.ExpiresAt)
+	row := q.db.QueryRowContext(ctx, createNewUserSession, arg.UserID, arg.Email, arg.ExpiresAt)
 	var id string
 	err := row.Scan(&id)
 	return id, err
 }
 
-const createUserSession = `-- name: CreateUserSession :one
-INSERT INTO user_sessions (user_id, user_email, expires_at) VALUES (?, ?, ?)
-    ON CONFLICT (user_email, user_id) DO UPDATE SET expires_at=excluded.expires_at
+const createSignInToken = `-- name: CreateSignInToken :one
+INSERT INTO user_sign_in_tokens (email, expires_at) VALUES (?, ?)
+    ON CONFLICT (email) DO UPDATE SET expires_at=excluded.expires_at
     RETURNING id
 `
 
-type CreateUserSessionParams struct {
-	UserID    sql.NullInt64
-	UserEmail string
-	ExpiresAt time.Time
+type CreateSignInTokenParams struct {
+	Email     string    `json:"email"`
+	ExpiresAt time.Time `json:"expires_at"`
 }
 
-func (q *Queries) CreateUserSession(ctx context.Context, arg CreateUserSessionParams) (string, error) {
-	row := q.db.QueryRowContext(ctx, createUserSession, arg.UserID, arg.UserEmail, arg.ExpiresAt)
+func (q *Queries) CreateSignInToken(ctx context.Context, arg CreateSignInTokenParams) (string, error) {
+	row := q.db.QueryRowContext(ctx, createSignInToken, arg.Email, arg.ExpiresAt)
 	var id string
 	err := row.Scan(&id)
 	return id, err
+}
+
+const createUser = `-- name: CreateUser :one
+INSERT INTO users (first_name, last_name, phone_number, email) VALUES (?, ?, ?, ?)
+    RETURNING id
+`
+
+type CreateUserParams struct {
+	FirstName   string `json:"first_name"`
+	LastName    string `json:"last_name"`
+	PhoneNumber string `json:"phone_number"`
+	Email       string `json:"email"`
+}
+
+func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (int64, error) {
+	row := q.db.QueryRowContext(ctx, createUser,
+		arg.FirstName,
+		arg.LastName,
+		arg.PhoneNumber,
+		arg.Email,
+	)
+	var id int64
+	err := row.Scan(&id)
+	return id, err
+}
+
+const deleteUserSessionById = `-- name: DeleteUserSessionById :exec
+DELETE FROM user_sessions
+    WHERE id=?
+`
+
+func (q *Queries) DeleteUserSessionById(ctx context.Context, id string) error {
+	_, err := q.db.ExecContext(ctx, deleteUserSessionById, id)
+	return err
+}
+
+const getSignInToken = `-- name: GetSignInToken :one
+DELETE FROM user_sign_in_tokens
+    WHERE id=?
+    RETURNING email, expires_at
+`
+
+type GetSignInTokenRow struct {
+	Email     string    `json:"email"`
+	ExpiresAt time.Time `json:"expires_at"`
+}
+
+func (q *Queries) GetSignInToken(ctx context.Context, id string) (GetSignInTokenRow, error) {
+	row := q.db.QueryRowContext(ctx, getSignInToken, id)
+	var i GetSignInTokenRow
+	err := row.Scan(&i.Email, &i.ExpiresAt)
+	return i, err
+}
+
+const getUserByEmail = `-- name: GetUserByEmail :one
+SELECT id, first_name, last_name, phone_number, email, created_at, updated_at, last_seen_at FROM users
+    WHERE email=?
+`
+
+func (q *Queries) GetUserByEmail(ctx context.Context, email string) (User, error) {
+	row := q.db.QueryRowContext(ctx, getUserByEmail, email)
+	var i User
+	err := row.Scan(
+		&i.ID,
+		&i.FirstName,
+		&i.LastName,
+		&i.PhoneNumber,
+		&i.Email,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.LastSeenAt,
+	)
+	return i, err
+}
+
+const getUserById = `-- name: GetUserById :one
+SELECT id, first_name, last_name, phone_number, email, created_at, updated_at, last_seen_at FROM users
+    WHERE id=?
+`
+
+func (q *Queries) GetUserById(ctx context.Context, id int64) (User, error) {
+	row := q.db.QueryRowContext(ctx, getUserById, id)
+	var i User
+	err := row.Scan(
+		&i.ID,
+		&i.FirstName,
+		&i.LastName,
+		&i.PhoneNumber,
+		&i.Email,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.LastSeenAt,
+	)
+	return i, err
+}
+
+const getUserSessionById = `-- name: GetUserSessionById :one
+SELECT id, user_id, email, expires_at FROM user_sessions
+    WHERE id=?
+`
+
+type GetUserSessionByIdRow struct {
+	ID        string         `json:"id"`
+	UserID    sql.NullInt64  `json:"user_id"`
+	Email     sql.NullString `json:"email"`
+	ExpiresAt time.Time      `json:"expires_at"`
+}
+
+func (q *Queries) GetUserSessionById(ctx context.Context, id string) (GetUserSessionByIdRow, error) {
+	row := q.db.QueryRowContext(ctx, getUserSessionById, id)
+	var i GetUserSessionByIdRow
+	err := row.Scan(
+		&i.ID,
+		&i.UserID,
+		&i.Email,
+		&i.ExpiresAt,
+	)
+	return i, err
 }
