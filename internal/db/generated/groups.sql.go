@@ -35,11 +35,47 @@ func (q *Queries) CreateGroup(ctx context.Context, arg CreateGroupParams) (Group
 	return i, err
 }
 
+const deleteGroupById = `-- name: DeleteGroupById :exec
+DELETE FROM groups
+    WHERE id=(
+        SELECT groups.id
+        FROM groups
+        INNER JOIN group_members
+            ON groups.id=group_members.group_id
+        WHERE groups.id=? AND group_members.role=? AND group_members.user_id=?
+        LIMIT 1
+    )
+`
+
+type DeleteGroupByIdParams struct {
+	ID     int64  `json:"id"`
+	Role   string `json:"role"`
+	UserID int64  `json:"user_id"`
+}
+
+func (q *Queries) DeleteGroupById(ctx context.Context, arg DeleteGroupByIdParams) error {
+	_, err := q.db.ExecContext(ctx, deleteGroupById, arg.ID, arg.Role, arg.UserID)
+	return err
+}
+
 const getGroupById = `-- name: GetGroupById :one
-SELECT groups.id as id, groups.display_name as group_name, groups.state as group_state, groups.color_theme as group_theme, groups.created_at as created_at, groups.updated_at as updated_at, group_members.role as member_role FROM groups
+SELECT groups.id AS id,
+    groups.display_name AS group_name,
+    groups.state AS group_state,
+    groups.color_theme AS group_theme,
+    groups.created_at AS created_at,
+    groups.updated_at AS updated_at,
+    group_members.role AS member_role,
+    (
+        SELECT IFNULL(SUM(group_expenses.cost), 0.0)
+        FROM group_expenses
+        WHERE group_expenses.group_id = groups.id
+    ) AS total_expenses
+    FROM groups
     INNER JOIN group_members
         ON group_members.group_id=groups.id
     WHERE groups.id=? AND group_members.user_id=?
+    LIMIT 1
 `
 
 type GetGroupByIdParams struct {
@@ -48,13 +84,14 @@ type GetGroupByIdParams struct {
 }
 
 type GetGroupByIdRow struct {
-	ID         int64     `json:"id"`
-	GroupName  string    `json:"group_name"`
-	GroupState string    `json:"group_state"`
-	GroupTheme string    `json:"group_theme"`
-	CreatedAt  time.Time `json:"created_at"`
-	UpdatedAt  time.Time `json:"updated_at"`
-	MemberRole string    `json:"member_role"`
+	ID            int64       `json:"id"`
+	GroupName     string      `json:"group_name"`
+	GroupState    string      `json:"group_state"`
+	GroupTheme    string      `json:"group_theme"`
+	CreatedAt     time.Time   `json:"created_at"`
+	UpdatedAt     time.Time   `json:"updated_at"`
+	MemberRole    string      `json:"member_role"`
+	TotalExpenses interface{} `json:"total_expenses"`
 }
 
 func (q *Queries) GetGroupById(ctx context.Context, arg GetGroupByIdParams) (GetGroupByIdRow, error) {
@@ -68,12 +105,24 @@ func (q *Queries) GetGroupById(ctx context.Context, arg GetGroupByIdParams) (Get
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.MemberRole,
+		&i.TotalExpenses,
 	)
 	return i, err
 }
 
 const getGroupsByUserId = `-- name: GetGroupsByUserId :many
-SELECT groups.id as id, groups.display_name as group_name, groups.state as group_state, groups.color_theme as group_theme, groups.created_at as created_at, groups.updated_at as updated_at FROM groups
+SELECT groups.id AS id,
+    groups.display_name AS group_name,
+    groups.state AS group_state,
+    groups.color_theme AS group_theme,
+    groups.created_at AS created_at,
+    groups.updated_at AS updated_at,
+    (
+        SELECT IFNULL(SUM(group_expenses.cost), 0.0)
+        FROM group_expenses
+        WHERE group_expenses.group_id = groups.id
+    ) AS total_expenses
+    FROM groups
     INNER JOIN group_members
         ON group_members.group_id=groups.id
     WHERE group_members.user_id=?
@@ -81,12 +130,13 @@ SELECT groups.id as id, groups.display_name as group_name, groups.state as group
 `
 
 type GetGroupsByUserIdRow struct {
-	ID         int64     `json:"id"`
-	GroupName  string    `json:"group_name"`
-	GroupState string    `json:"group_state"`
-	GroupTheme string    `json:"group_theme"`
-	CreatedAt  time.Time `json:"created_at"`
-	UpdatedAt  time.Time `json:"updated_at"`
+	ID            int64       `json:"id"`
+	GroupName     string      `json:"group_name"`
+	GroupState    string      `json:"group_state"`
+	GroupTheme    string      `json:"group_theme"`
+	CreatedAt     time.Time   `json:"created_at"`
+	UpdatedAt     time.Time   `json:"updated_at"`
+	TotalExpenses interface{} `json:"total_expenses"`
 }
 
 func (q *Queries) GetGroupsByUserId(ctx context.Context, userID int64) ([]GetGroupsByUserIdRow, error) {
@@ -105,6 +155,7 @@ func (q *Queries) GetGroupsByUserId(ctx context.Context, userID int64) ([]GetGro
 			&i.GroupTheme,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.TotalExpenses,
 		); err != nil {
 			return nil, err
 		}
@@ -119,25 +170,44 @@ func (q *Queries) GetGroupsByUserId(ctx context.Context, userID int64) ([]GetGro
 	return items, nil
 }
 
-const upsertGroupMember = `-- name: UpsertGroupMember :exec
-INSERT INTO group_members (group_id, user_id, state, role) VALUES (?, ?, ?, ?)
-    ON CONFLICT (group_id, user_id)
-        DO UPDATE SET state=excluded.state, role=excluded.state, updated_at=excluded.state
+const updateGroupById = `-- name: UpdateGroupById :one
+UPDATE groups
+    SET 
+        display_name=?,
+        color_theme=?,
+        updated_at=CURRENT_TIMESTAMP
+    WHERE id = (
+        SELECT groups.id
+        FROM groups
+        INNER JOIN group_members 
+            ON group_members.group_id=groups.id
+        WHERE groups.id=? AND group_members.user_id=?
+    )
+    RETURNING id, display_name, state, color_theme, created_at, updated_at
 `
 
-type UpsertGroupMemberParams struct {
-	GroupID int64  `json:"group_id"`
-	UserID  int64  `json:"user_id"`
-	State   string `json:"state"`
-	Role    string `json:"role"`
+type UpdateGroupByIdParams struct {
+	DisplayName string `json:"display_name"`
+	ColorTheme  string `json:"color_theme"`
+	ID          int64  `json:"id"`
+	UserID      int64  `json:"user_id"`
 }
 
-func (q *Queries) UpsertGroupMember(ctx context.Context, arg UpsertGroupMemberParams) error {
-	_, err := q.db.ExecContext(ctx, upsertGroupMember,
-		arg.GroupID,
+func (q *Queries) UpdateGroupById(ctx context.Context, arg UpdateGroupByIdParams) (Group, error) {
+	row := q.db.QueryRowContext(ctx, updateGroupById,
+		arg.DisplayName,
+		arg.ColorTheme,
+		arg.ID,
 		arg.UserID,
-		arg.State,
-		arg.Role,
 	)
-	return err
+	var i Group
+	err := row.Scan(
+		&i.ID,
+		&i.DisplayName,
+		&i.State,
+		&i.ColorTheme,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
 }

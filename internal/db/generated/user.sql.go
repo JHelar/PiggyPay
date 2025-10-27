@@ -13,7 +13,9 @@ import (
 
 const createExistingUserSession = `-- name: CreateExistingUserSession :one
 INSERT INTO user_sessions (user_id, email, expires_at) VALUES (?, ?, ?)
-    ON CONFLICT (user_id) DO UPDATE SET expires_at=excluded.expires_at
+    ON CONFLICT (user_id) DO UPDATE SET 
+        expires_at=excluded.expires_at,
+        last_seen_at=CURRENT_TIMESTAMP
     RETURNING id
 `
 
@@ -91,6 +93,16 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (int64, 
 	return id, err
 }
 
+const deleteUser = `-- name: DeleteUser :exec
+DELETE FROM users
+    WHERE id=?
+`
+
+func (q *Queries) DeleteUser(ctx context.Context, id int64) error {
+	_, err := q.db.ExecContext(ctx, deleteUser, id)
+	return err
+}
+
 const deleteUserSessionById = `-- name: DeleteUserSessionById :exec
 DELETE FROM user_sessions
     WHERE id=?
@@ -141,22 +153,25 @@ func (q *Queries) GetUserByEmail(ctx context.Context, email string) (User, error
 }
 
 const getUserById = `-- name: GetUserById :one
-SELECT id, first_name, last_name, phone_number, email, created_at, updated_at, last_seen_at FROM users
+SELECT first_name, last_name, phone_number, email FROM users
     WHERE id=?
 `
 
-func (q *Queries) GetUserById(ctx context.Context, id int64) (User, error) {
+type GetUserByIdRow struct {
+	FirstName   string `json:"first_name"`
+	LastName    string `json:"last_name"`
+	PhoneNumber string `json:"phone_number"`
+	Email       string `json:"email"`
+}
+
+func (q *Queries) GetUserById(ctx context.Context, id int64) (GetUserByIdRow, error) {
 	row := q.db.QueryRowContext(ctx, getUserById, id)
-	var i User
+	var i GetUserByIdRow
 	err := row.Scan(
-		&i.ID,
 		&i.FirstName,
 		&i.LastName,
 		&i.PhoneNumber,
 		&i.Email,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-		&i.LastSeenAt,
 	)
 	return i, err
 }
@@ -181,6 +196,51 @@ func (q *Queries) GetUserSessionById(ctx context.Context, id string) (GetUserSes
 		&i.UserID,
 		&i.Email,
 		&i.ExpiresAt,
+	)
+	return i, err
+}
+
+const updateUser = `-- name: UpdateUser :one
+UPDATE users
+    SET
+        first_name=?,
+        last_name=?,
+        phone_number=?,
+        email=?,
+        updated_at=CURRENT_TIMESTAMP
+    WHERE users.id=?
+    RETURNING first_name, last_name, phone_number, email
+`
+
+type UpdateUserParams struct {
+	FirstName   string `json:"first_name"`
+	LastName    string `json:"last_name"`
+	PhoneNumber string `json:"phone_number"`
+	Email       string `json:"email"`
+	ID          int64  `json:"id"`
+}
+
+type UpdateUserRow struct {
+	FirstName   string `json:"first_name"`
+	LastName    string `json:"last_name"`
+	PhoneNumber string `json:"phone_number"`
+	Email       string `json:"email"`
+}
+
+func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) (UpdateUserRow, error) {
+	row := q.db.QueryRowContext(ctx, updateUser,
+		arg.FirstName,
+		arg.LastName,
+		arg.PhoneNumber,
+		arg.Email,
+		arg.ID,
+	)
+	var i UpdateUserRow
+	err := row.Scan(
+		&i.FirstName,
+		&i.LastName,
+		&i.PhoneNumber,
+		&i.Email,
 	)
 	return i, err
 }

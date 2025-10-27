@@ -30,6 +30,14 @@ func RegisterRoutes(app fiber.Router, db *db.DB) {
 		return getUser(ctx, db)
 	}).Name("getUser")
 
+	app.Patch("/user/me", func(ctx *fiber.Ctx) error {
+		return updateUser(ctx, db)
+	}).Name("updateUser")
+
+	app.Delete("/user/me", func(ctx *fiber.Ctx) error {
+		return deleteUser(ctx, db)
+	}).Name("deleteUser")
+
 	app.Post("/groups/create", func(ctx *fiber.Ctx) error {
 		return createGroup(ctx, db)
 	}).Name("createGroup")
@@ -41,6 +49,22 @@ func RegisterRoutes(app fiber.Router, db *db.DB) {
 	app.Get("/groups/:id", func(ctx *fiber.Ctx) error {
 		return getGroup(ctx, db)
 	}).Name("getGroup")
+
+	app.Patch("/groups/:id", func(ctx *fiber.Ctx) error {
+		return updateGroup(ctx, db)
+	}).Name("updateGroup")
+
+	app.Delete("/groups/:id", func(ctx *fiber.Ctx) error {
+		return deleteGroup(ctx, db)
+	}).Name("deleteGroup")
+
+	app.Get("/groups/:id/member", func(ctx *fiber.Ctx) error {
+		return addMember(ctx, db)
+	}).Name("addMember")
+
+	app.Delete("/groups/:id/member", func(ctx *fiber.Ctx) error {
+		return removeMember(ctx, db)
+	}).Name("removeMember")
 }
 
 func helloWorld(ctx *fiber.Ctx, db *db.DB) error {

@@ -14,13 +14,19 @@ type Querier interface {
 	CreateNewUserSession(ctx context.Context, arg CreateNewUserSessionParams) (string, error)
 	CreateSignInToken(ctx context.Context, arg CreateSignInTokenParams) (string, error)
 	CreateUser(ctx context.Context, arg CreateUserParams) (int64, error)
+	DeleteGroupById(ctx context.Context, arg DeleteGroupByIdParams) error
+	DeleteGroupMember(ctx context.Context, arg DeleteGroupMemberParams) error
+	DeleteUser(ctx context.Context, id int64) error
 	DeleteUserSessionById(ctx context.Context, id string) error
 	GetGroupById(ctx context.Context, arg GetGroupByIdParams) (GetGroupByIdRow, error)
+	GetGroupMember(ctx context.Context, arg GetGroupMemberParams) (GetGroupMemberRow, error)
 	GetGroupsByUserId(ctx context.Context, userID int64) ([]GetGroupsByUserIdRow, error)
 	GetSignInToken(ctx context.Context, id string) (GetSignInTokenRow, error)
 	GetUserByEmail(ctx context.Context, email string) (User, error)
-	GetUserById(ctx context.Context, id int64) (User, error)
+	GetUserById(ctx context.Context, id int64) (GetUserByIdRow, error)
 	GetUserSessionById(ctx context.Context, id string) (GetUserSessionByIdRow, error)
+	UpdateGroupById(ctx context.Context, arg UpdateGroupByIdParams) (Group, error)
+	UpdateUser(ctx context.Context, arg UpdateUserParams) (UpdateUserRow, error)
 	UpsertGroupMember(ctx context.Context, arg UpsertGroupMemberParams) error
 }
 
