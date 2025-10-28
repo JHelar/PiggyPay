@@ -54,6 +54,65 @@ func (q *Queries) GetGroupMember(ctx context.Context, arg GetGroupMemberParams) 
 	return i, err
 }
 
+const getGroupMembers = `-- name: GetGroupMembers :many
+SELECT 
+    users.first_name AS first_name, 
+    users.last_name AS last_name, 
+    users.id AS member_id, 
+    group_members.role AS member_role
+    FROM group_members
+    INNER JOIN users
+        ON users.id=group_members.user_id
+    WHERE 
+        group_members.group_id=?
+    AND EXISTS (
+        SELECT 1
+        FROM group_members group_members_check
+        WHERE group_members_check.group_id=group_members.group_id
+        AND group_members_check.user_id=?
+    )
+`
+
+type GetGroupMembersParams struct {
+	GroupID int64 `json:"group_id"`
+	UserID  int64 `json:"user_id"`
+}
+
+type GetGroupMembersRow struct {
+	FirstName  string `json:"first_name"`
+	LastName   string `json:"last_name"`
+	MemberID   int64  `json:"member_id"`
+	MemberRole string `json:"member_role"`
+}
+
+func (q *Queries) GetGroupMembers(ctx context.Context, arg GetGroupMembersParams) ([]GetGroupMembersRow, error) {
+	rows, err := q.db.QueryContext(ctx, getGroupMembers, arg.GroupID, arg.UserID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []GetGroupMembersRow{}
+	for rows.Next() {
+		var i GetGroupMembersRow
+		if err := rows.Scan(
+			&i.FirstName,
+			&i.LastName,
+			&i.MemberID,
+			&i.MemberRole,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const upsertGroupMember = `-- name: UpsertGroupMember :exec
 INSERT INTO group_members (group_id, user_id, state, role) VALUES (?, ?, ?, ?)
     ON CONFLICT (group_id, user_id)

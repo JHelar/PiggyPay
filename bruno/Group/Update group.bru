@@ -1,0 +1,27 @@
+meta {
+  name: Update group
+  type: http
+  seq: 4
+}
+
+patch {
+  url: http://localhost:8080/api/v1/groups/1
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: 9ca28d98d734f29b51eedbf4b2b66997
+}
+
+body:json {
+  {
+    "display_name": "Piggy group",
+    "color_theme": "color_theme:green"
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

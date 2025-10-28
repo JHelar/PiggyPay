@@ -149,6 +149,11 @@ func updateGroup(c *fiber.Ctx, db *db.DB) error {
 		return fiber.ErrInternalServerError
 	}
 
+	if err := c.BodyParser(payload); err != nil {
+		log.Printf("updateGroup failed to parse payload")
+		return fiber.DefaultErrorHandler(c, err)
+	}
+
 	group, err := db.Queries.UpdateGroupById(ctx, generated.UpdateGroupByIdParams{
 		DisplayName: payload.DisplayName,
 		ColorTheme:  payload.ColorTheme,

@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"log"
+	"time"
 
 	"github.com/JHelar/PiggyPay.git/internal/db"
 	"github.com/JHelar/PiggyPay.git/internal/db/generated"
@@ -34,7 +35,17 @@ func createNewUser(c *fiber.Ctx, db *db.DB) error {
 	})
 
 	if err != nil {
-		return err
+		log.Printf("createNewUser failed to create user")
+		return fiber.DefaultErrorHandler(c, err)
+	}
+
+	if err = db.Queries.UpdateUserSession(ctx, generated.UpdateUserSessionParams{
+		ID:        session.ID,
+		ExpiresAt: time.Now().Add(SESSION_EXPIRE_TIME),
+		UserID:    sql.NullInt64{Valid: true, Int64: userId},
+	}); err != nil {
+		log.Printf("createNewUser failed to update user session")
+		return fiber.DefaultErrorHandler(c, err)
 	}
 
 	return c.JSON(fiber.Map{
@@ -103,6 +114,10 @@ func deleteUser(c *fiber.Ctx, db *db.DB) error {
 	if err := db.Queries.DeleteUser(ctx, session.UserID.Int64); err != nil {
 		log.Printf("updateUser error deleting user %v", err.Error())
 		return fiber.DefaultErrorHandler(c, err)
+	}
+
+	if err := db.Queries.DeleteUserSessionById(ctx, session.ID); err != nil {
+		log.Printf("updateUser error deleting user session %v", err.Error())
 	}
 
 	_, err := c.WriteString("Deleted")

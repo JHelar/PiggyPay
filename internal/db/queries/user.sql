@@ -16,9 +16,16 @@ INSERT INTO user_sessions (user_id, email, expires_at) VALUES (?, ?, ?)
 -- name: CreateExistingUserSession :one
 INSERT INTO user_sessions (user_id, email, expires_at) VALUES (?, ?, ?)
     ON CONFLICT (user_id) DO UPDATE SET 
-        expires_at=excluded.expires_at,
-        last_seen_at=CURRENT_TIMESTAMP
+        expires_at=excluded.expires_at
     RETURNING id;
+
+-- name: UpdateUserSession :exec
+UPDATE user_sessions
+    SET
+        expires_at=?,
+        email=null,
+        user_id=?
+    WHERE id=?;
 
 -- name: GetUserSessionById :one
 SELECT id, user_id, email, expires_at FROM user_sessions

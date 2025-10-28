@@ -9,6 +9,7 @@ import (
 )
 
 type Querier interface {
+	AddExpense(ctx context.Context, arg AddExpenseParams) (AddExpenseRow, error)
 	CreateExistingUserSession(ctx context.Context, arg CreateExistingUserSessionParams) (string, error)
 	CreateGroup(ctx context.Context, arg CreateGroupParams) (Group, error)
 	CreateNewUserSession(ctx context.Context, arg CreateNewUserSessionParams) (string, error)
@@ -19,7 +20,9 @@ type Querier interface {
 	DeleteUser(ctx context.Context, id int64) error
 	DeleteUserSessionById(ctx context.Context, id string) error
 	GetGroupById(ctx context.Context, arg GetGroupByIdParams) (GetGroupByIdRow, error)
+	GetGroupExpenses(ctx context.Context, arg GetGroupExpensesParams) ([]GetGroupExpensesRow, error)
 	GetGroupMember(ctx context.Context, arg GetGroupMemberParams) (GetGroupMemberRow, error)
+	GetGroupMembers(ctx context.Context, arg GetGroupMembersParams) ([]GetGroupMembersRow, error)
 	GetGroupsByUserId(ctx context.Context, userID int64) ([]GetGroupsByUserIdRow, error)
 	GetSignInToken(ctx context.Context, id string) (GetSignInTokenRow, error)
 	GetUserByEmail(ctx context.Context, email string) (User, error)
@@ -27,6 +30,7 @@ type Querier interface {
 	GetUserSessionById(ctx context.Context, id string) (GetUserSessionByIdRow, error)
 	UpdateGroupById(ctx context.Context, arg UpdateGroupByIdParams) (Group, error)
 	UpdateUser(ctx context.Context, arg UpdateUserParams) (UpdateUserRow, error)
+	UpdateUserSession(ctx context.Context, arg UpdateUserSessionParams) error
 	UpsertGroupMember(ctx context.Context, arg UpsertGroupMemberParams) error
 }
 

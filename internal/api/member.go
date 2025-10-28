@@ -11,6 +11,34 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
+func getMembers(c *fiber.Ctx, db *db.DB) error {
+	ctx := context.Background()
+
+	session := mustGetUserSession(c)
+
+	groupId, err := strconv.ParseInt(c.Params("id"), 10, 64)
+	if err != nil {
+		log.Println("getMembers failed to convert group id")
+		return fiber.DefaultErrorHandler(c, err)
+	}
+
+	members, err := db.Queries.GetGroupMembers(ctx, generated.GetGroupMembersParams{
+		GroupID: groupId,
+		UserID:  session.UserID.Int64,
+	})
+	if err == sql.ErrNoRows || len(members) == 0 {
+		log.Printf("getMembers user(%v) is not member in group(%v)\n", session.UserID.Int64, groupId)
+		return fiber.ErrUnauthorized
+	}
+
+	if err != nil {
+		log.Printf("getMembers error getting members for group(%v)\n", groupId)
+		return fiber.DefaultErrorHandler(c, err)
+	}
+
+	return c.JSON(members)
+}
+
 func addMember(c *fiber.Ctx, db *db.DB) error {
 	ctx := context.Background()
 
@@ -42,7 +70,7 @@ func addMember(c *fiber.Ctx, db *db.DB) error {
 		State:   string(MemberStateAdding),
 		Role:    string(MemberRoleRegular),
 	}); err != nil {
-		log.Println("addMember failed to add member(%v) to group(%v)", session.UserID.Int64, groupId)
+		log.Printf("addMember failed to add member(%v) to group(%v)", session.UserID.Int64, groupId)
 		return err
 	}
 

@@ -1,0 +1,29 @@
+meta {
+  name: Update user
+  type: http
+  seq: 2
+}
+
+patch {
+  url: http://localhost:8080/api/v1/user/me
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: d7460b69f8b143e3575eb8fcb29aef68
+}
+
+body:json {
+  {
+    "first_name": "Piggy",
+    "last_name": "Split",
+    "phone_number": "+460739169218",
+    "email": "pigy@bank.com"
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

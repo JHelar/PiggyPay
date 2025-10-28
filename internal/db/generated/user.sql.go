@@ -14,8 +14,7 @@ import (
 const createExistingUserSession = `-- name: CreateExistingUserSession :one
 INSERT INTO user_sessions (user_id, email, expires_at) VALUES (?, ?, ?)
     ON CONFLICT (user_id) DO UPDATE SET 
-        expires_at=excluded.expires_at,
-        last_seen_at=CURRENT_TIMESTAMP
+        expires_at=excluded.expires_at
     RETURNING id
 `
 
@@ -243,4 +242,24 @@ func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) (UpdateU
 		&i.Email,
 	)
 	return i, err
+}
+
+const updateUserSession = `-- name: UpdateUserSession :exec
+UPDATE user_sessions
+    SET
+        expires_at=?,
+        email=null,
+        user_id=?
+    WHERE id=?
+`
+
+type UpdateUserSessionParams struct {
+	ExpiresAt time.Time     `json:"expires_at"`
+	UserID    sql.NullInt64 `json:"user_id"`
+	ID        string        `json:"id"`
+}
+
+func (q *Queries) UpdateUserSession(ctx context.Context, arg UpdateUserSessionParams) error {
+	_, err := q.db.ExecContext(ctx, updateUserSession, arg.ExpiresAt, arg.UserID, arg.ID)
+	return err
 }
