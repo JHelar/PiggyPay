@@ -19,6 +19,7 @@ type Querier interface {
 	DeleteGroupMember(ctx context.Context, arg DeleteGroupMemberParams) error
 	DeleteUser(ctx context.Context, id int64) error
 	DeleteUserSessionById(ctx context.Context, id string) error
+	GetExpenseById(ctx context.Context, arg GetExpenseByIdParams) (GetExpenseByIdRow, error)
 	GetGroupById(ctx context.Context, arg GetGroupByIdParams) (GetGroupByIdRow, error)
 	GetGroupExpenses(ctx context.Context, arg GetGroupExpensesParams) ([]GetGroupExpensesRow, error)
 	GetGroupMember(ctx context.Context, arg GetGroupMemberParams) (GetGroupMemberRow, error)
@@ -28,7 +29,10 @@ type Querier interface {
 	GetUserByEmail(ctx context.Context, email string) (User, error)
 	GetUserById(ctx context.Context, id int64) (GetUserByIdRow, error)
 	GetUserSessionById(ctx context.Context, id string) (GetUserSessionByIdRow, error)
+	RemoveExpense(ctx context.Context, arg RemoveExpenseParams) error
+	UpdateExpense(ctx context.Context, arg UpdateExpenseParams) (UpdateExpenseRow, error)
 	UpdateGroupById(ctx context.Context, arg UpdateGroupByIdParams) (Group, error)
+	UpdateGroupState(ctx context.Context, arg UpdateGroupStateParams) error
 	UpdateUser(ctx context.Context, arg UpdateUserParams) (UpdateUserRow, error)
 	UpdateUserSession(ctx context.Context, arg UpdateUserSessionParams) error
 	UpsertGroupMember(ctx context.Context, arg UpsertGroupMemberParams) error

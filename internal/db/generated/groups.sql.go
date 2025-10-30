@@ -211,3 +211,28 @@ func (q *Queries) UpdateGroupById(ctx context.Context, arg UpdateGroupByIdParams
 	)
 	return i, err
 }
+
+const updateGroupState = `-- name: UpdateGroupState :exec
+UPDATE groups
+    SET
+        state=?,
+        updated_at=CURRENT_TIMESTAMP
+    WHERE id = (
+        SELECT groups.id
+        FROM groups
+        INNER JOIN group_members 
+            ON group_members.group_id=groups.id
+        WHERE groups.id=? AND group_members.user_id=?
+    )
+`
+
+type UpdateGroupStateParams struct {
+	State  string `json:"state"`
+	ID     int64  `json:"id"`
+	UserID int64  `json:"user_id"`
+}
+
+func (q *Queries) UpdateGroupState(ctx context.Context, arg UpdateGroupStateParams) error {
+	_, err := q.db.ExecContext(ctx, updateGroupState, arg.State, arg.ID, arg.UserID)
+	return err
+}

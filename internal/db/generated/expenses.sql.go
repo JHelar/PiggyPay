@@ -61,6 +61,36 @@ func (q *Queries) AddExpense(ctx context.Context, arg AddExpenseParams) (AddExpe
 	return i, err
 }
 
+const getExpenseById = `-- name: GetExpenseById :one
+SELECT id, name, cost FROM group_expenses
+    WHERE group_expenses.id=? AND group_expenses.group_id=?
+    AND EXISTS (
+        SELECT 1
+        FROM group_members group_members_check
+        WHERE group_members_check.group_id=group_expenses.group_id
+        AND group_members_check.user_id=?
+    )
+`
+
+type GetExpenseByIdParams struct {
+	ID      int64 `json:"id"`
+	GroupID int64 `json:"group_id"`
+	UserID  int64 `json:"user_id"`
+}
+
+type GetExpenseByIdRow struct {
+	ID   int64   `json:"id"`
+	Name string  `json:"name"`
+	Cost float64 `json:"cost"`
+}
+
+func (q *Queries) GetExpenseById(ctx context.Context, arg GetExpenseByIdParams) (GetExpenseByIdRow, error) {
+	row := q.db.QueryRowContext(ctx, getExpenseById, arg.ID, arg.GroupID, arg.UserID)
+	var i GetExpenseByIdRow
+	err := row.Scan(&i.ID, &i.Name, &i.Cost)
+	return i, err
+}
+
 const getGroupExpenses = `-- name: GetGroupExpenses :many
 SELECT 
     group_expenses.id AS id,
@@ -120,4 +150,69 @@ func (q *Queries) GetGroupExpenses(ctx context.Context, arg GetGroupExpensesPara
 		return nil, err
 	}
 	return items, nil
+}
+
+const removeExpense = `-- name: RemoveExpense :exec
+DELETE FROM group_expenses
+    WHERE group_expenses.id=? AND group_expenses.group_id=?
+    AND EXISTS (
+        SELECT 1
+        FROM group_members group_members_check
+        WHERE group_members_check.group_id=group_expenses.group_id
+        AND group_members_check.user_id=?
+    )
+`
+
+type RemoveExpenseParams struct {
+	ID      int64 `json:"id"`
+	GroupID int64 `json:"group_id"`
+	UserID  int64 `json:"user_id"`
+}
+
+func (q *Queries) RemoveExpense(ctx context.Context, arg RemoveExpenseParams) error {
+	_, err := q.db.ExecContext(ctx, removeExpense, arg.ID, arg.GroupID, arg.UserID)
+	return err
+}
+
+const updateExpense = `-- name: UpdateExpense :one
+UPDATE group_expenses
+    SET
+        cost=?,
+        name=?,
+        updated_at=CURRENT_TIMESTAMP
+    WHERE group_expenses.id=? AND group_expenses.group_id=?
+    AND EXISTS (
+        SELECT 1
+        FROM group_members group_members_check
+        WHERE group_members_check.group_id=group_expenses.group_id
+        AND group_members_check.user_id=?
+    )
+    RETURNING id, name, cost
+`
+
+type UpdateExpenseParams struct {
+	Cost    float64 `json:"cost"`
+	Name    string  `json:"name"`
+	ID      int64   `json:"id"`
+	GroupID int64   `json:"group_id"`
+	UserID  int64   `json:"user_id"`
+}
+
+type UpdateExpenseRow struct {
+	ID   int64   `json:"id"`
+	Name string  `json:"name"`
+	Cost float64 `json:"cost"`
+}
+
+func (q *Queries) UpdateExpense(ctx context.Context, arg UpdateExpenseParams) (UpdateExpenseRow, error) {
+	row := q.db.QueryRowContext(ctx, updateExpense,
+		arg.Cost,
+		arg.Name,
+		arg.ID,
+		arg.GroupID,
+		arg.UserID,
+	)
+	var i UpdateExpenseRow
+	err := row.Scan(&i.ID, &i.Name, &i.Cost)
+	return i, err
 }

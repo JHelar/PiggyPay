@@ -16,6 +16,16 @@ SELECT
         AND group_members_check.user_id=?
     );
 
+-- name: GetExpenseById :one
+SELECT id, name, cost FROM group_expenses
+    WHERE group_expenses.id=? AND group_expenses.group_id=?
+    AND EXISTS (
+        SELECT 1
+        FROM group_members group_members_check
+        WHERE group_members_check.group_id=group_expenses.group_id
+        AND group_members_check.user_id=?
+    );
+
 -- name: AddExpense :one
 INSERT INTO group_expenses (name, cost, group_id, user_id) 
     VALUES (?, ?, ?, ?)
@@ -33,3 +43,28 @@ INSERT INTO group_expenses (name, cost, group_id, user_id)
             FROM users
             WHERE users.id = group_expenses.user_id
         ) AS last_name;
+
+-- name: UpdateExpense :one
+UPDATE group_expenses
+    SET
+        cost=?,
+        name=?,
+        updated_at=CURRENT_TIMESTAMP
+    WHERE group_expenses.id=? AND group_expenses.group_id=?
+    AND EXISTS (
+        SELECT 1
+        FROM group_members group_members_check
+        WHERE group_members_check.group_id=group_expenses.group_id
+        AND group_members_check.user_id=?
+    )
+    RETURNING id, name, cost;
+
+-- name: RemoveExpense :exec
+DELETE FROM group_expenses
+    WHERE group_expenses.id=? AND group_expenses.group_id=?
+    AND EXISTS (
+        SELECT 1
+        FROM group_members group_members_check
+        WHERE group_members_check.group_id=group_expenses.group_id
+        AND group_members_check.user_id=?
+    );

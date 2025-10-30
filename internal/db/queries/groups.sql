@@ -35,6 +35,19 @@ UPDATE groups
     )
     RETURNING id, display_name, state, color_theme, created_at, updated_at;
 
+-- name: UpdateGroupState :exec
+UPDATE groups
+    SET
+        state=?,
+        updated_at=CURRENT_TIMESTAMP
+    WHERE id = (
+        SELECT groups.id
+        FROM groups
+        INNER JOIN group_members 
+            ON group_members.group_id=groups.id
+        WHERE groups.id=? AND group_members.user_id=?
+    );
+
 -- name: GetGroupById :one
 SELECT groups.id AS id,
     groups.display_name AS group_name,

@@ -1,6 +1,8 @@
 package api
 
 import (
+	"fmt"
+
 	"github.com/JHelar/PiggyPay.git/internal/db"
 	"github.com/gofiber/fiber/v2"
 )
@@ -18,31 +20,25 @@ func registerGroupRoutes(app fiber.Router, db *db.DB) {
 		return getGroups(ctx, db)
 	}).Name("getGroups")
 
-	app.Get("/:id", func(ctx *fiber.Ctx) error {
+	app.Use([]string{fmt.Sprintf("/:%s", GroupIdParam)}, func(c *fiber.Ctx) error {
+		return verifyGroup(c, db)
+	})
+
+	app.Get(fmt.Sprintf("/:%s", GroupIdParam), func(ctx *fiber.Ctx) error {
 		return getGroup(ctx, db)
 	}).Name("getGroup")
 
-	app.Patch("/:id", func(ctx *fiber.Ctx) error {
+	app.Patch(fmt.Sprintf("/:%s", GroupIdParam), func(ctx *fiber.Ctx) error {
 		return updateGroup(ctx, db)
 	}).Name("updateGroup")
 
-	app.Delete("/:id", func(ctx *fiber.Ctx) error {
+	app.Delete(fmt.Sprintf("/:%s", GroupIdParam), func(ctx *fiber.Ctx) error {
 		return deleteGroup(ctx, db)
 	}).Name("deleteGroup")
 
-	app.Get("/:id/member", func(ctx *fiber.Ctx) error {
-		return getMembers(ctx, db)
-	}).Name("getMembers")
+	memberRouter := app.Group(fmt.Sprintf("/:%s/member", GroupIdParam))
+	registerMemberRoutes(memberRouter, db)
 
-	app.Post("/:id/member", func(ctx *fiber.Ctx) error {
-		return addMember(ctx, db)
-	}).Name("addMember")
-
-	app.Delete("/:id/member", func(ctx *fiber.Ctx) error {
-		return removeMember(ctx, db)
-	}).Name("removeMember")
-
-	app.Get("/:id/expenses", func(ctx *fiber.Ctx) error {
-		return getExpenses(ctx, db)
-	}).Name("getExpenses")
+	expenseRouter := app.Group(fmt.Sprintf("/:%s/expense", GroupIdParam))
+	registerExpenseRoutes(expenseRouter, db)
 }

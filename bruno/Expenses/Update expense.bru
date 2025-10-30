@@ -1,0 +1,27 @@
+meta {
+  name: Update expense
+  type: http
+  seq: 3
+}
+
+patch {
+  url: http://localhost:8080/api/v1/groups/3/expense/2
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: f549408a56d8afadf8bccfccd6de83b1
+}
+
+body:json {
+  {
+    "expense_cost": 999,
+    "expense_name": "More bananas"
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}
