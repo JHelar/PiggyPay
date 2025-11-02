@@ -48,7 +48,7 @@ UPDATE groups
         WHERE groups.id=? AND group_members.user_id=?
     );
 
--- name: GetGroupById :one
+-- name: GetGroupForUserById :one
 SELECT groups.id AS id,
     groups.display_name AS group_name,
     groups.state AS group_state,
@@ -65,6 +65,17 @@ SELECT groups.id AS id,
     INNER JOIN group_members
         ON group_members.group_id=groups.id
     WHERE groups.id=? AND group_members.user_id=?
+    LIMIT 1;
+
+-- name: GetGroupById :one
+SELECT groups.id AS id,
+    groups.display_name AS group_name,
+    groups.state AS group_state,
+    groups.color_theme AS group_theme,
+    groups.created_at AS created_at,
+    groups.updated_at AS updated_at
+    FROM groups
+    WHERE id=?
     LIMIT 1;
 
 -- name: DeleteGroupById :exec

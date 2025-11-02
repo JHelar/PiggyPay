@@ -37,15 +37,24 @@ type GroupMember struct {
 	UpdatedAt time.Time `json:"updated_at"`
 }
 
+type GroupMemberReceipt struct {
+	ID          int64     `json:"id"`
+	GroupID     int64     `json:"group_id"`
+	UserID      int64     `json:"user_id"`
+	TotalDept   float64   `json:"total_dept"`
+	CurrentDept float64   `json:"current_dept"`
+	UpdatedAt   time.Time `json:"updated_at"`
+	CreateAt    time.Time `json:"create_at"`
+}
+
 type GroupMemberTransaction struct {
-	ID         int64          `json:"id"`
-	GroupID    int64          `json:"group_id"`
-	FromUserID int64          `json:"from_user_id"`
-	ToUserID   int64          `json:"to_user_id"`
-	State      string         `json:"state"`
-	Cost       float64        `json:"cost"`
-	CreatedAt  time.Time      `json:"created_at"`
-	PayedAt    sql.NullString `json:"payed_at"`
+	ID            int64          `json:"id"`
+	FromReceiptID int64          `json:"from_receipt_id"`
+	ToReceiptID   int64          `json:"to_receipt_id"`
+	State         string         `json:"state"`
+	Amount        float64        `json:"amount"`
+	CreatedAt     time.Time      `json:"created_at"`
+	PayedAt       sql.NullString `json:"payed_at"`
 }
 
 type User struct {

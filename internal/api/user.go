@@ -120,6 +120,5 @@ func deleteUser(c *fiber.Ctx, db *db.DB) error {
 		log.Printf("updateUser error deleting user session %v", err.Error())
 	}
 
-	_, err := c.WriteString("Deleted")
-	return err
+	return c.SendString("Deleted")
 }

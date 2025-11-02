@@ -7,6 +7,7 @@ CREATE TABLE IF NOT EXISTS users (
     last_name TEXT NOT NULL,
     phone_number TEXT NOT NULL UNIQUE,
     email TEXT NOT NULL UNIQUE,
+    
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     last_seen_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
@@ -41,14 +42,18 @@ CREATE TABLE IF NOT EXISTS groups (
 
 CREATE TABLE IF NOT EXISTS group_expenses (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
+    
     group_id INTEGER NOT NULL,
     user_id INTEGER NOT NULL,
+    
     name TEXT NOT NULL,
     cost REAL NOT NULL,
+    
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
     FOREIGN KEY (group_id) REFERENCES groups(id) ON DELETE CASCADE,
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    FOREIGN KEY (user_id) REFERENCES users(id)
 );
 
 CREATE TABLE IF NOT EXISTS group_members (
@@ -59,21 +64,40 @@ CREATE TABLE IF NOT EXISTS group_members (
 
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    
     PRIMARY KEY (group_id, user_id),
-    FOREIGN KEY (group_id) REFERENCES groups(id) ON DELETE CASCADE,
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    FOREIGN KEY (group_id) REFERENCES groups(id),
+    FOREIGN KEY (user_id) REFERENCES users(id)
+);
+
+CREATE TABLE IF NOT EXISTS group_member_receipts (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+
+    group_id INTEGER NOT NULL,
+    user_id INTEGER NOT NULL,
+
+    total_dept REAL NOT NULL,
+    current_dept REAL NOT NULL,
+
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    create_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (group_id) REFERENCES groups(id),
+    FOREIGN KEY (user_id) REFERENCES users(id)
 );
 
 CREATE TABLE IF NOT EXISTS group_member_transactions (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    group_id INTEGER NOT NULL,
-    from_user_id INTEGER NOT NULL,
-    to_user_id INTEGER NOT NULL,
+    
+    from_receipt_id INTEGER NOT NULL,
+    to_receipt_id INTEGER NOT NULL,
+
     state TEXT NOT NULL,
-    cost REAL NOT NULL,
+    amount REAL NOT NULL,
+
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     payed_at TEXT DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (group_id) REFERENCES groups(id),
-    FOREIGN KEY (from_user_id) REFERENCES users(id),
-    FOREIGN KEY (to_user_id) REFERENCES users(id)
+
+    FOREIGN KEY (from_receipt_id) REFERENCES group_member_receipts(id),
+    FOREIGN KEY (to_receipt_id) REFERENCES group_member_receipts(id)
 );

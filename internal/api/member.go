@@ -14,20 +14,19 @@ import (
 func getMembers(c *fiber.Ctx, db *db.DB) error {
 	ctx := context.Background()
 
-	session := mustGetUserSession(c)
-	group := mustGetGroupSession(c)
+	session := mustGetGroupSession(c)
 
 	members, err := db.Queries.GetGroupMembers(ctx, generated.GetGroupMembersParams{
-		GroupID: group.ID,
-		UserID:  session.UserID.Int64,
+		GroupID: session.GroupID,
+		UserID:  session.UserID,
 	})
 	if err == sql.ErrNoRows || len(members) == 0 {
-		log.Printf("getMembers user(%v) is not member in group(%v)\n", session.UserID.Int64, group.ID)
+		log.Printf("getMembers user(%v) is not member in group(%v)\n", session.UserID, session.GroupID)
 		return fiber.ErrUnauthorized
 	}
 
 	if err != nil {
-		log.Printf("getMembers error getting members for group(%v)\n", group.ID)
+		log.Printf("getMembers error getting members for group(%v)\n", session.GroupID)
 		return fiber.DefaultErrorHandler(c, err)
 	}
 
@@ -37,42 +36,68 @@ func getMembers(c *fiber.Ctx, db *db.DB) error {
 func addMember(c *fiber.Ctx, db *db.DB) error {
 	ctx := context.Background()
 
-	session := mustGetUserSession(c)
-	group := mustGetGroupSession(c)
+	session := mustGetGroupSession(c)
 
 	_, err := db.Queries.GetGroupMember(ctx, generated.GetGroupMemberParams{
-		GroupID: group.ID,
-		UserID:  session.UserID.Int64,
+		GroupID: session.GroupID,
+		UserID:  session.UserID,
 	})
 	if err == nil {
-		log.Printf("addMember user(%v) already member in group(%v)\n", session.UserID.Int64, group.ID)
-		_, err = c.WriteString("user already a member")
-		return err
+		log.Printf("addMember user(%v) already member in group(%v)\n", session.UserID, session.GroupID)
+		return c.SendString("user already a member")
 	}
 	if err != sql.ErrNoRows {
-		log.Printf("addMember error getting member info for user(%v) in group(%v)", session.UserID.Int64, group.ID)
+		log.Printf("addMember error getting member info for user(%v) in group(%v)", session.UserID, session.GroupID)
 		return fiber.DefaultErrorHandler(c, err)
 	}
 
 	if err = db.Queries.UpsertGroupMember(ctx, generated.UpsertGroupMemberParams{
-		GroupID: group.ID,
-		UserID:  session.UserID.Int64,
+		GroupID: session.GroupID,
+		UserID:  session.UserID,
 		State:   string(MemberStateAdding),
 		Role:    string(MemberRoleRegular),
 	}); err != nil {
-		log.Printf("addMember failed to add member(%v) to group(%v)", session.UserID.Int64, group.ID)
+		log.Printf("addMember failed to add member(%v) to group(%v)", session.UserID, session.GroupID)
 		return err
 	}
 
-	_, err = c.WriteString("Member added")
-	return err
+	return c.SendString("Member added")
+}
+
+type UpdateMemberState struct {
+	State MemberState
+}
+
+func updateMemberState(c *fiber.Ctx, db *db.DB) error {
+	ctx := context.Background()
+	payload := new(UpdateMemberState)
+
+	if err := c.BodyParser(payload); err != nil {
+		log.Printf("updateMemberState failed to parse body")
+		return fiber.DefaultErrorHandler(c, err)
+	}
+
+	session := mustGetGroupSession(c)
+
+	if err := db.Queries.UpsertGroupMember(ctx, generated.UpsertGroupMemberParams{
+		GroupID: session.GroupID,
+		UserID:  session.UserID,
+		State:   string(payload.State),
+		Role:    session.MemberRole,
+	}); err != nil {
+		log.Printf("updateMemberState failed to update member state group(%v) for user(%v)", session.GroupID, session.UserID)
+		return fiber.DefaultErrorHandler(c, err)
+	}
+
+	go checkGroupState(session.GroupID, db)
+
+	return c.SendString("Member updated")
 }
 
 func removeMember(c *fiber.Ctx, db *db.DB) error {
 	ctx := context.Background()
 
-	session := mustGetUserSession(c)
-	group := mustGetGroupSession(c)
+	session := mustGetGroupSession(c)
 
 	memberUserId, err := strconv.ParseInt(c.Query("member_id"), 10, 64)
 	if err != nil {
@@ -80,29 +105,23 @@ func removeMember(c *fiber.Ctx, db *db.DB) error {
 		return fiber.DefaultErrorHandler(c, err)
 	}
 
-	user_member, err := db.Queries.GetGroupMember(ctx, generated.GetGroupMemberParams{
-		GroupID: group.ID,
-		UserID:  session.UserID.Int64,
-	})
-
 	if err != nil {
-		log.Printf("removeMember error getting member info for user(%v) in group(%v)", session.UserID.Int64, group.ID)
+		log.Printf("removeMember error getting member info for user(%v) in group(%v)", session.UserID, session.GroupID)
 		return fiber.DefaultErrorHandler(c, err)
 	}
 
-	if user_member.MemberRole != string(MemberRoleAdmin) {
-		log.Printf("removeMember user(%v) is not an admin", session.UserID.Int64)
+	if session.MemberRole != string(MemberRoleAdmin) {
+		log.Printf("removeMember user(%v) is not an admin", session.UserID)
 		return fiber.ErrUnauthorized
 	}
 
 	if err = db.Queries.DeleteGroupMember(ctx, generated.DeleteGroupMemberParams{
-		GroupID: group.ID,
+		GroupID: session.GroupID,
 		UserID:  memberUserId,
 	}); err != nil {
-		log.Printf("removeMember failed to remove member(%v) from group(%v)", memberUserId, group.ID)
+		log.Printf("removeMember failed to remove member(%v) from group(%v)", memberUserId, session.GroupID)
 		return fiber.DefaultErrorHandler(c, err)
 	}
 
-	_, err = c.WriteString("Member removed")
-	return err
+	return c.SendString("Member removed")
 }

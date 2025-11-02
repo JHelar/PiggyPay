@@ -21,7 +21,7 @@ func registerGroupRoutes(app fiber.Router, db *db.DB) {
 	}).Name("getGroups")
 
 	app.Use([]string{fmt.Sprintf("/:%s", GroupIdParam)}, func(c *fiber.Ctx) error {
-		return verifyGroup(c, db)
+		return verifyGroupMember(c, db)
 	})
 
 	app.Get(fmt.Sprintf("/:%s", GroupIdParam), func(ctx *fiber.Ctx) error {

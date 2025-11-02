@@ -64,6 +64,41 @@ SELECT groups.id AS id,
     groups.state AS group_state,
     groups.color_theme AS group_theme,
     groups.created_at AS created_at,
+    groups.updated_at AS updated_at
+    FROM groups
+    WHERE id=?
+    LIMIT 1
+`
+
+type GetGroupByIdRow struct {
+	ID         int64     `json:"id"`
+	GroupName  string    `json:"group_name"`
+	GroupState string    `json:"group_state"`
+	GroupTheme string    `json:"group_theme"`
+	CreatedAt  time.Time `json:"created_at"`
+	UpdatedAt  time.Time `json:"updated_at"`
+}
+
+func (q *Queries) GetGroupById(ctx context.Context, id int64) (GetGroupByIdRow, error) {
+	row := q.db.QueryRowContext(ctx, getGroupById, id)
+	var i GetGroupByIdRow
+	err := row.Scan(
+		&i.ID,
+		&i.GroupName,
+		&i.GroupState,
+		&i.GroupTheme,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const getGroupForUserById = `-- name: GetGroupForUserById :one
+SELECT groups.id AS id,
+    groups.display_name AS group_name,
+    groups.state AS group_state,
+    groups.color_theme AS group_theme,
+    groups.created_at AS created_at,
     groups.updated_at AS updated_at,
     group_members.role AS member_role,
     (
@@ -78,12 +113,12 @@ SELECT groups.id AS id,
     LIMIT 1
 `
 
-type GetGroupByIdParams struct {
+type GetGroupForUserByIdParams struct {
 	ID     int64 `json:"id"`
 	UserID int64 `json:"user_id"`
 }
 
-type GetGroupByIdRow struct {
+type GetGroupForUserByIdRow struct {
 	ID            int64       `json:"id"`
 	GroupName     string      `json:"group_name"`
 	GroupState    string      `json:"group_state"`
@@ -94,9 +129,9 @@ type GetGroupByIdRow struct {
 	TotalExpenses interface{} `json:"total_expenses"`
 }
 
-func (q *Queries) GetGroupById(ctx context.Context, arg GetGroupByIdParams) (GetGroupByIdRow, error) {
-	row := q.db.QueryRowContext(ctx, getGroupById, arg.ID, arg.UserID)
-	var i GetGroupByIdRow
+func (q *Queries) GetGroupForUserById(ctx context.Context, arg GetGroupForUserByIdParams) (GetGroupForUserByIdRow, error) {
+	row := q.db.QueryRowContext(ctx, getGroupForUserById, arg.ID, arg.UserID)
+	var i GetGroupForUserByIdRow
 	err := row.Scan(
 		&i.ID,
 		&i.GroupName,

@@ -16,16 +16,15 @@ const ExpenseIdParam = "expenseId"
 func getExpenses(c *fiber.Ctx, db *db.DB) error {
 	ctx := context.Background()
 
-	session := mustGetUserSession(c)
-	group := mustGetGroupSession(c)
+	session := mustGetGroupSession(c)
 
 	expenses, err := db.Queries.GetGroupExpenses(ctx, generated.GetGroupExpensesParams{
-		GroupID: group.ID,
-		UserID:  session.UserID.Int64,
+		GroupID: session.GroupID,
+		UserID:  session.UserID,
 	})
 
 	if err != nil {
-		log.Printf("getExpenses failed to get group(%v) expenses for user(%v)", group.ID, session.UserID.Int64)
+		log.Printf("getExpenses failed to get group(%v) expenses for user(%v)", session.GroupID, session.UserID)
 		return fiber.DefaultErrorHandler(c, err)
 	}
 
@@ -41,17 +40,16 @@ func getExpense(c *fiber.Ctx, db *db.DB) error {
 		return fiber.ErrInternalServerError
 	}
 
-	session := mustGetUserSession(c)
-	group := mustGetGroupSession(c)
+	session := mustGetGroupSession(c)
 
 	expense, err := db.Queries.GetExpenseById(ctx, generated.GetExpenseByIdParams{
 		ID:      expenseId,
-		UserID:  session.UserID.Int64,
-		GroupID: group.ID,
+		UserID:  session.UserID,
+		GroupID: session.GroupID,
 	})
 
 	if err != nil {
-		log.Printf("getExpense failed to get expense(%v) for user(%v)", expenseId, session.UserID.Int64)
+		log.Printf("getExpense failed to get expense(%v) for user(%v)", expenseId, session.UserID)
 		return fiber.DefaultErrorHandler(c, err)
 	}
 
@@ -72,8 +70,12 @@ func addExpense(c *fiber.Ctx, db *db.DB) error {
 		return fiber.DefaultErrorHandler(c, err)
 	}
 
-	session := mustGetUserSession(c)
-	group := mustGetGroupSession(c)
+	session := mustGetGroupSession(c)
+
+	group, _ := db.Queries.GetGroupForUserById(ctx, generated.GetGroupForUserByIdParams{
+		ID:     session.GroupID,
+		UserID: session.UserID,
+	})
 
 	if !canModifyExpenses(GroupState(group.GroupState)) {
 		log.Printf("addExpense cannot add expense in the group with state(%s)", group.GroupState)
@@ -86,32 +88,32 @@ func addExpense(c *fiber.Ctx, db *db.DB) error {
 	expense, err := db.Queries.AddExpense(ctx, generated.AddExpenseParams{
 		Name:    payload.ExpenseName,
 		Cost:    payload.ExpenseCost,
-		GroupID: group.ID,
-		UserID:  session.UserID.Int64,
+		GroupID: session.GroupID,
+		UserID:  session.UserID,
 	})
 
 	if err != nil {
-		log.Printf("addExpense failed to add expense for user(%v) in group(%v)", session.UserID.Int64, group.ID)
+		log.Printf("addExpense failed to add expense for user(%v) in group(%v)", session.UserID, session.GroupID)
 		return fiber.DefaultErrorHandler(c, err)
 	}
 
 	if group.GroupState != string(GroupStateExpenses) {
 		if err := db.Queries.UpdateGroupState(ctx, generated.UpdateGroupStateParams{
 			State:  string(GroupStateExpenses),
-			ID:     group.ID,
-			UserID: session.UserID.Int64,
+			ID:     session.GroupID,
+			UserID: session.UserID,
 		}); err != nil {
-			log.Printf("addExpense failed to update group state for user(%v) in group(%v)", session.UserID.Int64, group.ID)
+			log.Printf("addExpense failed to update group state for user(%v) in group(%v)", session.UserID, session.GroupID)
 		}
 	}
 
 	if err := db.Queries.UpsertGroupMember(ctx, generated.UpsertGroupMemberParams{
-		GroupID: group.ID,
-		UserID:  session.UserID.Int64,
+		GroupID: session.GroupID,
+		UserID:  session.UserID,
 		State:   string(MemberStateAdding),
-		Role:    group.MemberRole,
+		Role:    session.MemberRole,
 	}); err != nil {
-		log.Printf("addExpense failed to update member state for user(%v) in group(%v)", session.UserID.Int64, group.ID)
+		log.Printf("addExpense failed to update member state for user(%v) in group(%v)", session.UserID, session.GroupID)
 	}
 
 	return c.JSON(expense)
@@ -137,8 +139,11 @@ func updateExpense(c *fiber.Ctx, db *db.DB) error {
 		return fiber.ErrInternalServerError
 	}
 
-	session := mustGetUserSession(c)
-	group := mustGetGroupSession(c)
+	session := mustGetGroupSession(c)
+	group, _ := db.Queries.GetGroupForUserById(ctx, generated.GetGroupForUserByIdParams{
+		ID:     session.GroupID,
+		UserID: session.UserID,
+	})
 
 	if !canModifyExpenses(GroupState(group.GroupState)) {
 		log.Printf("updateExpense cannot update expense in the group with state(%s)", group.GroupState)
@@ -152,8 +157,8 @@ func updateExpense(c *fiber.Ctx, db *db.DB) error {
 		Cost:    payload.ExpenseCost,
 		Name:    payload.ExpenseName,
 		ID:      expenseId,
-		GroupID: group.ID,
-		UserID:  session.UserID.Int64,
+		GroupID: session.GroupID,
+		UserID:  session.UserID,
 	})
 
 	if err != nil {
@@ -162,7 +167,7 @@ func updateExpense(c *fiber.Ctx, db *db.DB) error {
 			return fiber.ErrNotFound
 		}
 
-		log.Printf("updateExpense failed to update expense(%v) for user(%v)", expenseId, session.UserID.Int64)
+		log.Printf("updateExpense failed to update expense(%v) for user(%v)", expenseId, session.UserID)
 		return fiber.ErrInternalServerError
 	}
 
@@ -170,19 +175,19 @@ func updateExpense(c *fiber.Ctx, db *db.DB) error {
 		if err := db.Queries.UpdateGroupState(ctx, generated.UpdateGroupStateParams{
 			State:  string(GroupStateExpenses),
 			ID:     group.ID,
-			UserID: session.UserID.Int64,
+			UserID: session.UserID,
 		}); err != nil {
-			log.Printf("updateExpense failed to update group state for user(%v) in group(%v)", session.UserID.Int64, group.ID)
+			log.Printf("updateExpense failed to update group state for user(%v) in group(%v)", session.UserID, group.ID)
 		}
 	}
 
 	if err := db.Queries.UpsertGroupMember(ctx, generated.UpsertGroupMemberParams{
 		GroupID: group.ID,
-		UserID:  session.UserID.Int64,
+		UserID:  session.UserID,
 		State:   string(MemberStateAdding),
 		Role:    group.MemberRole,
 	}); err != nil {
-		log.Printf("updateExpense failed to update member state for user(%v) in group(%v)", session.UserID.Int64, group.ID)
+		log.Printf("updateExpense failed to update member state for user(%v) in group(%v)", session.UserID, group.ID)
 	}
 
 	return c.JSON(expense)
@@ -193,27 +198,25 @@ func removeExpense(c *fiber.Ctx, db *db.DB) error {
 
 	expenseId, err := strconv.ParseInt(c.Params(ExpenseIdParam), 10, 64)
 	if err != nil {
-		log.Printf("removeExpense failed to convert group id")
+		log.Printf("removeExpense failed to convert expense id")
 		return fiber.ErrInternalServerError
 	}
 
-	session := mustGetUserSession(c)
-	group := mustGetGroupSession(c)
+	session := mustGetGroupSession(c)
 
 	if err := db.Queries.RemoveExpense(ctx, generated.RemoveExpenseParams{
 		ID:      expenseId,
-		UserID:  session.UserID.Int64,
-		GroupID: group.ID,
+		UserID:  session.UserID,
+		GroupID: session.GroupID,
 	}); err != nil {
 		if err == sql.ErrNoRows {
 			log.Printf("removeExpense no expense found")
 			return fiber.ErrNotFound
 		}
 
-		log.Printf("removeExpense failed to delete expense(%v) for user(%v)", expenseId, session.UserID.Int64)
+		log.Printf("removeExpense failed to delete expense(%v) for user(%v)", expenseId, session.UserID)
 		return fiber.ErrInternalServerError
 	}
 
-	_, err = c.WriteString("Expense removed")
-	return err
+	return c.SendString("Expense removed")
 }

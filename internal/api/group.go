@@ -53,7 +53,7 @@ func canModifyExpenses(groupState GroupState) bool {
 const GroupSessionLocal = "groupSession"
 const GroupIdParam = "groupId"
 
-func verifyGroup(c *fiber.Ctx, db *db.DB) error {
+func verifyGroupMember(c *fiber.Ctx, db *db.DB) error {
 	ctx := context.Background()
 
 	groupId, err := strconv.ParseInt(c.Params(GroupIdParam), 10, 64)
@@ -64,9 +64,9 @@ func verifyGroup(c *fiber.Ctx, db *db.DB) error {
 
 	session := mustGetUserSession(c)
 
-	group, err := db.Queries.GetGroupById(ctx, generated.GetGroupByIdParams{
-		ID:     groupId,
-		UserID: session.UserID.Int64,
+	member, err := db.Queries.GetGroupMember(ctx, generated.GetGroupMemberParams{
+		GroupID: groupId,
+		UserID:  session.UserID.Int64,
 	})
 
 	if err != nil {
@@ -74,12 +74,12 @@ func verifyGroup(c *fiber.Ctx, db *db.DB) error {
 		return fiber.ErrUnauthorized
 	}
 
-	c.Locals(GroupSessionLocal, group)
+	c.Locals(GroupSessionLocal, member)
 	return c.Next()
 }
 
-func mustGetGroupSession(c *fiber.Ctx) generated.GetGroupByIdRow {
-	return c.Locals(GroupSessionLocal).(generated.GetGroupByIdRow)
+func mustGetGroupSession(c *fiber.Ctx) generated.GetGroupMemberRow {
+	return c.Locals(GroupSessionLocal).(generated.GetGroupMemberRow)
 }
 
 type CreateGroup struct {
@@ -169,9 +169,7 @@ func updateGroup(c *fiber.Ctx, db *db.DB) error {
 	ctx := context.Background()
 	payload := new(UpdateGroup)
 
-	session := mustGetUserSession(c)
-
-	groupSession := mustGetGroupSession(c)
+	session := mustGetGroupSession(c)
 
 	if err := c.BodyParser(payload); err != nil {
 		log.Printf("updateGroup failed to parse payload")
@@ -181,8 +179,8 @@ func updateGroup(c *fiber.Ctx, db *db.DB) error {
 	group, err := db.Queries.UpdateGroupById(ctx, generated.UpdateGroupByIdParams{
 		DisplayName: payload.DisplayName,
 		ColorTheme:  payload.ColorTheme,
-		ID:          groupSession.ID,
-		UserID:      session.UserID.Int64,
+		ID:          session.GroupID,
+		UserID:      session.UserID,
 	})
 
 	if err != nil && err == sql.ErrNoRows {
@@ -201,18 +199,26 @@ func updateGroup(c *fiber.Ctx, db *db.DB) error {
 func deleteGroup(c *fiber.Ctx, db *db.DB) error {
 	ctx := context.Background()
 
-	session := mustGetUserSession(c)
-	group := mustGetGroupSession(c)
+	session := mustGetGroupSession(c)
 
 	if err := db.Queries.DeleteGroupById(ctx, generated.DeleteGroupByIdParams{
-		ID:     group.ID,
+		ID:     session.GroupID,
 		Role:   string(MemberRoleAdmin),
-		UserID: session.UserID.Int64,
+		UserID: session.UserID,
 	}); err != nil {
 		log.Printf("deleteGroup failed to delete group\n")
 		return fiber.DefaultErrorHandler(c, err)
 	}
 
-	_, err := c.WriteString("Group deleted")
-	return err
+	return c.SendString("Group deleted")
+}
+
+func checkGroupState(groupId int64, db *db.DB) {
+	ctx := context.Background()
+	group, err := db.Queries.GetGroupById(ctx, groupId)
+
+	if err != nil {
+		log.Printf("checkGroupState failed to get group(%v)", groupId)
+		return
+	}
 }
