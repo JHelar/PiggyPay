@@ -16,7 +16,7 @@ func getMembers(c *fiber.Ctx, db *db.DB) error {
 
 	session := mustGetGroupSession(c)
 
-	members, err := db.Queries.GetGroupMembers(ctx, generated.GetGroupMembersParams{
+	members, err := db.Queries.GetGroupMembersForUser(ctx, generated.GetGroupMembersForUserParams{
 		GroupID: session.GroupID,
 		UserID:  session.UserID,
 	})
@@ -89,7 +89,15 @@ func updateMemberState(c *fiber.Ctx, db *db.DB) error {
 		return fiber.DefaultErrorHandler(c, err)
 	}
 
-	go checkGroupState(session.GroupID, db)
+	go func() {
+		group, _ := db.Queries.GetGroupForUserById(ctx, generated.GetGroupForUserByIdParams{
+			ID:     session.GroupID,
+			UserID: session.UserID,
+		})
+		if group.GroupState == string(GroupStateExpenses) {
+			checkGroupReadyState(session.GroupID, db)
+		}
+	}()
 
 	return c.SendString("Member updated")
 }
@@ -102,11 +110,6 @@ func removeMember(c *fiber.Ctx, db *db.DB) error {
 	memberUserId, err := strconv.ParseInt(c.Query("member_id"), 10, 64)
 	if err != nil {
 		log.Println("addMember failed to convert member_id id")
-		return fiber.DefaultErrorHandler(c, err)
-	}
-
-	if err != nil {
-		log.Printf("removeMember error getting member info for user(%v) in group(%v)", session.UserID, session.GroupID)
 		return fiber.DefaultErrorHandler(c, err)
 	}
 

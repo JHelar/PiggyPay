@@ -12,7 +12,9 @@ type Querier interface {
 	AddExpense(ctx context.Context, arg AddExpenseParams) (AddExpenseRow, error)
 	CreateExistingUserSession(ctx context.Context, arg CreateExistingUserSessionParams) (string, error)
 	CreateGroup(ctx context.Context, arg CreateGroupParams) (Group, error)
+	CreateMemberTransaction(ctx context.Context, arg CreateMemberTransactionParams) error
 	CreateNewUserSession(ctx context.Context, arg CreateNewUserSessionParams) (string, error)
+	CreateReceipt(ctx context.Context, arg CreateReceiptParams) (CreateReceiptRow, error)
 	CreateSignInToken(ctx context.Context, arg CreateSignInTokenParams) (string, error)
 	CreateUser(ctx context.Context, arg CreateUserParams) (int64, error)
 	DeleteGroupById(ctx context.Context, arg DeleteGroupByIdParams) error
@@ -20,11 +22,11 @@ type Querier interface {
 	DeleteUser(ctx context.Context, id int64) error
 	DeleteUserSessionById(ctx context.Context, id string) error
 	GetExpenseById(ctx context.Context, arg GetExpenseByIdParams) (GetExpenseByIdRow, error)
-	GetGroupById(ctx context.Context, id int64) (GetGroupByIdRow, error)
 	GetGroupExpenses(ctx context.Context, arg GetGroupExpensesParams) ([]GetGroupExpensesRow, error)
 	GetGroupForUserById(ctx context.Context, arg GetGroupForUserByIdParams) (GetGroupForUserByIdRow, error)
 	GetGroupMember(ctx context.Context, arg GetGroupMemberParams) (GetGroupMemberRow, error)
-	GetGroupMembers(ctx context.Context, arg GetGroupMembersParams) ([]GetGroupMembersRow, error)
+	GetGroupMemberTotals(ctx context.Context, groupID int64) ([]GetGroupMemberTotalsRow, error)
+	GetGroupMembersForUser(ctx context.Context, arg GetGroupMembersForUserParams) ([]GetGroupMembersForUserRow, error)
 	GetGroupsByUserId(ctx context.Context, userID int64) ([]GetGroupsByUserIdRow, error)
 	GetSignInToken(ctx context.Context, id string) (GetSignInTokenRow, error)
 	GetUserByEmail(ctx context.Context, email string) (User, error)
@@ -34,6 +36,7 @@ type Querier interface {
 	UpdateExpense(ctx context.Context, arg UpdateExpenseParams) (UpdateExpenseRow, error)
 	UpdateGroupById(ctx context.Context, arg UpdateGroupByIdParams) (Group, error)
 	UpdateGroupState(ctx context.Context, arg UpdateGroupStateParams) error
+	UpdateGroupStateIfMembersIsInState(ctx context.Context, arg UpdateGroupStateIfMembersIsInStateParams) error
 	UpdateUser(ctx context.Context, arg UpdateUserParams) (UpdateUserRow, error)
 	UpdateUserSession(ctx context.Context, arg UpdateUserSessionParams) error
 	UpsertGroupMember(ctx context.Context, arg UpsertGroupMemberParams) error

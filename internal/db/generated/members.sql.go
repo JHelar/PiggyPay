@@ -54,7 +54,46 @@ func (q *Queries) GetGroupMember(ctx context.Context, arg GetGroupMemberParams) 
 	return i, err
 }
 
-const getGroupMembers = `-- name: GetGroupMembers :many
+const getGroupMemberTotals = `-- name: GetGroupMemberTotals :many
+SELECT user_id, (
+        SELECT IFNULL(SUM(group_expenses.cost), 0.0)
+        FROM group_expenses
+        WHERE group_expenses.group_id = group_members.group_id 
+            AND group_expenses.user_id=group_members.user_id
+    ) as total
+    FROM group_members
+    WHERE group_members.group_id=?
+`
+
+type GetGroupMemberTotalsRow struct {
+	UserID int64       `json:"user_id"`
+	Total  interface{} `json:"total"`
+}
+
+func (q *Queries) GetGroupMemberTotals(ctx context.Context, groupID int64) ([]GetGroupMemberTotalsRow, error) {
+	rows, err := q.db.QueryContext(ctx, getGroupMemberTotals, groupID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []GetGroupMemberTotalsRow{}
+	for rows.Next() {
+		var i GetGroupMemberTotalsRow
+		if err := rows.Scan(&i.UserID, &i.Total); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getGroupMembersForUser = `-- name: GetGroupMembersForUser :many
 SELECT 
     users.first_name AS first_name, 
     users.last_name AS last_name, 
@@ -73,27 +112,27 @@ SELECT
     )
 `
 
-type GetGroupMembersParams struct {
+type GetGroupMembersForUserParams struct {
 	GroupID int64 `json:"group_id"`
 	UserID  int64 `json:"user_id"`
 }
 
-type GetGroupMembersRow struct {
+type GetGroupMembersForUserRow struct {
 	FirstName  string `json:"first_name"`
 	LastName   string `json:"last_name"`
 	MemberID   int64  `json:"member_id"`
 	MemberRole string `json:"member_role"`
 }
 
-func (q *Queries) GetGroupMembers(ctx context.Context, arg GetGroupMembersParams) ([]GetGroupMembersRow, error) {
-	rows, err := q.db.QueryContext(ctx, getGroupMembers, arg.GroupID, arg.UserID)
+func (q *Queries) GetGroupMembersForUser(ctx context.Context, arg GetGroupMembersForUserParams) ([]GetGroupMembersForUserRow, error) {
+	rows, err := q.db.QueryContext(ctx, getGroupMembersForUser, arg.GroupID, arg.UserID)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []GetGroupMembersRow{}
+	items := []GetGroupMembersForUserRow{}
 	for rows.Next() {
-		var i GetGroupMembersRow
+		var i GetGroupMembersForUserRow
 		if err := rows.Scan(
 			&i.FirstName,
 			&i.LastName,

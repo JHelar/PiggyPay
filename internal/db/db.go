@@ -39,3 +39,21 @@ func New() *DB {
 		db:      db,
 	}
 }
+
+func (db *DB) RunAsTransaction(ctx context.Context, queries func(*generated.Queries) error) error {
+	tx, err := db.db.BeginTx(ctx, &sql.TxOptions{
+		Isolation: sql.LevelDefault,
+		ReadOnly:  false,
+	})
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	qtx := db.Queries.WithTx(tx)
+	if err := queries(qtx); err != nil {
+		return err
+	}
+
+	return tx.Commit()
+}

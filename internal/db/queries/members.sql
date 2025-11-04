@@ -12,7 +12,7 @@ SELECT group_id, user_id, state AS member_state, role AS member_role FROM group_
     WHERE group_id=? AND user_id=?
     LIMIT 1;
 
--- name: GetGroupMembers :many
+-- name: GetGroupMembersForUser :many
 SELECT 
     users.first_name AS first_name, 
     users.last_name AS last_name, 
@@ -30,6 +30,15 @@ SELECT
         AND group_members_check.user_id=?
     );
 
+-- name: GetGroupMemberTotals :many
+SELECT user_id, (
+        SELECT IFNULL(SUM(group_expenses.cost), 0.0)
+        FROM group_expenses
+        WHERE group_expenses.group_id = group_members.group_id 
+            AND group_expenses.user_id=group_members.user_id
+    ) as total
+    FROM group_members
+    WHERE group_members.group_id=?;
         
 -- name: DeleteGroupMember :exec
 DELETE FROM group_members

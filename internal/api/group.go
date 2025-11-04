@@ -3,11 +3,13 @@ package api
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"log"
 	"strconv"
 
 	"github.com/JHelar/PiggyPay.git/internal/db"
 	"github.com/JHelar/PiggyPay.git/internal/db/generated"
+	"github.com/JHelar/PiggyPay.git/pkg/utils"
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -15,6 +17,7 @@ type ColorTheme string
 type GroupState string
 type MemberState string
 type MemberRole string
+type TransactionState string
 
 const (
 	ColorThemeBlue  ColorTheme = "color_theme:blue"
@@ -22,10 +25,10 @@ const (
 )
 
 const (
-	GroupStateExpenses GroupState = "group_state:expenses"
-	GroupStateWaiting  GroupState = "group_state:waiting"
-	GroupStatePaying   GroupState = "group_state:paying"
-	GroupStateResolved GroupState = "group_state:resolved"
+	GroupStateExpenses   GroupState = "group_state:expenses"
+	GroupStateGenerating GroupState = "group_state:generating"
+	GroupStatePaying     GroupState = "group_state:paying"
+	GroupStateResolved   GroupState = "group_state:resolved"
 )
 
 const (
@@ -35,19 +38,18 @@ const (
 
 const (
 	MemberStateAdding   MemberState = "member_state:adding"
+	MemberStateReady    MemberState = "member_state:ready"
 	MemberStateResolved MemberState = "member_state:resolved"
 	MemberStatePaying   MemberState = "member_state:paying"
 )
 
-func canModifyExpenses(groupState GroupState) bool {
-	if groupState == GroupStateExpenses {
-		return true
-	}
-	if groupState == GroupStateWaiting {
-		return true
-	}
+const (
+	TransactionStateUnpaid TransactionState = "transaction_state:unpaid"
+	TransactionStatePaid   TransactionState = "transaction_state:Paid"
+)
 
-	return false
+func canModifyExpenses(groupState GroupState) bool {
+	return groupState == GroupStateExpenses
 }
 
 const GroupSessionLocal = "groupSession"
@@ -213,12 +215,76 @@ func deleteGroup(c *fiber.Ctx, db *db.DB) error {
 	return c.SendString("Group deleted")
 }
 
-func checkGroupState(groupId int64, db *db.DB) {
+func checkGroupReadyState(groupId int64, db *db.DB) {
 	ctx := context.Background()
-	group, err := db.Queries.GetGroupById(ctx, groupId)
+	if err := db.RunAsTransaction(ctx, func(q *generated.Queries) error {
+		err := q.UpdateGroupStateIfMembersIsInState(ctx, generated.UpdateGroupStateIfMembersIsInStateParams{
+			ID:      groupId,
+			State:   string(GroupStateGenerating),
+			State_2: string(GroupStateExpenses),
+			State_3: string(MemberStateReady),
+		})
 
-	if err != nil {
-		log.Printf("checkGroupState failed to get group(%v)", groupId)
+		if err == sql.ErrNoRows {
+			return fmt.Errorf("checkGroupReadyState group not updated")
+		}
+
+		// Create members
+		members, err := q.GetGroupMemberTotals(ctx, groupId)
+
+		if err != nil {
+			return fmt.Errorf("checkGroupReadyState failed to get group member totals")
+		}
+
+		groupTotal := 0.0
+		for _, member := range members {
+			groupTotal = groupTotal + member.Total.(float64)
+		}
+
+		payPerMember := groupTotal / float64(len(members))
+		var receipts []generated.CreateReceiptRow
+
+		for _, member := range members {
+			total_dept := member.Total.(float64) - payPerMember
+
+			receipt, err := q.CreateReceipt(ctx, generated.CreateReceiptParams{
+				GroupID:     groupId,
+				UserID:      member.UserID,
+				TotalDept:   total_dept,
+				CurrentDept: total_dept,
+			})
+
+			if err != nil {
+				return err
+			}
+
+			receipts = append(receipts, receipt)
+		}
+
+		transactions, err := utils.BalanceReceipts(receipts)
+		if err != nil {
+			return fmt.Errorf("checkGroupReadyState failed to balance receipts, %v", err.Error())
+		}
+		for _, transaction := range transactions {
+			q.CreateMemberTransaction(ctx, generated.CreateMemberTransactionParams{
+				FromReceiptID: transaction.FromID,
+				ToReceiptID:   transaction.ToID,
+				State:         string(TransactionStateUnpaid),
+				Amount:        transaction.Cost,
+			})
+		}
+
+		if err := q.UpdateGroupStateIfMembersIsInState(ctx, generated.UpdateGroupStateIfMembersIsInStateParams{
+			ID:      groupId,
+			State:   string(GroupStatePaying),
+			State_2: string(GroupStateGenerating),
+			State_3: string(MemberStateReady),
+		}); err != nil {
+			return fmt.Errorf("checkGroupReadyState error updating group state: %v", err.Error())
+		}
+		return nil
+	}); err != nil {
+		log.Printf("checkGroupReadyState failed to create receipts: %v", err.Error())
 		return
 	}
 }
