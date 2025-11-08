@@ -82,15 +82,50 @@ func payTransaction(c *fiber.Ctx, db *db.DB) error {
 
 	session := mustGetTransactionSession(c)
 
-	if err := db.Queries.PayUserGroupTransaction(ctx, generated.PayUserGroupTransactionParams{
-		FromState: string(TransactionStateUnpaid),
-		ToState:   string(TransactionStatePaid),
-		UserID:    session.UserID,
-		GroupID:   session.GroupID,
-		ID:        session.TransactionID,
-	}); err != nil {
-		fmt.Printf("getTransaction failed to pay transaction(%v) for user(%v) and group(%v)", session.TransactionID, session.UserID, session.GroupID)
-		return fiber.DefaultErrorHandler(c, err)
+	var currentUserDept float64
+	err := db.RunAsTransaction(ctx, func(q *generated.Queries) error {
+		transaction, err := q.PayUserGroupTransaction(ctx, generated.PayUserGroupTransactionParams{
+			FromState: string(TransactionStateUnpaid),
+			ToState:   string(TransactionStatePaid),
+			UserID:    session.UserID,
+			GroupID:   session.GroupID,
+			ID:        session.TransactionID,
+		})
+		if err != nil {
+			fmt.Printf("payTransaction failed to pay transaction(%v) for user(%v) and group(%v)", session.TransactionID, session.UserID, session.GroupID)
+			return fiber.DefaultErrorHandler(c, err)
+		}
+
+		receipt, err := q.UpdateReceiptDeptById(ctx, generated.UpdateReceiptDeptByIdParams{
+			Amount:    transaction.Amount,
+			ReceiptID: transaction.FromReceiptID,
+		})
+		if err != nil {
+			fmt.Printf("payTransaction failed to update receipt(%v) for user(%v) and group(%v)", transaction.FromReceiptID, session.UserID, session.GroupID)
+			return fiber.DefaultErrorHandler(c, err)
+		}
+
+		currentUserDept = receipt.CurrentDept
+		if currentUserDept == 0 {
+			if err := q.UpsertGroupMember(ctx, generated.UpsertGroupMemberParams{
+				GroupID: session.GroupID,
+				UserID:  session.UserID,
+				Role:    session.MemberRole,
+				State:   string(MemberStateResolved),
+			}); err != nil {
+				fmt.Printf("payTransaction failed to update member state for user(%v) and group(%v)", session.UserID, session.GroupID)
+				return fiber.DefaultErrorHandler(c, err)
+			}
+		}
+		return nil
+	})
+
+	if err != nil {
+		return err
+	}
+
+	if currentUserDept == 0 {
+		go checkGroupResolvedState(session.GroupID, db)
 	}
 
 	return c.SendString("Transaction payed")

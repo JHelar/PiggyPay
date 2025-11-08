@@ -34,12 +34,13 @@ type Querier interface {
 	GetUserGroupTransaction(ctx context.Context, arg GetUserGroupTransactionParams) (GetUserGroupTransactionRow, error)
 	GetUserGroupTransactions(ctx context.Context, arg GetUserGroupTransactionsParams) ([]GetUserGroupTransactionsRow, error)
 	GetUserSessionById(ctx context.Context, id string) (GetUserSessionByIdRow, error)
-	PayUserGroupTransaction(ctx context.Context, arg PayUserGroupTransactionParams) error
+	PayUserGroupTransaction(ctx context.Context, arg PayUserGroupTransactionParams) (GroupMemberTransaction, error)
 	RemoveExpense(ctx context.Context, arg RemoveExpenseParams) error
 	UpdateExpense(ctx context.Context, arg UpdateExpenseParams) (UpdateExpenseRow, error)
 	UpdateGroupById(ctx context.Context, arg UpdateGroupByIdParams) (Group, error)
 	UpdateGroupState(ctx context.Context, arg UpdateGroupStateParams) error
 	UpdateGroupStateIfMembersIsInState(ctx context.Context, arg UpdateGroupStateIfMembersIsInStateParams) error
+	UpdateReceiptDeptById(ctx context.Context, arg UpdateReceiptDeptByIdParams) (GroupMemberReceipt, error)
 	UpdateUser(ctx context.Context, arg UpdateUserParams) (UpdateUserRow, error)
 	UpdateUserSession(ctx context.Context, arg UpdateUserSessionParams) error
 	UpsertGroupMember(ctx context.Context, arg UpsertGroupMemberParams) error

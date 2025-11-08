@@ -219,10 +219,10 @@ func checkGroupReadyState(groupId int64, db *db.DB) {
 	ctx := context.Background()
 	if err := db.RunAsTransaction(ctx, func(q *generated.Queries) error {
 		err := q.UpdateGroupStateIfMembersIsInState(ctx, generated.UpdateGroupStateIfMembersIsInStateParams{
-			ID:      groupId,
-			State:   string(GroupStateGenerating),
-			State_2: string(GroupStateExpenses),
-			State_3: string(MemberStateReady),
+			GroupID:          groupId,
+			ToGroupState:     string(GroupStateGenerating),
+			CheckGroupState:  string(GroupStateGenerating),
+			CheckMemberState: string(MemberStateReady),
 		})
 
 		if err == sql.ErrNoRows {
@@ -275,16 +275,29 @@ func checkGroupReadyState(groupId int64, db *db.DB) {
 		}
 
 		if err := q.UpdateGroupStateIfMembersIsInState(ctx, generated.UpdateGroupStateIfMembersIsInStateParams{
-			ID:      groupId,
-			State:   string(GroupStatePaying),
-			State_2: string(GroupStateGenerating),
-			State_3: string(MemberStateReady),
+			GroupID:          groupId,
+			ToGroupState:     string(GroupStatePaying),
+			CheckGroupState:  string(GroupStateGenerating),
+			CheckMemberState: string(MemberStateReady),
 		}); err != nil {
 			return fmt.Errorf("checkGroupReadyState error updating group state: %v", err.Error())
 		}
 		return nil
 	}); err != nil {
 		log.Printf("checkGroupReadyState failed to create receipts: %v", err.Error())
+		return
+	}
+}
+
+func checkGroupResolvedState(groupId int64, db *db.DB) {
+	ctx := context.Background()
+	if err := db.Queries.UpdateGroupStateIfMembersIsInState(ctx, generated.UpdateGroupStateIfMembersIsInStateParams{
+		GroupID:          groupId,
+		ToGroupState:     string(GroupStateResolved),
+		CheckGroupState:  string(GroupStatePaying),
+		CheckMemberState: string(MemberStateResolved),
+	}); err != nil {
+		log.Printf("checkGroupResolvedState failed to update group state: %v", err.Error())
 		return
 	}
 }

@@ -150,7 +150,7 @@ func (q *Queries) GetUserGroupTransactions(ctx context.Context, arg GetUserGroup
 	return items, nil
 }
 
-const payUserGroupTransaction = `-- name: PayUserGroupTransaction :exec
+const payUserGroupTransaction = `-- name: PayUserGroupTransaction :one
 UPDATE group_member_transactions
 SET state=?,payed_at=CURRENT_TIMESTAMP
 WHERE id=(
@@ -159,10 +159,12 @@ WHERE id=(
                 ON group_member_receipts.id=group_member_transactions.from_receipt_id
             WHERE 
                 group_member_receipts.user_id=? 
+                AND group_member_receipts.current_dept > 0
                 AND group_member_receipts.group_id=?
                 AND group_member_transactions.id=?
                 AND group_member_transactions.state=?
     )
+RETURNING id, from_receipt_id, to_receipt_id, state, amount, created_at, payed_at
 `
 
 type PayUserGroupTransactionParams struct {
@@ -173,13 +175,23 @@ type PayUserGroupTransactionParams struct {
 	FromState string `json:"from_state"`
 }
 
-func (q *Queries) PayUserGroupTransaction(ctx context.Context, arg PayUserGroupTransactionParams) error {
-	_, err := q.db.ExecContext(ctx, payUserGroupTransaction,
+func (q *Queries) PayUserGroupTransaction(ctx context.Context, arg PayUserGroupTransactionParams) (GroupMemberTransaction, error) {
+	row := q.db.QueryRowContext(ctx, payUserGroupTransaction,
 		arg.ToState,
 		arg.UserID,
 		arg.GroupID,
 		arg.ID,
 		arg.FromState,
 	)
-	return err
+	var i GroupMemberTransaction
+	err := row.Scan(
+		&i.ID,
+		&i.FromReceiptID,
+		&i.ToReceiptID,
+		&i.State,
+		&i.Amount,
+		&i.CreatedAt,
+		&i.PayedAt,
+	)
+	return i, err
 }

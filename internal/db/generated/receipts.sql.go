@@ -38,3 +38,30 @@ func (q *Queries) CreateReceipt(ctx context.Context, arg CreateReceiptParams) (C
 	err := row.Scan(&i.ID, &i.UserID, &i.TotalDept)
 	return i, err
 }
+
+const updateReceiptDeptById = `-- name: UpdateReceiptDeptById :one
+UPDATE group_member_receipts
+SET current_dept=current_dept-?1,updated_at=CURRENT_TIMESTAMP
+WHERE id=?2
+RETURNING id, group_id, user_id, total_dept, current_dept, updated_at, create_at
+`
+
+type UpdateReceiptDeptByIdParams struct {
+	Amount    float64 `json:"amount"`
+	ReceiptID int64   `json:"receipt_id"`
+}
+
+func (q *Queries) UpdateReceiptDeptById(ctx context.Context, arg UpdateReceiptDeptByIdParams) (GroupMemberReceipt, error) {
+	row := q.db.QueryRowContext(ctx, updateReceiptDeptById, arg.Amount, arg.ReceiptID)
+	var i GroupMemberReceipt
+	err := row.Scan(
+		&i.ID,
+		&i.GroupID,
+		&i.UserID,
+		&i.TotalDept,
+		&i.CurrentDept,
+		&i.UpdatedAt,
+		&i.CreateAt,
+	)
+	return i, err
+}

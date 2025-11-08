@@ -239,28 +239,28 @@ func (q *Queries) UpdateGroupState(ctx context.Context, arg UpdateGroupStatePara
 
 const updateGroupStateIfMembersIsInState = `-- name: UpdateGroupStateIfMembersIsInState :exec
 UPDATE groups
-SET state = ?, updated_at = CURRENT_TIMESTAMP
-WHERE id = ? AND groups.state = ?
+SET state = ?1, updated_at = CURRENT_TIMESTAMP
+WHERE id = ?2 AND groups.state = ?3
     AND (
-        SELECT COUNT(*) = SUM(group_members.state = ?)
+        SELECT COUNT(*) = SUM(group_members.state = ?4)
         FROM group_members
         WHERE group_id=groups.id
     )
 `
 
 type UpdateGroupStateIfMembersIsInStateParams struct {
-	State   string `json:"state"`
-	ID      int64  `json:"id"`
-	State_2 string `json:"state_2"`
-	State_3 string `json:"state_3"`
+	ToGroupState     string `json:"to_group_state"`
+	GroupID          int64  `json:"group_id"`
+	CheckGroupState  string `json:"check_group_state"`
+	CheckMemberState string `json:"check_member_state"`
 }
 
 func (q *Queries) UpdateGroupStateIfMembersIsInState(ctx context.Context, arg UpdateGroupStateIfMembersIsInStateParams) error {
 	_, err := q.db.ExecContext(ctx, updateGroupStateIfMembersIsInState,
-		arg.State,
-		arg.ID,
-		arg.State_2,
-		arg.State_3,
+		arg.ToGroupState,
+		arg.GroupID,
+		arg.CheckGroupState,
+		arg.CheckMemberState,
 	)
 	return err
 }

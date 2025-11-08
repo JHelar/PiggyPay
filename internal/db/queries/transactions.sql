@@ -42,7 +42,7 @@ SELECT
         AND from_receipts.user_id=?
         AND from_receipts.group_id=?;
     
--- name: PayUserGroupTransaction :exec
+-- name: PayUserGroupTransaction :one
 UPDATE group_member_transactions
 SET state=@to_state,payed_at=CURRENT_TIMESTAMP
 WHERE id=(
@@ -51,7 +51,9 @@ WHERE id=(
                 ON group_member_receipts.id=group_member_transactions.from_receipt_id
             WHERE 
                 group_member_receipts.user_id=? 
+                AND group_member_receipts.current_dept > 0
                 AND group_member_receipts.group_id=?
                 AND group_member_transactions.id=?
                 AND group_member_transactions.state=@from_state
-    );
+    )
+RETURNING *;
