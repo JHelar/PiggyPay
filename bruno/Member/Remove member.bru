@@ -4,14 +4,18 @@ meta {
   seq: 3
 }
 
-get {
-  url: http://localhost:8080/api/v1/groups/2/member?member_id=?
+delete {
+  url: http://localhost:8080/api/v1/groups/3/member?member_id=3
   body: none
   auth: bearer
 }
 
 params:query {
-  member_id: ?
+  member_id: 3
+}
+
+auth:bearer {
+  token: 9300be7bb4d411252bef963beea6f297
 }
 
 settings {

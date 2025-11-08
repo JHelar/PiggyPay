@@ -47,7 +47,7 @@ func balanceReceipts(i int, nodes []*ReceiptNode, transactions *[]Transaction) e
 	}
 	min := nodes[i]
 	if min.TotalDept > 0 {
-		return fmt.Errorf("findTransactions min is larger than 0 was %f", min.TotalDept)
+		return fmt.Errorf("min is larger than 0 was %f", min.TotalDept)
 	}
 
 	for j := len(nodes) - 1; j >= 0; j-- {
@@ -61,7 +61,7 @@ func balanceReceipts(i int, nodes []*ReceiptNode, transactions *[]Transaction) e
 		max := nodes[j]
 
 		if max.TotalDept < 0 {
-			return fmt.Errorf("findTransactions max is less than 0")
+			return fmt.Errorf("max is less than 0 was %f", max.TotalDept)
 		}
 		if max.TotalDept == 0 {
 			continue

@@ -21,4 +21,7 @@ func registerMemberRoutes(app fiber.Router, db *db.DB) {
 	app.Delete("/", func(ctx *fiber.Ctx) error {
 		return removeMember(ctx, db)
 	}).Name("removeMember")
+
+	transactionRouter := app.Group("/transaction")
+	registerTransactionRoutes(transactionRouter, db)
 }

@@ -29,3 +29,157 @@ func (q *Queries) CreateMemberTransaction(ctx context.Context, arg CreateMemberT
 	)
 	return err
 }
+
+const getUserGroupTransaction = `-- name: GetUserGroupTransaction :one
+SELECT 
+    group_member_transactions.from_receipt_id AS from_receipt_id,
+    group_member_transactions.to_receipt_id AS to_receipt_id, 
+    group_member_transactions.state AS transaction_state, 
+    group_member_transactions.amount AS transaction_amount,
+    to_users.first_name AS to_first_name,
+    to_users.last_name AS to_last_name,
+    to_users.phone_number as to_phone_number
+    FROM group_member_transactions
+    INNER JOIN group_member_receipts from_receipts
+        ON group_member_transactions.from_receipt_id=from_receipts.id
+    INNER JOIN group_member_receipts to_receipts
+        ON group_member_transactions.to_receipt_id=to_receipts.id
+    INNER JOIN users to_users
+        ON to_users.id=from_receipts.user_id
+    WHERE
+        group_member_transactions.id=?
+        AND from_receipts.user_id=?
+        AND from_receipts.group_id=?
+`
+
+type GetUserGroupTransactionParams struct {
+	ID      int64 `json:"id"`
+	UserID  int64 `json:"user_id"`
+	GroupID int64 `json:"group_id"`
+}
+
+type GetUserGroupTransactionRow struct {
+	FromReceiptID     int64   `json:"from_receipt_id"`
+	ToReceiptID       int64   `json:"to_receipt_id"`
+	TransactionState  string  `json:"transaction_state"`
+	TransactionAmount float64 `json:"transaction_amount"`
+	ToFirstName       string  `json:"to_first_name"`
+	ToLastName        string  `json:"to_last_name"`
+	ToPhoneNumber     string  `json:"to_phone_number"`
+}
+
+func (q *Queries) GetUserGroupTransaction(ctx context.Context, arg GetUserGroupTransactionParams) (GetUserGroupTransactionRow, error) {
+	row := q.db.QueryRowContext(ctx, getUserGroupTransaction, arg.ID, arg.UserID, arg.GroupID)
+	var i GetUserGroupTransactionRow
+	err := row.Scan(
+		&i.FromReceiptID,
+		&i.ToReceiptID,
+		&i.TransactionState,
+		&i.TransactionAmount,
+		&i.ToFirstName,
+		&i.ToLastName,
+		&i.ToPhoneNumber,
+	)
+	return i, err
+}
+
+const getUserGroupTransactions = `-- name: GetUserGroupTransactions :many
+SELECT 
+    group_member_transactions.from_receipt_id AS from_receipt_id,
+    group_member_transactions.to_receipt_id AS to_receipt_id, 
+    group_member_transactions.state AS transaction_state, 
+    group_member_transactions.amount AS transaction_amount,
+    to_users.first_name AS to_first_name,
+    to_users.last_name AS to_last_name,
+    to_users.phone_number as to_phone_number
+    FROM group_member_transactions
+    INNER JOIN group_member_receipts from_receipts
+        ON group_member_transactions.from_receipt_id=from_receipts.id
+    INNER JOIN group_member_receipts to_receipts
+        ON group_member_transactions.to_receipt_id=to_receipts.id
+    INNER JOIN users to_users
+        ON to_users.id=from_receipts.user_id
+    WHERE
+        from_receipts.user_id=?
+        AND from_receipts.group_id=?
+`
+
+type GetUserGroupTransactionsParams struct {
+	UserID  int64 `json:"user_id"`
+	GroupID int64 `json:"group_id"`
+}
+
+type GetUserGroupTransactionsRow struct {
+	FromReceiptID     int64   `json:"from_receipt_id"`
+	ToReceiptID       int64   `json:"to_receipt_id"`
+	TransactionState  string  `json:"transaction_state"`
+	TransactionAmount float64 `json:"transaction_amount"`
+	ToFirstName       string  `json:"to_first_name"`
+	ToLastName        string  `json:"to_last_name"`
+	ToPhoneNumber     string  `json:"to_phone_number"`
+}
+
+func (q *Queries) GetUserGroupTransactions(ctx context.Context, arg GetUserGroupTransactionsParams) ([]GetUserGroupTransactionsRow, error) {
+	rows, err := q.db.QueryContext(ctx, getUserGroupTransactions, arg.UserID, arg.GroupID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []GetUserGroupTransactionsRow{}
+	for rows.Next() {
+		var i GetUserGroupTransactionsRow
+		if err := rows.Scan(
+			&i.FromReceiptID,
+			&i.ToReceiptID,
+			&i.TransactionState,
+			&i.TransactionAmount,
+			&i.ToFirstName,
+			&i.ToLastName,
+			&i.ToPhoneNumber,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const payUserGroupTransaction = `-- name: PayUserGroupTransaction :exec
+UPDATE group_member_transactions
+SET state=?,payed_at=CURRENT_TIMESTAMP
+WHERE id=(
+        SELECT id FROM group_member_transactions
+            INNER JOIN group_member_receipts
+                ON group_member_receipts.id=group_member_transactions.from_receipt_id
+            WHERE 
+                group_member_receipts.user_id=? 
+                AND group_member_receipts.group_id=?
+                AND group_member_transactions.id=?
+                AND group_member_transactions.state=?
+    )
+`
+
+type PayUserGroupTransactionParams struct {
+	ToState   string `json:"to_state"`
+	UserID    int64  `json:"user_id"`
+	GroupID   int64  `json:"group_id"`
+	ID        int64  `json:"id"`
+	FromState string `json:"from_state"`
+}
+
+func (q *Queries) PayUserGroupTransaction(ctx context.Context, arg PayUserGroupTransactionParams) error {
+	_, err := q.db.ExecContext(ctx, payUserGroupTransaction,
+		arg.ToState,
+		arg.UserID,
+		arg.GroupID,
+		arg.ID,
+		arg.FromState,
+	)
+	return err
+}

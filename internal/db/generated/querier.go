@@ -31,7 +31,10 @@ type Querier interface {
 	GetSignInToken(ctx context.Context, id string) (GetSignInTokenRow, error)
 	GetUserByEmail(ctx context.Context, email string) (User, error)
 	GetUserById(ctx context.Context, id int64) (GetUserByIdRow, error)
+	GetUserGroupTransaction(ctx context.Context, arg GetUserGroupTransactionParams) (GetUserGroupTransactionRow, error)
+	GetUserGroupTransactions(ctx context.Context, arg GetUserGroupTransactionsParams) ([]GetUserGroupTransactionsRow, error)
 	GetUserSessionById(ctx context.Context, id string) (GetUserSessionByIdRow, error)
+	PayUserGroupTransaction(ctx context.Context, arg PayUserGroupTransactionParams) error
 	RemoveExpense(ctx context.Context, arg RemoveExpenseParams) error
 	UpdateExpense(ctx context.Context, arg UpdateExpenseParams) (UpdateExpenseRow, error)
 	UpdateGroupById(ctx context.Context, arg UpdateGroupByIdParams) (Group, error)
