@@ -157,7 +157,18 @@ func getGroups(c *fiber.Ctx, db *db.DB) error {
 }
 
 func getGroup(c *fiber.Ctx, db *db.DB) error {
-	group := mustGetGroupSession(c)
+	ctx := context.Background()
+	session := mustGetGroupSession(c)
+
+	group, err := db.Queries.GetGroupForUserById(ctx, generated.GetGroupForUserByIdParams{
+		ID:     session.GroupID,
+		UserID: session.UserID,
+	})
+
+	if err != nil {
+		log.Printf("getGroup, error getting user group")
+		return fiber.ErrNotFound
+	}
 
 	return c.JSON(group)
 }
