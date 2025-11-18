@@ -1,14 +1,12 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation } from "@tanstack/react-query";
+import { focusManager, useMutation } from "@tanstack/react-query";
 import { useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { View } from "react-native";
 import Animated, { FadeOut } from "react-native-reanimated";
 import { StyleSheet } from "react-native-unistyles";
 import { z } from "zod";
-import { signIn, verifyCode } from "@/api/user";
-import { AuthState } from "@/auth";
-import { authorize } from "@/auth/auth.store";
+import { createUser, signIn, verifyCode } from "@/api/user";
 import { Button } from "@/ui/components/Button";
 import { FormField } from "@/ui/components/FormField";
 import { Spinner } from "@/ui/components/Spinner";
@@ -30,7 +28,6 @@ function EmailSubmit() {
 		try {
 			await mutateAsync(formData);
 			useSignInStore.getState().transition("next", {
-				state: AuthState.VERIFYING,
 				email: formData.email,
 			});
 		} catch {
@@ -74,10 +71,8 @@ function VerifyCode() {
 		),
 	});
 
-	const email = useSignInStore(({ currentPayload }) =>
-		currentPayload?.state === AuthState.VERIFYING
-			? currentPayload.email
-			: undefined,
+	const email = useSignInStore(
+		({ statePayload }) => statePayload.EmailSubmit?.email,
 	);
 
 	const onSubmit = form.handleSubmit(async (formData) => {
@@ -94,7 +89,6 @@ function VerifyCode() {
 			});
 
 			useSignInStore.getState().transition("next", {
-				state: AuthState.AUTHORIZED,
 				newUser: new_user,
 				sessionId: session,
 			});
@@ -106,8 +100,6 @@ function VerifyCode() {
 	const onChangeEmail = useCallback(() => {
 		useSignInStore.getState().transition("back");
 	}, []);
-
-	console.log("Verify", error, isPending);
 
 	return (
 		<View style={styles.container}>
@@ -147,11 +139,98 @@ function VerifyCode() {
 	);
 }
 
+function CreateUser() {
+	const { mutateAsync, isPending } = useMutation(createUser());
+
+	const form = useForm({
+		resolver: zodResolver(
+			z.object({
+				firstName: z.string(),
+				lastName: z.string(),
+				phoneNumber: z.string(),
+			}),
+		),
+	});
+
+	const onSubmit = form.handleSubmit(async (formData) => {
+		try {
+			const user = await mutateAsync({
+				first_name: formData.firstName,
+				last_name: formData.lastName,
+				phone_number: formData.phoneNumber,
+			});
+
+			useSignInStore.getState().transition("next", user);
+		} catch (error) {
+			useSignInStore.getState().transition("error");
+		}
+	});
+
+	return (
+		<View style={styles.container}>
+			<Text variant="headline" containerStyles={styles.title}>
+				Email verification
+			</Text>
+			{isPending && <Spinner />}
+			{!isPending && (
+				<Animated.View exiting={FadeOut.duration(250)}>
+					<FormField
+						control={form.control}
+						label="First name"
+						name="firstName"
+						disabled
+						input={
+							<TextInput
+								autoCapitalize="words"
+								autoComplete="name-given"
+								keyboardType="default"
+								textContentType="givenName"
+							/>
+						}
+					/>
+					<FormField
+						control={form.control}
+						label="Last name"
+						name="lastName"
+						disabled
+						input={
+							<TextInput
+								autoCapitalize="words"
+								autoComplete="name-family"
+								keyboardType="default"
+								textContentType="familyName"
+							/>
+						}
+					/>
+					<FormField
+						control={form.control}
+						label="Phone number"
+						name="phoneNumber"
+						disabled
+						input={
+							<TextInput
+								autoCapitalize="none"
+								autoComplete="tel"
+								keyboardType="phone-pad"
+								textContentType="telephoneNumber"
+							/>
+						}
+					/>
+					<Button containerStyles={styles.submit} onPress={onSubmit}>
+						Create
+					</Button>
+				</Animated.View>
+			)}
+		</View>
+	);
+}
+
 export function SignInScreen() {
 	const state = useSignInStore(({ currentState }) => currentState);
 
 	if (state === "EmailSubmit") return <EmailSubmit />;
 	if (state === "VerifyCode") return <VerifyCode />;
+	if (state === "NewUser") return <CreateUser />;
 }
 
 const styles = StyleSheet.create((theme) => ({

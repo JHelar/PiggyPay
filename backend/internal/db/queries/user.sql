@@ -44,7 +44,7 @@ SELECT first_name, last_name, phone_number, email FROM users
 
 -- name: CreateUser :one
 INSERT INTO users (first_name, last_name, phone_number, email) VALUES (?, ?, ?, ?)
-    RETURNING id;
+    RETURNING first_name, last_name, phone_number, email, id;
 
 -- name: UpdateUser :one
 UPDATE users

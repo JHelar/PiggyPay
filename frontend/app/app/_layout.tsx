@@ -1,7 +1,7 @@
 import { useHeaderHeight } from "@react-navigation/elements";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Stack } from "expo-router";
-import { Protected } from "expo-router/build/views/Protected";
+import * as Splash from "expo-splash-screen";
 import { type PropsWithChildren, Suspense } from "react";
 import { StyleSheet } from "react-native-unistyles";
 import { AuthState, useAuth } from "@/auth";
@@ -22,6 +22,7 @@ function ScreenLayout({ children }: PropsWithChildren) {
 
 export default function RootLayout() {
 	const authState = useAuth(({ state }) => state);
+
 	return (
 		<QueryClientProvider client={queryClient}>
 			<Stack
@@ -32,13 +33,13 @@ export default function RootLayout() {
 				}}
 				screenLayout={({ children }) => <ScreenLayout>{children}</ScreenLayout>}
 			>
-				<Protected guard={authState === AuthState.UNAUTHORIZED}>
-					<Stack.Screen name="Home" options={HomeRouteOptions} />
+				<Stack.Protected guard={authState === AuthState.UNAUTHORIZED}>
+					<Stack.Screen name="index" options={HomeRouteOptions} />
 					<Stack.Screen name="SignIn" options={SignInRouteOptions} />
-				</Protected>
-				<Protected guard={authState === AuthState.AUTHORIZED}>
+				</Stack.Protected>
+				<Stack.Protected guard={authState === AuthState.AUTHORIZED}>
 					<Stack.Screen name="Groups/index" options={GroupsRouteOptions} />
-				</Protected>
+				</Stack.Protected>
 			</Stack>
 		</QueryClientProvider>
 	);

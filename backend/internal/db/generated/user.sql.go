@@ -68,7 +68,7 @@ func (q *Queries) CreateSignInToken(ctx context.Context, arg CreateSignInTokenPa
 
 const createUser = `-- name: CreateUser :one
 INSERT INTO users (first_name, last_name, phone_number, email) VALUES (?, ?, ?, ?)
-    RETURNING id
+    RETURNING first_name, last_name, phone_number, email, id
 `
 
 type CreateUserParams struct {
@@ -78,16 +78,30 @@ type CreateUserParams struct {
 	Email       string `json:"email"`
 }
 
-func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (int64, error) {
+type CreateUserRow struct {
+	FirstName   string `json:"first_name"`
+	LastName    string `json:"last_name"`
+	PhoneNumber string `json:"phone_number"`
+	Email       string `json:"email"`
+	ID          int64  `json:"id"`
+}
+
+func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (CreateUserRow, error) {
 	row := q.db.QueryRowContext(ctx, createUser,
 		arg.FirstName,
 		arg.LastName,
 		arg.PhoneNumber,
 		arg.Email,
 	)
-	var id int64
-	err := row.Scan(&id)
-	return id, err
+	var i CreateUserRow
+	err := row.Scan(
+		&i.FirstName,
+		&i.LastName,
+		&i.PhoneNumber,
+		&i.Email,
+		&i.ID,
+	)
+	return i, err
 }
 
 const deleteUser = `-- name: DeleteUser :exec

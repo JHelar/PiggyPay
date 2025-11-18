@@ -1,13 +1,13 @@
 import { router } from "expo-router";
 import { create } from "zustand";
-import { AuthState, useAuth } from "@/auth";
+import type { User } from "@/api/user";
 import { authorize } from "@/auth/auth.store";
 
 const SignInState = ["EmailSubmit", "VerifyCode", "NewUser"] as const;
 type SignInState = (typeof SignInState)[number];
 
 type SignInStateTransition =
-	| ((payload?: AuthPayload) => Promise<SignInState | void> | void)
+	| ((payload: SignInStoreStatePayloads) => Promise<SignInState | void> | void)
 	| SignInState;
 type SignInStateTransitionType = "next" | "back" | "error";
 
@@ -22,9 +22,10 @@ const SignInStateMachine: Record<
 				router.back();
 				return;
 			}
-			if (payload.state === AuthState.AUTHORIZED) {
-				authorize(payload.sessionId);
-				if (payload.newUser) return "NewUser";
+			if (payload.VerifyCode?.newUser) {
+				return "NewUser";
+			} else if (payload.VerifyCode?.sessionId) {
+				return authorize(payload.VerifyCode?.sessionId);
 			}
 			router.back();
 		},
@@ -32,7 +33,13 @@ const SignInStateMachine: Record<
 		error: router.back,
 	},
 	NewUser: {
-		next: router.back,
+		next(payload) {
+			if (payload?.NewUser?.user && payload.VerifyCode?.sessionId) {
+				authorize(payload.VerifyCode?.sessionId);
+				return router.replace("/Groups");
+			}
+			return router.back();
+		},
 		back: router.back,
 		error: router.back,
 	},
@@ -41,31 +48,25 @@ const SignInStateMachine: Record<
 async function getNextState(
 	currentState: SignInState,
 	type: SignInStateTransitionType,
-	transitionPayload?: AuthPayload,
+	payloads: SignInStoreStatePayloads,
 ) {
 	const transition = SignInStateMachine[currentState][type];
-	if (typeof transition === "function")
-		return await transition(transitionPayload);
+	if (typeof transition === "function") return await transition(payloads);
 	return transition;
 }
 
-type AuthPayload =
-	| {
-			state: AuthState["UNAUTHORIZED"];
-	  }
-	| {
-			state: AuthState["VERIFYING"];
-			email: string;
-	  }
-	| {
-			state: AuthState["AUTHORIZED"];
-			sessionId: string;
-			newUser: boolean;
-	  };
+type AuthPayload = {
+	email?: string;
+	sessionId?: string;
+	newUser?: boolean;
+	user?: User;
+};
+
+type SignInStoreStatePayloads = Partial<Record<SignInState, AuthPayload>>;
 
 type SignInStoreState = {
 	currentState: SignInState;
-	currentPayload?: AuthPayload;
+	statePayload: SignInStoreStatePayloads;
 	isTransitioning: boolean;
 	start(): void;
 	transition(
@@ -77,19 +78,31 @@ type SignInStoreState = {
 export const useSignInStore = create<SignInStoreState>((set, get) => ({
 	currentState: "EmailSubmit" as const,
 	isTransitioning: false,
+	statePayload: new Map(),
 	start() {
-		set({ currentState: "EmailSubmit", currentPayload: undefined });
+		set({ currentState: "EmailSubmit", statePayload: {} });
 		router.navigate("/SignIn");
 	},
 	async transition(type, payload) {
 		try {
-			set({ isTransitioning: true, currentPayload: payload });
-			const nextState = await getNextState(get().currentState, type, payload);
+			set((prev) => ({
+				isTransitioning: true,
+				statePayload: { ...prev.statePayload, [prev.currentState]: payload },
+			}));
+			const nextState = await getNextState(
+				get().currentState,
+				type,
+				get().statePayload,
+			);
 			if (typeof nextState === "string") {
 				set({ currentState: nextState });
 			}
 		} catch {
-			const nextState = await getNextState(get().currentState, "error");
+			const nextState = await getNextState(
+				get().currentState,
+				"error",
+				get().statePayload,
+			);
 			if (typeof nextState === "string") {
 				set({ currentState: nextState });
 			}

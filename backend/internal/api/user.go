@@ -27,7 +27,7 @@ func createNewUser(c *fiber.Ctx, db *db.DB) error {
 
 	session := mustGetUserSession(c)
 
-	userId, err := db.Queries.CreateUser(ctx, generated.CreateUserParams{
+	user, err := db.Queries.CreateUser(ctx, generated.CreateUserParams{
 		Email:       session.Email.String,
 		FirstName:   payload.FirstName,
 		LastName:    payload.LastName,
@@ -42,15 +42,13 @@ func createNewUser(c *fiber.Ctx, db *db.DB) error {
 	if err = db.Queries.UpdateUserSession(ctx, generated.UpdateUserSessionParams{
 		ID:        session.ID,
 		ExpiresAt: time.Now().Add(SESSION_EXPIRE_TIME),
-		UserID:    sql.NullInt64{Valid: true, Int64: userId},
+		UserID:    sql.NullInt64{Valid: true, Int64: user.ID},
 	}); err != nil {
 		log.Printf("createNewUser failed to update user session")
 		return fiber.DefaultErrorHandler(c, err)
 	}
 
-	return c.JSON(fiber.Map{
-		"user_id": userId,
-	})
+	return c.JSON(user)
 }
 
 func getUser(c *fiber.Ctx, db *db.DB) error {
@@ -68,9 +66,7 @@ func getUser(c *fiber.Ctx, db *db.DB) error {
 		return fiber.ErrInternalServerError
 	}
 
-	return c.JSON(fiber.Map{
-		"first_name": user.FirstName,
-	})
+	return c.JSON(user)
 }
 
 type UpdateUser struct {

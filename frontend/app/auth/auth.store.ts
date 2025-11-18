@@ -1,8 +1,12 @@
+import { SplashScreen } from "expo-router";
 import * as SecureStore from "expo-secure-store";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
+import { getUser } from "@/api/user";
+import { queryClient } from "@/query";
 
 export const AuthState = {
+	INITIALIZING: "AuthState(INITIALIZING)",
 	UNAUTHORIZED: "AuthState(UNAUTHORIZED)",
 	VERIFYING: "AuthState(VERIFYING)",
 	AUTHORIZED: "AuthState(AUTHORIZED)",
@@ -15,10 +19,11 @@ type AuthStoreState = {
 	accessToken?: string;
 };
 
+SplashScreen.preventAutoHideAsync();
 export const useAuth = create<AuthStoreState>()(
 	persist(
 		(set, get) => ({
-			state: AuthState.UNAUTHORIZED,
+			state: AuthState.INITIALIZING,
 			accessToken: undefined,
 		}),
 		{
@@ -28,13 +33,35 @@ export const useAuth = create<AuthStoreState>()(
 				getItem: SecureStore.getItemAsync,
 				removeItem: SecureStore.deleteItemAsync,
 			})),
+			onRehydrateStorage() {
+				return (state) => {
+					if (state === undefined) return;
+
+					if (state.accessToken) {
+						queryClient
+							.prefetchQuery(getUser())
+							.then(() => useAuth.setState({ state: AuthState.AUTHORIZED }))
+							.catch(() => {
+								useAuth.setState({ state: AuthState.UNAUTHORIZED });
+							});
+					} else {
+						useAuth.setState({ state: AuthState.UNAUTHORIZED });
+					}
+					SplashScreen.hideAsync();
+				};
+			},
+			partialize(state) {
+				return {
+					accessToken: state.accessToken,
+				};
+			},
 		},
 	),
 );
 
 export function getAccessToken() {
 	const state = useAuth.getState();
-	if (state.state === AuthState.AUTHORIZED) return state.accessToken;
+	return state.accessToken;
 }
 
 export function authorize(accessToken: string) {

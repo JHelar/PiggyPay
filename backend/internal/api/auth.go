@@ -121,8 +121,8 @@ func verifyUserSignIn(c *fiber.Ctx, db *db.DB) error {
 		return fiber.ErrUnauthorized
 	}
 
-	if fmt.Sprint(signInToken.Code) == code {
-		log.Printf("invalid code")
+	if fmt.Sprint(signInToken.Code) != code {
+		log.Printf("invalid code(%s) expected(%d)", code, signInToken.Code)
 		return fiber.ErrUnauthorized
 	}
 

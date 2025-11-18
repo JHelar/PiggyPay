@@ -16,7 +16,7 @@ type Querier interface {
 	CreateNewUserSession(ctx context.Context, arg CreateNewUserSessionParams) (string, error)
 	CreateReceipt(ctx context.Context, arg CreateReceiptParams) (CreateReceiptRow, error)
 	CreateSignInToken(ctx context.Context, arg CreateSignInTokenParams) error
-	CreateUser(ctx context.Context, arg CreateUserParams) (int64, error)
+	CreateUser(ctx context.Context, arg CreateUserParams) (CreateUserRow, error)
 	DeleteGroupById(ctx context.Context, arg DeleteGroupByIdParams) error
 	DeleteGroupMember(ctx context.Context, arg DeleteGroupMemberParams) error
 	DeleteUser(ctx context.Context, id int64) error

@@ -1,1 +1,1 @@
-export { AuthState, useAuth } from "./auth.store";
+export { AuthState, User, useAuth } from "./auth.store";
