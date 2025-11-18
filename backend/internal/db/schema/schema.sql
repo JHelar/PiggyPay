@@ -23,8 +23,8 @@ CREATE TABLE IF NOT EXISTS user_sessions (
 );
 
 CREATE TABLE IF NOT EXISTS user_sign_in_tokens (
-    id TEXT PRIMARY KEY DEFAULT (lower(hex(randomblob(16)))),
-    email TEXT NOT NULL UNIQUE,
+    email TEXT NOT NULL UNIQUE PRIMARY KEY,
+    code INTEGER NOT NULL,
     
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     expires_at TIMESTAMP NOT NULL

@@ -1,0 +1,3 @@
+import type { ExtendedStackNavigationOptions } from "expo-router/build/layouts/StackClient";
+
+export const HomeRouteOptions: ExtendedStackNavigationOptions = {};

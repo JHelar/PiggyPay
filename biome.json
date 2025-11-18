@@ -6,6 +6,9 @@
 	"linter": {
 		"enabled": true,
 		"rules": {
+			"style": {
+				"useImportType": "error"
+			},
 			"recommended": false,
 			"correctness": {
 				"noChildrenProp": "error",

@@ -15,7 +15,7 @@ type Querier interface {
 	CreateMemberTransaction(ctx context.Context, arg CreateMemberTransactionParams) error
 	CreateNewUserSession(ctx context.Context, arg CreateNewUserSessionParams) (string, error)
 	CreateReceipt(ctx context.Context, arg CreateReceiptParams) (CreateReceiptRow, error)
-	CreateSignInToken(ctx context.Context, arg CreateSignInTokenParams) (string, error)
+	CreateSignInToken(ctx context.Context, arg CreateSignInTokenParams) error
 	CreateUser(ctx context.Context, arg CreateUserParams) (int64, error)
 	DeleteGroupById(ctx context.Context, arg DeleteGroupByIdParams) error
 	DeleteGroupMember(ctx context.Context, arg DeleteGroupMemberParams) error
@@ -28,7 +28,7 @@ type Querier interface {
 	GetGroupMemberTotals(ctx context.Context, groupID int64) ([]GetGroupMemberTotalsRow, error)
 	GetGroupMembersForUser(ctx context.Context, arg GetGroupMembersForUserParams) ([]GetGroupMembersForUserRow, error)
 	GetGroupsByUserId(ctx context.Context, userID int64) ([]GetGroupsByUserIdRow, error)
-	GetSignInToken(ctx context.Context, id string) (GetSignInTokenRow, error)
+	GetSignInToken(ctx context.Context, email string) (GetSignInTokenRow, error)
 	GetUserByEmail(ctx context.Context, email string) (User, error)
 	GetUserById(ctx context.Context, id int64) (GetUserByIdRow, error)
 	GetUserGroupTransaction(ctx context.Context, arg GetUserGroupTransactionParams) (GetUserGroupTransactionRow, error)

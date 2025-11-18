@@ -1,25 +1,32 @@
-import type { A11YProps, PressableComponent } from "@/ui/ui.types";
-import { ReactNode } from "react";
+import type { ReactNode } from "react";
 import { Pressable } from "react-native";
-import { StyleSheet, UnistylesVariants } from "react-native-unistyles";
+import { StyleSheet, type UnistylesVariants } from "react-native-unistyles";
+import type { A11YProps, Extendable, PressableComponent } from "@/ui/ui.types";
 import { Text } from "../Text";
 
 type ButtonProps = {
 	children?: ReactNode;
+	isLoading?: boolean;
 } & UnistylesVariants<typeof styles> &
 	PressableComponent &
-	A11YProps;
+	A11YProps &
+	Extendable;
 
 export function Button({
 	onPress,
 	children,
 	variant = "filled",
+	containerStyles,
 	...a11yProps
 }: ButtonProps) {
 	styles.useVariants({ variant });
 
 	return (
-		<Pressable onPress={onPress} style={styles.container} {...a11yProps}>
+		<Pressable
+			onPress={onPress}
+			style={[styles.container, containerStyles]}
+			{...a11yProps}
+		>
 			<Text containerStyles={styles.text}>{children}</Text>
 		</Pressable>
 	);
@@ -37,6 +44,7 @@ const styles = StyleSheet.create((theme) => ({
 				filled: {
 					backgroundColor: theme.button.primary.background,
 				},
+				ghost: {},
 			},
 		},
 	},
@@ -44,7 +52,7 @@ const styles = StyleSheet.create((theme) => ({
 		variants: {
 			variant: {
 				filled: {
-					color: theme.button.primary.color,
+					color: theme.text.color.inverted,
 				},
 			},
 		},

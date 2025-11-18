@@ -1,5 +1,5 @@
+import { cloneElement, isValidElement, type ReactNode } from "react";
 import { isDefined } from "@/utils/isDefined";
-import { isValidElement, cloneElement, ReactNode } from "react";
 
 export type RenderSlot<Props = {}> =
 	| boolean

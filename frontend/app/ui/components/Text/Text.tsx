@@ -1,7 +1,11 @@
+import type { ReactNode } from "react";
+import {
+	type AccessibilityRole,
+	Text as RNText,
+	type TextStyle,
+} from "react-native";
+import { StyleSheet, type UnistylesVariants } from "react-native-unistyles";
 import type { A11YProps, Extendable } from "@/ui/ui.types";
-import { ReactNode } from "react";
-import { AccessibilityRole, Text as RNText, TextStyle } from "react-native";
-import { StyleSheet, UnistylesVariants } from "react-native-unistyles";
 
 type TextVariants = UnistylesVariants<typeof styles>;
 

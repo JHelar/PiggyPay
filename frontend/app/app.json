@@ -10,7 +10,10 @@
 		"newArchEnabled": true,
 		"ios": {
 			"supportsTablet": true,
-			"bundleIdentifier": "com.getbright.io.piggysplit"
+			"bundleIdentifier": "com.piggysplit",
+			"config": {
+				"usesNonExemptEncryption": false
+			}
 		},
 		"android": {
 			"adaptiveIcon": {
@@ -21,7 +24,7 @@
 			},
 			"edgeToEdgeEnabled": true,
 			"predictiveBackGestureEnabled": false,
-			"package": "com.getbright.io.piggysplit"
+			"package": "com.piggysplit"
 		},
 		"web": {
 			"output": "static",
@@ -40,7 +43,8 @@
 						"backgroundColor": "#000000"
 					}
 				}
-			]
+			],
+			"expo-secure-store"
 		],
 		"experiments": {
 			"typedRoutes": true,

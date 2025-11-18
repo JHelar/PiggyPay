@@ -1,4 +1,4 @@
-import type { StyleProp, ViewStyle, AccessibilityProps } from "react-native";
+import type { AccessibilityProps, StyleProp, ViewStyle } from "react-native";
 
 export type A11YProps = {
 	[K in keyof AccessibilityProps]: AccessibilityProps[K];

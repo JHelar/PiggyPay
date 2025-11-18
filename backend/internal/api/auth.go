@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+	"math/rand"
 	"strings"
 	"time"
 
@@ -69,6 +70,10 @@ func mustGetUserSession(c *fiber.Ctx) generated.GetUserSessionByIdRow {
 	return c.Locals(USER_SESSION_LOCAL).(generated.GetUserSessionByIdRow)
 }
 
+func generateSignInCode() int64 {
+	return 10000 + rand.Int63n(89999)
+}
+
 type NewUserSignIn struct {
 	Email string `json:"email" xml:"email" form:"email"`
 }
@@ -80,10 +85,12 @@ func newUserSignIn(c *fiber.Ctx, db *db.DB) error {
 	if err := c.BodyParser(payload); err != nil {
 		return err
 	}
+	code:= generateSignInCode()
 
 	expires := time.Now().Add(SESSION_EXPIRE_TIME)
-	signInToken, err := db.Queries.CreateSignInToken(ctx, generated.CreateSignInTokenParams{
+	err := db.Queries.CreateSignInToken(ctx, generated.CreateSignInTokenParams{
 		Email:     payload.Email,
+		Code: code,
 		ExpiresAt: expires,
 	})
 
@@ -91,27 +98,32 @@ func newUserSignIn(c *fiber.Ctx, db *db.DB) error {
 		return err
 	}
 
-	return c.JSON(fiber.Map{
-		"token": signInToken,
-	})
+	log.Printf("Sign in created: code(%d) email(%s)", code, payload.Email)
+	return c.SendString("Email verification code sent")
 }
 
 func verifyUserSignIn(c *fiber.Ctx, db *db.DB) error {
 	ctx := context.Background()
-	token := c.Query("token")
+	email := c.Query("email")
+	code := c.Query("code")
 
-	if len(token) <= 0 {
-		return fmt.Errorf("missing token")
-	}
+	log.Printf("Verifying email(%s) code(%s)", email, code)
 
-	signInToken, err := db.Queries.GetSignInToken(ctx, token)
+	signInToken, err := db.Queries.GetSignInToken(ctx, email)
 
 	if err != nil {
-		return err
+		log.Printf("verifyUserSignIn error getting sign in token email(%s)", email)
+		return fiber.ErrUnauthorized
 	}
 
 	if signInToken.ExpiresAt.Before(time.Now()) {
-		return fmt.Errorf("token has expired")
+		log.Println("token has expired")
+		return fiber.ErrUnauthorized
+	}
+
+	if fmt.Sprint(signInToken.Code) == code {
+		log.Printf("invalid code")
+		return fiber.ErrUnauthorized
 	}
 
 	user, err := db.Queries.GetUserByEmail(ctx, signInToken.Email)
@@ -138,8 +150,11 @@ func verifyUserSignIn(c *fiber.Ctx, db *db.DB) error {
 	}
 
 	if err != nil {
-		return err
+		log.Printf("Error (%v) verify user sign in", err.Error())
+		return fiber.ErrUnauthorized
 	}
+
+	log.Printf("New session(%s) created", session)
 
 	return c.JSON(fiber.Map{
 		"session":  session,

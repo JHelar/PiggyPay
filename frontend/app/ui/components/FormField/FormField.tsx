@@ -1,25 +1,25 @@
-import { renderSlot, RenderSlot } from "@/ui/utils/renderSlot";
 import {
-	ControllerFieldState,
-	ControllerRenderProps,
-	FieldPath,
-	FieldValues,
+	type ControllerFieldState,
+	type ControllerRenderProps,
+	type FieldPath,
+	type FieldValues,
+	type UseControllerProps,
+	type UseFormStateReturn,
 	useController,
-	UseControllerProps,
-	UseFormStateReturn,
 } from "react-hook-form";
 import { View } from "react-native";
-import { Text } from "../Text";
 import { StyleSheet } from "react-native-unistyles";
+import { type RenderSlot, renderSlot } from "@/ui/utils/renderSlot";
+import { Text } from "../Text";
 
 export type FormFieldInput<
 	TFieldValues extends FieldValues = FieldValues,
 	TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>,
-> = {
+> = Partial<{
 	field: ControllerRenderProps<TFieldValues, TName>;
 	fieldState: ControllerFieldState;
 	formState: UseFormStateReturn<TFieldValues>;
-};
+}>;
 
 type FormFieldProps<
 	TFieldValues extends FieldValues = FieldValues,
@@ -60,7 +60,9 @@ export function FormField<
 			<Text variant="small">{label}</Text>
 			{Input}
 			{fieldState.error && (
-				<Text variant="small">{fieldState.error.message}</Text>
+				<Text variant="small" containerStyles={styles.error}>
+					{fieldState.error.message}
+				</Text>
 			)}
 		</View>
 	);
@@ -69,5 +71,8 @@ export function FormField<
 const styles = StyleSheet.create((theme) => ({
 	container: {
 		rowGap: theme.gap(1),
+	},
+	error: {
+		color: theme.text.color.error,
 	},
 }));

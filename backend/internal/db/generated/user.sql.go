@@ -50,22 +50,20 @@ func (q *Queries) CreateNewUserSession(ctx context.Context, arg CreateNewUserSes
 	return id, err
 }
 
-const createSignInToken = `-- name: CreateSignInToken :one
-INSERT INTO user_sign_in_tokens (email, expires_at) VALUES (?, ?)
+const createSignInToken = `-- name: CreateSignInToken :exec
+INSERT INTO user_sign_in_tokens (email, code, expires_at) VALUES (?, ?, ?)
     ON CONFLICT (email) DO UPDATE SET expires_at=excluded.expires_at
-    RETURNING id
 `
 
 type CreateSignInTokenParams struct {
 	Email     string    `json:"email"`
+	Code      int64     `json:"code"`
 	ExpiresAt time.Time `json:"expires_at"`
 }
 
-func (q *Queries) CreateSignInToken(ctx context.Context, arg CreateSignInTokenParams) (string, error) {
-	row := q.db.QueryRowContext(ctx, createSignInToken, arg.Email, arg.ExpiresAt)
-	var id string
-	err := row.Scan(&id)
-	return id, err
+func (q *Queries) CreateSignInToken(ctx context.Context, arg CreateSignInTokenParams) error {
+	_, err := q.db.ExecContext(ctx, createSignInToken, arg.Email, arg.Code, arg.ExpiresAt)
+	return err
 }
 
 const createUser = `-- name: CreateUser :one
@@ -114,19 +112,20 @@ func (q *Queries) DeleteUserSessionById(ctx context.Context, id string) error {
 
 const getSignInToken = `-- name: GetSignInToken :one
 DELETE FROM user_sign_in_tokens
-    WHERE id=?
-    RETURNING email, expires_at
+    WHERE email=?
+    RETURNING email, code, expires_at
 `
 
 type GetSignInTokenRow struct {
 	Email     string    `json:"email"`
+	Code      int64     `json:"code"`
 	ExpiresAt time.Time `json:"expires_at"`
 }
 
-func (q *Queries) GetSignInToken(ctx context.Context, id string) (GetSignInTokenRow, error) {
-	row := q.db.QueryRowContext(ctx, getSignInToken, id)
+func (q *Queries) GetSignInToken(ctx context.Context, email string) (GetSignInTokenRow, error) {
+	row := q.db.QueryRowContext(ctx, getSignInToken, email)
 	var i GetSignInTokenRow
-	err := row.Scan(&i.Email, &i.ExpiresAt)
+	err := row.Scan(&i.Email, &i.Code, &i.ExpiresAt)
 	return i, err
 }
 

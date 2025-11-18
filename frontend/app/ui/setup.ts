@@ -1,5 +1,5 @@
+import type { TextStyle } from "react-native";
 import { StyleSheet } from "react-native-unistyles";
-import { TextStyle } from "react-native";
 
 const GAP_SIZE = 8;
 
@@ -31,14 +31,17 @@ type AppTheme = {
 		color: {
 			default: string;
 			inverted: string;
+			error: string;
 		};
 	};
 	typography: Record<TextVariants, TypographyTheme>;
 	button: {
 		primary: {
 			background: string;
-			color: string;
 		};
+	};
+	input: {
+		background: string;
 	};
 	gap(type: number): number;
 };
@@ -53,10 +56,14 @@ const blueLight: AppTheme = {
 	background: {
 		primary: "#CCF0FF",
 	},
+	input: {
+		background: "#F9F9F9",
+	},
 	text: {
 		color: {
 			default: "#000000",
 			inverted: "#FFFFFF",
+			error: "#FF0000",
 		},
 	},
 	typography: {
@@ -94,7 +101,6 @@ const blueLight: AppTheme = {
 	button: {
 		primary: {
 			background: "#007BB6",
-			color: "#FFFFFF",
 		},
 	},
 	gap(type) {

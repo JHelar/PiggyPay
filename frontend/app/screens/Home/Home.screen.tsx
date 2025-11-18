@@ -1,16 +1,14 @@
-import { Button } from "@/ui/components/Button";
-import { Text } from "@/ui/components/Text/Text";
-import { useRouter } from "expo-router";
 import { View } from "react-native";
 import { StyleSheet } from "react-native-unistyles";
+import { Button } from "@/ui/components/Button";
+import { Text } from "@/ui/components/Text/Text";
+import { useSignInStore } from "../SignIn";
 
-export default function Index() {
-	const router = useRouter();
-
+export function HomeScreen() {
 	return (
 		<View style={styles.container}>
 			<Text variant="headline">Welcome</Text>
-			<Button onPress={() => router.navigate("/signIn")}>Sign in</Button>
+			<Button onPress={useSignInStore.getState().start}>Sign in</Button>
 		</View>
 	);
 }

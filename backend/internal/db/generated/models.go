@@ -77,8 +77,8 @@ type UserSession struct {
 }
 
 type UserSignInToken struct {
-	ID        string    `json:"id"`
 	Email     string    `json:"email"`
+	Code      int64     `json:"code"`
 	CreatedAt time.Time `json:"created_at"`
 	ExpiresAt time.Time `json:"expires_at"`
 }
