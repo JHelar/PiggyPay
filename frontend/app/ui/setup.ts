@@ -26,6 +26,7 @@ type AppTheme = {
 	};
 	background: {
 		primary: string;
+		surface: string;
 	};
 	text: {
 		color: {
@@ -55,6 +56,7 @@ const blueLight: AppTheme = {
 	},
 	background: {
 		primary: "#CCF0FF",
+		surface: "#F9F9F9",
 	},
 	input: {
 		background: "#F9F9F9",

@@ -56,6 +56,7 @@ type CreateUserArguments = {
 	first_name: string;
 	last_name: string;
 	phone_number: string;
+	sessionId: string;
 };
 export function createUser() {
 	return mutationOptions({
@@ -64,6 +65,9 @@ export function createUser() {
 			return await fetchJSON("user/create", {
 				method: "POST",
 				output: User,
+				headers: {
+					Authorization: `Bearer ${createUserArgs.sessionId}`,
+				},
 				body: JSON.stringify(createUserArgs),
 			});
 		},

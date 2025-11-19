@@ -35,8 +35,7 @@ const SignInStateMachine: Record<
 	NewUser: {
 		next(payload) {
 			if (payload?.NewUser?.user && payload.VerifyCode?.sessionId) {
-				authorize(payload.VerifyCode?.sessionId);
-				return router.replace("/Groups");
+				return authorize(payload.VerifyCode?.sessionId);
 			}
 			return router.back();
 		},

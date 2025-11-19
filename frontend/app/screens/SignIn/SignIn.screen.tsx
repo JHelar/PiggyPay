@@ -153,15 +153,27 @@ function CreateUser() {
 	});
 
 	const onSubmit = form.handleSubmit(async (formData) => {
+		const sessionId =
+			useSignInStore.getState().statePayload.VerifyCode?.sessionId;
+		if (sessionId === undefined) return;
+
 		try {
+			console.log("Sending", {
+				first_name: formData.firstName,
+				last_name: formData.lastName,
+				phone_number: formData.phoneNumber,
+				sessionId,
+			});
+
 			const user = await mutateAsync({
 				first_name: formData.firstName,
 				last_name: formData.lastName,
 				phone_number: formData.phoneNumber,
+				sessionId,
 			});
 
 			useSignInStore.getState().transition("next", user);
-		} catch (error) {
+		} catch {
 			useSignInStore.getState().transition("error");
 		}
 	});
@@ -178,7 +190,6 @@ function CreateUser() {
 						control={form.control}
 						label="First name"
 						name="firstName"
-						disabled
 						input={
 							<TextInput
 								autoCapitalize="words"
@@ -192,7 +203,6 @@ function CreateUser() {
 						control={form.control}
 						label="Last name"
 						name="lastName"
-						disabled
 						input={
 							<TextInput
 								autoCapitalize="words"
@@ -206,7 +216,6 @@ function CreateUser() {
 						control={form.control}
 						label="Phone number"
 						name="phoneNumber"
-						disabled
 						input={
 							<TextInput
 								autoCapitalize="none"

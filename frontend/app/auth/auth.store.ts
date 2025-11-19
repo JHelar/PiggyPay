@@ -39,13 +39,21 @@ export const useAuth = create<AuthStoreState>()(
 
 					if (state.accessToken) {
 						queryClient
-							.prefetchQuery(getUser())
-							.then(() => useAuth.setState({ state: AuthState.AUTHORIZED }))
+							.fetchQuery(getUser())
+							.then((data) => {
+								useAuth.setState({ state: AuthState.AUTHORIZED });
+							})
 							.catch(() => {
-								useAuth.setState({ state: AuthState.UNAUTHORIZED });
+								useAuth.setState({
+									state: AuthState.UNAUTHORIZED,
+									accessToken: undefined,
+								});
 							});
 					} else {
-						useAuth.setState({ state: AuthState.UNAUTHORIZED });
+						useAuth.setState({
+							state: AuthState.UNAUTHORIZED,
+							accessToken: undefined,
+						});
 					}
 					SplashScreen.hideAsync();
 				};

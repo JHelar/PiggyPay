@@ -20,11 +20,11 @@ type CreateNewUser struct {
 func createNewUser(c *fiber.Ctx, db *db.DB) error {
 	ctx := context.Background()
 	payload := new(CreateNewUser)
-
+	
 	if err := c.BodyParser(payload); err != nil {
 		return err
 	}
-
+	
 	session := mustGetUserSession(c)
 
 	user, err := db.Queries.CreateUser(ctx, generated.CreateUserParams{
