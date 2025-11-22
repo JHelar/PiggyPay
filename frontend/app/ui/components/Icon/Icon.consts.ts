@@ -1,1 +1,3 @@
 export const DEFAULT_ICON_SIZE = 24;
+export const DEFAULT_ICON_INITIALS_SIZE = 30;
+export const INITIALS_FONT_SIZE_MULTIPLIER = 0.5;

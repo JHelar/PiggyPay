@@ -1,4 +1,4 @@
-import type { TextStyle } from "react-native";
+import { Platform, type TextStyle, type ViewStyle } from "react-native";
 import { StyleSheet } from "react-native-unistyles";
 
 const GAP_SIZE = 8;
@@ -24,14 +24,19 @@ type AppTheme = {
 		medium: number;
 		large: number;
 	};
+	border: {
+		primary: string;
+	};
 	background: {
 		primary: string;
 		surface: string;
+		inverted: string;
 	};
 	text: {
 		color: {
 			default: string;
 			inverted: string;
+			accent: string;
 			error: string;
 		};
 	};
@@ -45,9 +50,18 @@ type AppTheme = {
 		background: string;
 	};
 	gap(type: number): number;
+	elevation(
+		level: number,
+	): Pick<
+		ViewStyle,
+		"elevation" | "shadowOpacity" | "shadowRadius" | "shadowOffset"
+	>;
 };
 
 const blueLight: AppTheme = {
+	border: {
+		primary: "#1CB6F8",
+	},
 	radius: {
 		none: 0,
 		small: 4,
@@ -57,6 +71,7 @@ const blueLight: AppTheme = {
 	background: {
 		primary: "#CCF0FF",
 		surface: "#F9F9F9",
+		inverted: "#202020",
 	},
 	input: {
 		background: "#F9F9F9",
@@ -64,6 +79,7 @@ const blueLight: AppTheme = {
 	text: {
 		color: {
 			default: "#000000",
+			accent: "#003C5F",
 			inverted: "#FFFFFF",
 			error: "#FF0000",
 		},
@@ -72,32 +88,32 @@ const blueLight: AppTheme = {
 		headline: {
 			fontSize: 32,
 			fontWeight: 400,
-			lineHeight: 40,
+			lineHeight: 32,
 		},
 		title: {
 			fontSize: 22,
 			fontWeight: 400,
-			lineHeight: 28,
+			lineHeight: 22,
 		},
 		subtitle: {
 			fontSize: 22,
 			fontWeight: 400,
-			lineHeight: 28,
+			lineHeight: 22,
 		},
 		body: {
 			fontSize: 16,
 			fontWeight: 400,
-			lineHeight: 18,
+			lineHeight: 16,
 		},
 		small: {
 			fontSize: 14,
-			fontWeight: 400,
-			lineHeight: 16,
+			fontWeight: 600,
+			lineHeight: 14,
 		},
 		xsmall: {
 			fontSize: 12,
-			fontWeight: 400,
-			lineHeight: 14,
+			fontWeight: 600,
+			lineHeight: 12,
 		},
 	},
 	button: {
@@ -107,6 +123,23 @@ const blueLight: AppTheme = {
 	},
 	gap(type) {
 		return type * GAP_SIZE;
+	},
+	elevation(level) {
+		return {
+			...Platform.select({
+				android: {
+					elevation: level,
+				},
+				ios: {
+					shadowOpacity: 0.3,
+					shadowRadius: 3,
+					shadowOffset: {
+						height: 0,
+						width: 0,
+					},
+				},
+			}),
+		};
 	},
 };
 

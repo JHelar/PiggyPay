@@ -57,7 +57,7 @@ export function FormField<
 
 	return (
 		<View style={styles.container}>
-			<Text variant="small">{label}</Text>
+			<Text variant="xsmall">{label}</Text>
 			{Input}
 			{fieldState.error && (
 				<Text variant="small" containerStyles={styles.error}>

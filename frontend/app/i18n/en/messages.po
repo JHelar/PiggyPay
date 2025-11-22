@@ -1,0 +1,125 @@
+msgid ""
+msgstr ""
+"POT-Creation-Date: 2025-11-19 15:50+0100\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: @lingui/cli\n"
+"Language: en\n"
+"Project-Id-Version: \n"
+"Report-Msgid-Bugs-To: \n"
+"PO-Revision-Date: \n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"Plural-Forms: \n"
+
+#: screens/SignIn/components/VerifyCode.tsx:67
+msgid "An email with code has been sent to {email}"
+msgstr "An email with code has been sent to {email}"
+
+#: screens/Profile/Profile.screen.tsx:32
+msgid "Cancel"
+msgstr "Cancel"
+
+#: screens/SignIn/components/VerifyCode.tsx:86
+msgid "Change email"
+msgstr "Change email"
+
+#: ui/components/Snackbar/Snackbar.tsx:29
+msgid "Close"
+msgstr "Close"
+
+#: screens/SignIn/components/CreateUser.tsx:99
+msgid "Create"
+msgstr "Create"
+
+#: screens/Profile/Profile.screen.tsx:26
+msgid "Delete"
+msgstr "Delete"
+
+#: screens/Profile/Profile.screen.tsx:70
+msgid "Delete account"
+msgstr "Delete account"
+
+#: screens/Profile/Profile.screen.tsx:20
+msgid "Delete account?"
+msgstr "Delete account?"
+
+#: screens/Profile/Profile.route.tsx:12
+msgid "Edit"
+msgstr "Edit"
+
+#: screens/Groups/Groups.route.tsx:40
+msgid "Edit profile"
+msgstr "Edit profile"
+
+#: screens/Profile/Profile.screen.tsx:54
+msgid "Email"
+msgstr "Email"
+
+#: screens/SignIn/components/CreateUser.tsx:59
+#: screens/SignIn/components/VerifyCode.tsx:62
+#~ msgid "Email verification"
+#~ msgstr "Email verification"
+
+#: screens/SignIn/components/VerifyCode.tsx:65
+#~ msgid "Email with code sent to {email}"
+#~ msgstr "Email with code sent to {email}"
+
+#: screens/Profile/Profile.screen.tsx:52
+msgid "First name"
+msgstr "First name"
+
+#: screens/Groups/Groups.route.tsx:14
+msgid "Groups"
+msgstr "Groups"
+
+#: screens/Profile/Profile.screen.tsx:53
+msgid "Last name"
+msgstr "Last name"
+
+#: screens/SignIn/components/CreateUser.tsx:54
+msgid "New user"
+msgstr "New user"
+
+#: screens/Groups/Groups.route.tsx:53
+msgid "Open menu"
+msgstr "Open menu"
+
+#: screens/Profile/Profile.screen.tsx:55
+msgid "Phone number"
+msgstr "Phone number"
+
+#: screens/Home/Home.screen.tsx:15
+msgid "Sign in"
+msgstr "Sign in"
+
+#: screens/SignIn/components/EmailSubmit.tsx:39
+msgid "Sign In"
+msgstr "Sign In"
+
+#: screens/Groups/Groups.route.tsx:47
+#: screens/Profile/Profile.screen.tsx:63
+msgid "Sign out"
+msgstr "Sign out"
+
+#: screens/SignIn/components/EmailSubmit.tsx:56
+#: screens/SignIn/components/VerifyCode.tsx:83
+msgid "Submit"
+msgstr "Submit"
+
+#: api/user.ts:110
+msgid "User deleted"
+msgstr "User deleted"
+
+#: screens/SignIn/components/VerifyCode.tsx:61
+msgid "Verify"
+msgstr "Verify"
+
+#: screens/Home/Home.screen.tsx:12
+msgid "Welcome"
+msgstr "Welcome"
+
+#: screens/Profile/Profile.screen.tsx:21
+msgid "You will be removed from any ongoing and archived groups, all expenses you have made will also be removed."
+msgstr "You will be removed from any ongoing and archived groups, all expenses you have made will also be removed."

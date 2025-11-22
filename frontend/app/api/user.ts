@@ -1,6 +1,11 @@
+import { i18n } from "@lingui/core";
+import { msg } from "@lingui/core/macro";
 import { mutationOptions, queryOptions } from "@tanstack/react-query";
 import z from "zod";
-import { fetchJSON } from "@/query/fetch";
+import { unauthorize } from "@/auth/auth.store";
+import { Snackbar } from "@/components/SnackbarRoot";
+import { queryClient } from "@/query";
+import { fetchJSON, fetchRaw } from "@/query/fetch";
 
 export const User = z.object({
 	first_name: z.string(),
@@ -21,6 +26,24 @@ export function signIn() {
 	});
 }
 
+export function signOut() {
+	return mutationOptions({
+		async mutationFn() {
+			return await fetchRaw("user/signOut", {
+				method: "GET",
+			});
+		},
+		onError() {
+			queryClient.clear();
+			unauthorize();
+		},
+		onSuccess() {
+			queryClient.clear();
+			unauthorize();
+		},
+	});
+}
+
 type VerifyUserArguments = { email: string; code: number };
 export function verifyCode() {
 	return mutationOptions({
@@ -36,6 +59,9 @@ export function verifyCode() {
 					code: code.toString(),
 				},
 			});
+		},
+		async onSuccess() {
+			await queryClient.invalidateQueries({ queryKey: ["user"] });
 		},
 	});
 }
@@ -69,6 +95,43 @@ export function createUser() {
 					Authorization: `Bearer ${createUserArgs.sessionId}`,
 				},
 				body: JSON.stringify(createUserArgs),
+			});
+		},
+	});
+}
+const userDeletedToastText = msg`User deleted`;
+export function deleteUser() {
+	return mutationOptions({
+		async mutationFn() {
+			return await fetchRaw("user/me", {
+				method: "DELETE",
+			});
+		},
+		onSuccess() {
+			queryClient.clear();
+			unauthorize();
+
+			Snackbar.toast({
+				text: i18n._(userDeletedToastText),
+			});
+		},
+	});
+}
+
+type UpdateUserArguments = {
+	first_name: string;
+	last_name: string;
+	phone_number: string;
+	email: string;
+};
+export function updateUser() {
+	return mutationOptions({
+		mutationKey: ["user"],
+		async mutationFn(updateUserArguments: UpdateUserArguments) {
+			return await fetchJSON("user/me", {
+				method: "PATCH",
+				output: User,
+				body: JSON.stringify(updateUserArguments),
 			});
 		},
 	});

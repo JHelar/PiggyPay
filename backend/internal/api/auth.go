@@ -161,3 +161,13 @@ func verifyUserSignIn(c *fiber.Ctx, db *db.DB) error {
 		"new_user": isNewUser,
 	})
 }
+
+func signOut(c *fiber.Ctx, db *db.DB) error {
+	ctx := context.Background()
+	session := mustGetUserSession(c)
+
+	if err := db.Queries.DeleteUserSessionById(ctx, session.ID); err != nil {
+		log.Printf("error signOut %v", err.Error())
+	}
+	return c.SendString("Successfully signed out")
+}

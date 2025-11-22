@@ -15,7 +15,7 @@ export function useRefreshOnScreenFocus() {
 
 			// refetch all stale active queries
 			queryClient.refetchQueries({
-				queryKey: ["posts"],
+				queryKey: ["groups", "user"],
 				stale: true,
 				type: "active",
 			});

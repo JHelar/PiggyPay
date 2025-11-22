@@ -36,10 +36,14 @@ export function TextInput<
 const styles = StyleSheet.create((theme) => ({
 	input: {
 		backgroundColor: theme.input.background,
-		height: theme.gap(6.5),
-		borderRadius: theme.radius.small,
-		paddingHorizontal: theme.gap(3),
+		borderRadius: theme.radius.medium,
 		color: theme.text.color.default,
+		borderColor: theme.border.primary,
+		borderWidth: 1,
+		height: 52,
+		alignContent: "center",
+		alignItems: "center",
+		paddingHorizontal: theme.gap(2),
 		...theme.typography.body,
 	},
 }));

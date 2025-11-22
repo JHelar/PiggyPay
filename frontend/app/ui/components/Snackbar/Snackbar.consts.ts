@@ -1,0 +1,1 @@
+export const SNACKBAR_AUTO_CLOSE_TIMEOUT = 3 * 1000;

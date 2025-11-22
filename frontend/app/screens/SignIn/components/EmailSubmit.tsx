@@ -1,0 +1,72 @@
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Trans } from "@lingui/react/macro";
+import { useMutation } from "@tanstack/react-query";
+import { useForm } from "react-hook-form";
+import { View } from "react-native";
+import { StyleSheet } from "react-native-unistyles";
+import z from "zod";
+import { signIn } from "@/api/user";
+import { Button } from "@/ui/components/Button";
+import { FormField } from "@/ui/components/FormField";
+import { Text } from "@/ui/components/Text";
+import { TextInput } from "@/ui/components/TextInput";
+import { useSignInStore } from "../SignIn.store";
+
+export function EmailSubmit() {
+	const { mutateAsync } = useMutation(signIn());
+	const form = useForm({
+		resolver: zodResolver(
+			z.object({
+				email: z.email({ error: "Email is required" }),
+			}),
+		),
+	});
+
+	const onSubmit = form.handleSubmit(async (formData) => {
+		try {
+			await mutateAsync(formData);
+			useSignInStore.getState().transition("next", {
+				email: formData.email,
+			});
+		} catch {
+			useSignInStore.getState().transition("error");
+		}
+	});
+
+	return (
+		<View style={styles.container}>
+			<Text variant="headline">
+				<Trans>Sign In</Trans>
+			</Text>
+			<View style={styles.content}>
+				<FormField
+					control={form.control}
+					label="Email"
+					name="email"
+					input={
+						<TextInput
+							autoCapitalize="none"
+							autoComplete="email"
+							keyboardType="email-address"
+							textContentType="emailAddress"
+						/>
+					}
+				/>
+				<Button onPress={onSubmit}>
+					<Trans>Submit</Trans>
+				</Button>
+			</View>
+		</View>
+	);
+}
+
+const styles = StyleSheet.create((theme) => ({
+	container: {
+		flex: 1,
+		rowGap: theme.gap(6),
+	},
+	content: {
+		flex: 1,
+		rowGap: theme.gap(2),
+	},
+}));

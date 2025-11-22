@@ -11,6 +11,7 @@ module.exports = function (api) {
 		// other config
 		plugins: [
 			// other plugins
+			"@lingui/babel-plugin-lingui-macro",
 			[
 				"react-native-unistyles/plugin",
 				{

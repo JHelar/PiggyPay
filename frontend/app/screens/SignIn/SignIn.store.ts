@@ -49,6 +49,7 @@ async function getNextState(
 	type: SignInStateTransitionType,
 	payloads: SignInStoreStatePayloads,
 ) {
+	console.log(`[Transition] ${currentState} with`, payloads);
 	const transition = SignInStateMachine[currentState][type];
 	if (typeof transition === "function") return await transition(payloads);
 	return transition;

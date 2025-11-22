@@ -1,3 +1,4 @@
+import { Trans } from "@lingui/react/macro";
 import { View } from "react-native";
 import { StyleSheet } from "react-native-unistyles";
 import { Button } from "@/ui/components/Button";
@@ -7,8 +8,12 @@ import { useSignInStore } from "../SignIn";
 export function HomeScreen() {
 	return (
 		<View style={styles.container}>
-			<Text variant="headline">Welcome</Text>
-			<Button onPress={useSignInStore.getState().start}>Sign in</Button>
+			<Text variant="headline">
+				<Trans>Welcome</Trans>
+			</Text>
+			<Button onPress={useSignInStore.getState().start}>
+				<Trans>Sign in</Trans>
+			</Button>
 		</View>
 	);
 }

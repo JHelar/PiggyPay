@@ -1,57 +1,27 @@
-import { useHeaderHeight } from "@react-navigation/elements";
-import { QueryClientProvider } from "@tanstack/react-query";
+import { i18n } from "@lingui/core";
+import { I18nProvider } from "@lingui/react";
+import {
+	QueryClientProvider,
+	useQueryErrorResetBoundary,
+} from "@tanstack/react-query";
 import { Stack } from "expo-router";
-import * as Splash from "expo-splash-screen";
-import { type PropsWithChildren, Suspense } from "react";
-import { StyleSheet } from "react-native-unistyles";
-import { AuthState, useAuth } from "@/auth";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { SnackbarRoot } from "@/components/SnackbarRoot";
 import { queryClient } from "@/query";
-import { GroupsRouteOptions } from "@/screens/Groups";
-import { HomeRouteOptions } from "@/screens/Home";
-import { SignInRouteOptions } from "@/screens/SignIn";
-import { ScreenContent } from "@/ui/components/ScreenContent";
 
-function ScreenLayout({ children }: PropsWithChildren) {
-	const headerHeight = useHeaderHeight();
-	return (
-		<ScreenContent containerStyles={styles.header(headerHeight)}>
-			<Suspense>{children}</Suspense>
-		</ScreenContent>
-	);
-}
-
-export default function RootLayout() {
-	const authState = useAuth(({ state }) => state);
+export default function AppLayout() {
+	const { reset } = useQueryErrorResetBoundary();
 
 	return (
 		<QueryClientProvider client={queryClient}>
-			<Stack
-				screenOptions={{
-					headerTransparent: true,
-					headerTintColor: styles.backButton.color,
-					headerTitle: "",
-				}}
-				screenLayout={({ children }) => <ScreenLayout>{children}</ScreenLayout>}
-			>
-				<Stack.Protected guard={authState === AuthState.UNAUTHORIZED}>
-					<Stack.Screen name="index" options={HomeRouteOptions} />
-					<Stack.Screen name="SignIn" options={SignInRouteOptions} />
-				</Stack.Protected>
-				<Stack.Protected guard={authState === AuthState.AUTHORIZED}>
-					<Stack.Screen name="Groups/index" options={GroupsRouteOptions} />
-				</Stack.Protected>
-			</Stack>
+			<I18nProvider i18n={i18n}>
+				<ErrorBoundary queryReset={reset}>
+					<Stack
+						screenOptions={{ headerShown: false, presentation: "modal" }}
+					/>
+					<SnackbarRoot />
+				</ErrorBoundary>
+			</I18nProvider>
 		</QueryClientProvider>
 	);
 }
-
-const styles = StyleSheet.create((theme) => ({
-	backButton: {
-		color: theme.text.color.default,
-	},
-	header(headerHeight) {
-		return {
-			paddingTop: theme.gap(2) + headerHeight,
-		};
-	},
-}));

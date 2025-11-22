@@ -1,9 +1,9 @@
-import type AntDesign from "@expo/vector-icons/AntDesign";
+import type MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import type { ComponentProps } from "react";
 import type { TextStyle } from "react-native";
 import type { A11YProps, Extendable } from "@/ui/ui.types";
 
-type IconName = ComponentProps<typeof AntDesign>["name"];
+type IconName = ComponentProps<typeof MaterialIcons>["name"];
 
 export type IconProps = {
 	size?: number;

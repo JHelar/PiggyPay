@@ -1,5 +1,6 @@
 import type z from "zod";
 import { getAccessToken } from "@/auth/auth.store";
+import { NetworkError } from "@/components/ErrorBoundary";
 
 const BASE_URL = "http://127.0.0.1:8080";
 const API_PATH = "api/v1";
@@ -32,8 +33,9 @@ export async function fetchRaw(path: string, options: FetchOptions) {
 
 	const response = await fetch(url, options);
 	if (!response.ok) {
-		throw new Error(
-			`[Fetch code(${response.status})] path(${path}) with message "${response.statusText}"`,
+		throw new NetworkError(
+			response.status,
+			new Error(`[Fetch] path(${path}) with message "${response.statusText}"`),
 		);
 	}
 

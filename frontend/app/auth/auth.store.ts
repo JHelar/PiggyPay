@@ -77,6 +77,7 @@ export function authorize(accessToken: string) {
 		state: AuthState.AUTHORIZED,
 		accessToken,
 	});
+	queryClient.prefetchQuery(getUser());
 }
 
 export function unauthorize() {
