@@ -1,5 +1,3 @@
-import { PickPartial } from "expo-router";
-
 type ObjectKeyPaths<
 	Source extends Record<PropertyKey, unknown>,
 	Prefix extends string = "",

@@ -4,5 +4,6 @@ import { GroupsScreen } from "@/screens/Groups";
 
 export default function Groups() {
 	const query = useQuery(getGroups());
+
 	return <GroupsScreen query={query} />;
 }

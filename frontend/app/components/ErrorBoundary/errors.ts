@@ -9,10 +9,10 @@ export abstract class ErrorBoundaryError extends Error {
 
 export class NetworkError extends ErrorBoundaryError {
 	constructor(
-		private status: number,
+		public statusCode: number,
 		error: Error,
 	) {
-		super(`[NetworkError (${status})] ${error.message}`, { cause: error });
+		super(`[NetworkError (${statusCode})] ${error.message}`, { cause: error });
 	}
 
 	public render(): ReactNode {
@@ -20,7 +20,7 @@ export class NetworkError extends ErrorBoundaryError {
 	}
 
 	public handle(reset: () => void): boolean {
-		if (this.status === 401) {
+		if (this.statusCode === 401) {
 			queryClient
 				.getMutationCache()
 				.build(queryClient, signOut())

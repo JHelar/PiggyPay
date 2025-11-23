@@ -4,5 +4,6 @@ import { ProfileScreen } from "@/screens/Profile";
 
 export default function Profile() {
 	const query = useQuery(getUser());
+
 	return <ProfileScreen query={query} />;
 }
