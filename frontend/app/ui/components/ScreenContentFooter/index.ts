@@ -1,0 +1,1 @@
+export { ScreenContentFooter } from "./ScreenContentFooter";

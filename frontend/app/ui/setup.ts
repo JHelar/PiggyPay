@@ -31,6 +31,7 @@ type AppTheme = {
 		primary: string;
 		surface: string;
 		inverted: string;
+		footer: string;
 	};
 	text: {
 		color: {
@@ -72,6 +73,7 @@ const blueLight: AppTheme = {
 		primary: "#CCF0FF",
 		surface: "#F9F9F9",
 		inverted: "#202020",
+		footer: "#0000000d",
 	},
 	input: {
 		background: "#F9F9F9",
@@ -131,8 +133,8 @@ const blueLight: AppTheme = {
 					elevation: level,
 				},
 				ios: {
-					shadowOpacity: 0.3,
-					shadowRadius: 3,
+					shadowOpacity: 0.1 * level,
+					shadowRadius: level,
 					shadowOffset: {
 						height: 0,
 						width: 0,

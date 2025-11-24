@@ -118,6 +118,7 @@ export function deleteUser() {
 	});
 }
 
+const userUpdatedToastText = msg`User updated`;
 type UpdateUserArguments = {
 	first_name: string;
 	last_name: string;
@@ -132,6 +133,14 @@ export function updateUser() {
 				method: "PATCH",
 				output: User,
 				body: JSON.stringify(updateUserArguments),
+			});
+		},
+		onSuccess() {
+			Snackbar.toast({
+				text: i18n._(userUpdatedToastText),
+			});
+			queryClient.invalidateQueries({
+				queryKey: ["user"],
 			});
 		},
 	});

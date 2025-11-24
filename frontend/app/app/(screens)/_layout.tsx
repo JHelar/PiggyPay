@@ -6,6 +6,7 @@ import { GroupsRouteOptions } from "@/screens/Groups";
 import { HomeRouteOptions } from "@/screens/Home";
 import { ProfileRouteOptions } from "@/screens/Profile";
 import { SignInRouteOptions } from "@/screens/SignIn";
+import type { RenderSlot } from "@/ui/utils/renderSlot";
 
 export default function ScreenLayoutRoot() {
 	const authState = useAuth(({ state }) => state);
@@ -17,8 +18,15 @@ export default function ScreenLayoutRoot() {
 				headerTintColor: styles.backButton.color,
 				headerTitle: "",
 			}}
-			screenLayout={({ children }) => {
-				return <ScreenLayout variant="primary">{children}</ScreenLayout>;
+			screenLayout={({ children, options }) => {
+				return (
+					<ScreenLayout
+						variant="primary"
+						footer={options.unstable_sheetFooter?.() as RenderSlot}
+					>
+						{children}
+					</ScreenLayout>
+				);
 			}}
 		>
 			<Stack.Protected guard={authState === AuthState.UNAUTHORIZED}>

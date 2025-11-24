@@ -1,6 +1,6 @@
 import type { QueryErrorResetFunction } from "@tanstack/react-query";
 import { Component, type ErrorInfo, type ReactNode } from "react";
-import { ErrorBoundaryError } from "./errors";
+import { isErrorBoundaryError } from "./errors";
 
 type ErrorBoundaryProps = {
 	children: ReactNode;
@@ -34,7 +34,7 @@ export class ErrorBoundary extends Component<
 	}
 
 	public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-		if (error instanceof ErrorBoundaryError) {
+		if (isErrorBoundaryError(error)) {
 			if (error.handle(this.handleReset)) {
 				return { hasError: false, error: null };
 			}
@@ -48,7 +48,7 @@ export class ErrorBoundary extends Component<
 
 	public render() {
 		if (this.state.hasError) {
-			if (this.state.error instanceof ErrorBoundaryError) {
+			if (isErrorBoundaryError(this.state.error)) {
 				return this.state.error.render(this.handleReset);
 			}
 			return null;

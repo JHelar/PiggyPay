@@ -10,11 +10,13 @@ import { Spinner } from "@/ui/components/Spinner";
 export function ScreenLayout({
 	children,
 	variant,
-}: PropsWithChildren<Pick<ScreenContentProps, "variant">>) {
+	footer,
+}: PropsWithChildren<Pick<ScreenContentProps, "variant" | "footer">>) {
 	const headerHeight = useHeaderHeight();
 	return (
 		<ScreenContent
 			variant={variant}
+			footer={footer}
 			containerStyles={styles.header(headerHeight, variant)}
 		>
 			<Suspense fallback={<Spinner />}>{children}</Suspense>

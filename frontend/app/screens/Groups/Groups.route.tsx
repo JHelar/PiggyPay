@@ -4,7 +4,10 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
 import type { ExtendedStackNavigationOptions } from "expo-router/build/layouts/StackClient";
 import { getUser, signOut } from "@/api/user";
+import { Button as UIButton } from "@/ui/components/Button";
+import { Icon } from "@/ui/components/Icon";
 import { IconButton } from "@/ui/components/IconButton";
+import { ScreenContentFooter } from "@/ui/components/ScreenContentFooter";
 import { Text } from "@/ui/components/Text";
 
 export const GroupsRouteOptions: ExtendedStackNavigationOptions = {
@@ -58,6 +61,21 @@ export const GroupsRouteOptions: ExtendedStackNavigationOptions = {
 					</ContextMenu.Trigger>
 				</ContextMenu>
 			</Host>
+		);
+	},
+	unstable_sheetFooter() {
+		const router = useRouter();
+		return (
+			<ScreenContentFooter
+				primary={
+					<UIButton
+						onPress={() => router.navigate("/(modals)/Groups/New")}
+						icon={<Icon name="add-circle-outline" />}
+					>
+						<Trans>New group</Trans>
+					</UIButton>
+				}
+			/>
 		);
 	},
 };

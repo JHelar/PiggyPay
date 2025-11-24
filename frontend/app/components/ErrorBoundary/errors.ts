@@ -2,12 +2,21 @@ import type { ReactNode } from "react";
 import { signOut } from "@/api/user";
 import { queryClient } from "@/query";
 
-export abstract class ErrorBoundaryError extends Error {
-	public abstract render(reset: () => void): ReactNode;
-	public abstract handle(reset: () => void): boolean;
+export interface ErrorBoundaryError {
+	render(reset: () => void): ReactNode;
+	handle(reset: () => void): boolean;
 }
 
-export class NetworkError extends ErrorBoundaryError {
+export function isErrorBoundaryError(
+	error: unknown,
+): error is ErrorBoundaryError {
+	if (error instanceof NetworkError) {
+		return true;
+	}
+	return false;
+}
+
+export class NetworkError extends Error implements ErrorBoundaryError {
 	constructor(
 		public statusCode: number,
 		error: Error,

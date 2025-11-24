@@ -4,7 +4,7 @@ import "./onlineManager";
 import "@tanstack/react-query";
 import { NetworkError } from "@/components/ErrorBoundary";
 
-type QueryKey = ["user" | "groups", ...ReadonlyArray<unknown>];
+type QueryKey = ["user" | "groups", ...(readonly unknown[])];
 
 const RETRY_DELAY = 1000 * 10;
 

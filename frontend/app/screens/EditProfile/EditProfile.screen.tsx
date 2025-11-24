@@ -1,17 +1,25 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useLingui } from "@lingui/react/macro";
+import { Trans, useLingui } from "@lingui/react/macro";
+import { useMutation } from "@tanstack/react-query";
+import { useRouter } from "expo-router";
 import { use } from "react";
 import { useForm } from "react-hook-form";
 import { View } from "react-native";
 import { StyleSheet } from "react-native-unistyles";
 import z from "zod";
+import { updateUser } from "@/api/user";
+import { Snackbar } from "@/components/SnackbarRoot";
+import { useScreenOptionsEffect } from "@/hooks/useScreenOptionsEffect";
+import { Button } from "@/ui/components/Button";
 import { FormField } from "@/ui/components/FormField";
 import { TextInput } from "@/ui/components/TextInput";
 import type { EditProfileScreenProps } from "./EditProfile.types";
 
 export function EditProfileScreen({ query }: EditProfileScreenProps) {
 	const user = use(query.promise);
+	const { mutateAsync } = useMutation(updateUser());
 	const { t } = useLingui();
+	const router = useRouter();
 
 	const form = useForm({
 		resolver: zodResolver(
@@ -27,6 +35,33 @@ export function EditProfileScreen({ query }: EditProfileScreenProps) {
 			firstName: user.first_name,
 			lastName: user.last_name,
 			phoneNumber: user.phone_number,
+		},
+	});
+
+	const onSubmit = form.handleSubmit(async (updateData) => {
+		try {
+			await mutateAsync({
+				first_name: updateData.firstName,
+				last_name: updateData.lastName,
+				email: updateData.email,
+				phone_number: updateData.phoneNumber,
+			});
+		} catch {
+			Snackbar.toast({
+				text: t`Update failed, something went wrong`,
+			});
+		} finally {
+			router.back();
+		}
+	});
+
+	useScreenOptionsEffect({
+		headerRight() {
+			return (
+				<Button variant="ghost" onPress={onSubmit} loading={query.isFetching}>
+					<Trans>Save</Trans>
+				</Button>
+			);
 		},
 	});
 
