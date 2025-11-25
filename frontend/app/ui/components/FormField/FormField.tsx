@@ -1,34 +1,13 @@
 import {
-	type ControllerFieldState,
-	type ControllerRenderProps,
 	type FieldPath,
 	type FieldValues,
-	type UseControllerProps,
-	type UseFormStateReturn,
 	useController,
 } from "react-hook-form";
 import { View } from "react-native";
 import { StyleSheet } from "react-native-unistyles";
-import { type RenderSlot, renderSlot } from "@/ui/utils/renderSlot";
+import { renderSlot } from "@/ui/utils/renderSlot";
 import { Text } from "../Text";
-
-export type FormFieldInput<
-	TFieldValues extends FieldValues = FieldValues,
-	TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>,
-> = Partial<{
-	field: ControllerRenderProps<TFieldValues, TName>;
-	fieldState: ControllerFieldState;
-	formState: UseFormStateReturn<TFieldValues>;
-}>;
-
-type FormFieldProps<
-	TFieldValues extends FieldValues = FieldValues,
-	TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>,
-	TTransformedValues = TFieldValues,
-> = {
-	label: string;
-	input: RenderSlot<FormFieldInput<TFieldValues, TName>>;
-} & UseControllerProps<TFieldValues, TName, TTransformedValues>;
+import type { FormFieldProps } from "./FormField.types";
 
 export function FormField<
 	TFieldValues extends FieldValues = FieldValues,

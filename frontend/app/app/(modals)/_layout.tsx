@@ -25,6 +25,6 @@ export default function ModalLayoutRoot() {
 
 const styles = StyleSheet.create((theme) => ({
 	container: {
-		backgroundColor: theme.background.surface,
+		backgroundColor: theme.background.secondary,
 	},
 }));

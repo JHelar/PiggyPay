@@ -97,6 +97,8 @@ func createGroup(c *fiber.Ctx, db *db.DB) error {
 		return err
 	}
 
+	log.Printf("create %v", payload)
+
 	session := mustGetUserSession(c)
 
 	user_groups, err := db.Queries.GetGroupsByUserId(ctx, session.UserID.Int64)
@@ -120,6 +122,8 @@ func createGroup(c *fiber.Ctx, db *db.DB) error {
 		ColorTheme:  payload.ColorTheme,
 		State:       string(GroupStateExpenses),
 	})
+
+	log.Printf("Group created %v", group_result)
 
 	if err != nil {
 		log.Printf("createGroup: error creating group, %s", err.Error())

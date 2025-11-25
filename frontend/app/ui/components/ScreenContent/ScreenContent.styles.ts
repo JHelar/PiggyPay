@@ -14,7 +14,7 @@ export const styles = StyleSheet.create((theme, rt) => ({
 					backgroundColor: theme.background.primary,
 				},
 				surface: {
-					backgroundColor: theme.background.surface,
+					backgroundColor: theme.background.secondary,
 				},
 			},
 		},

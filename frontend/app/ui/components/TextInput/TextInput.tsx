@@ -4,7 +4,7 @@ import {
 	type TextInputProps as RNTextInputProps,
 } from "react-native";
 import { StyleSheet } from "react-native-unistyles";
-import type { FormFieldInput } from "../FormField/FormField";
+import type { FormFieldInput } from "../FormField";
 
 type TextInputProps<
 	TFieldValues extends FieldValues = FieldValues,
@@ -35,7 +35,7 @@ export function TextInput<
 
 const styles = StyleSheet.create((theme) => ({
 	input: {
-		backgroundColor: theme.input.background,
+		backgroundColor: theme.background.surface,
 		borderRadius: theme.radius.medium,
 		color: theme.text.color.default,
 		borderColor: theme.border.primary,

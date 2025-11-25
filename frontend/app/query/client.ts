@@ -4,7 +4,7 @@ import "./onlineManager";
 import "@tanstack/react-query";
 import { NetworkError } from "@/components/ErrorBoundary";
 
-type QueryKey = ["user" | "groups", ...(readonly unknown[])];
+type QueryKey = ["user" | "groups" | "group", ...(readonly unknown[])];
 
 const RETRY_DELAY = 1000 * 10;
 
@@ -26,12 +26,10 @@ export const queryClient = new QueryClient({
 	defaultOptions: {
 		queries: {
 			experimental_prefetchInRender: true,
-			retryDelay: RETRY_DELAY,
-			retry: handleRetry,
+			retry: false,
 		},
 		mutations: {
-			retryDelay: RETRY_DELAY,
-			retry: handleRetry,
+			retry: false,
 		},
 	},
 });

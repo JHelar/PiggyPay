@@ -17,7 +17,7 @@ import type { EditProfileScreenProps } from "./EditProfile.types";
 
 export function EditProfileScreen({ query }: EditProfileScreenProps) {
 	const user = use(query.promise);
-	const { mutateAsync } = useMutation(updateUser());
+	const { mutateAsync, isPending } = useMutation(updateUser());
 	const { t } = useLingui();
 	const router = useRouter();
 
@@ -58,7 +58,7 @@ export function EditProfileScreen({ query }: EditProfileScreenProps) {
 	useScreenOptionsEffect({
 		headerRight() {
 			return (
-				<Button variant="ghost" onPress={onSubmit} loading={query.isFetching}>
+				<Button variant="ghost" onPress={onSubmit} loading={isPending}>
 					<Trans>Save</Trans>
 				</Button>
 			);

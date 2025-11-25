@@ -43,7 +43,7 @@ const styles = StyleSheet.create((theme) => ({
 			width: size,
 			height: size,
 			borderRadius: size,
-			backgroundColor: theme.background.surface,
+			backgroundColor: theme.background.secondary,
 			alignItems: "center",
 			justifyContent: "center",
 			textAlign: "center",

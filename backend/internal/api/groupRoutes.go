@@ -12,7 +12,7 @@ func registerGroupRoutes(app fiber.Router, db *db.DB) {
 		return verifyUserSession(c, db)
 	})
 
-	app.Post("/create", func(ctx *fiber.Ctx) error {
+	app.Post("/", func(ctx *fiber.Ctx) error {
 		return createGroup(ctx, db)
 	}).Name("createGroup")
 

@@ -36,7 +36,7 @@ export function Snackbar({ text, action, onClose }: SnackbarProps) {
 
 const styles = StyleSheet.create((theme) => ({
 	container: {
-		backgroundColor: theme.background.inverted,
+		backgroundColor: theme.background.surfaceInverted,
 		flexDirection: "row",
 		padding: theme.gap(2),
 		borderRadius: theme.radius.small,

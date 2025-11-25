@@ -30,11 +30,9 @@ export class NetworkError extends Error implements ErrorBoundaryError {
 
 	public handle(reset: () => void): boolean {
 		if (this.statusCode === 401) {
-			queryClient
-				.getMutationCache()
-				.build(queryClient, signOut())
-				.execute()
-				.finally(reset);
+			console.log("I AM RESETTING?!");
+			reset();
+			queryClient.getMutationCache().build(queryClient, signOut()).execute();
 			return true;
 		}
 		return false;

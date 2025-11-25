@@ -39,6 +39,7 @@ export class ErrorBoundary extends Component<
 				return { hasError: false, error: null };
 			}
 		}
+		return { hasError: true, error };
 	}
 
 	private handleReset() {
