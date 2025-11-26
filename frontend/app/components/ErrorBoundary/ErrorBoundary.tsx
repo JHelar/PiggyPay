@@ -10,6 +10,7 @@ type ErrorBoundaryProps = {
 type ErrorBoundaryState = {
 	hasError: boolean;
 	error: Error | null;
+	fallback: ReactNode;
 };
 
 export class ErrorBoundary extends Component<
@@ -24,35 +25,32 @@ export class ErrorBoundary extends Component<
 	public state: ErrorBoundaryState = {
 		hasError: false,
 		error: null,
+		fallback: null,
 	};
 
 	public static getDerivedStateFromError(
-		this: ErrorBoundary,
 		error: Error,
+		errorInfo: ErrorInfo,
 	): ErrorBoundaryState {
-		return { hasError: true, error };
+		return { hasError: true, error, fallback: null };
 	}
 
 	public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+		let fallback: ReactNode = null;
 		if (isErrorBoundaryError(error)) {
-			if (error.handle(this.handleReset)) {
-				return { hasError: false, error: null };
-			}
+			fallback = error.handle(this.handleReset);
 		}
-		return { hasError: true, error };
+		this.setState({ error, hasError: true, fallback });
 	}
 
 	private handleReset() {
 		this.props.queryReset();
-		this.setState({ hasError: false, error: null });
+		this.setState({ hasError: false, error: null, fallback: null });
 	}
 
 	public render() {
 		if (this.state.hasError) {
-			if (isErrorBoundaryError(this.state.error)) {
-				return this.state.error.render(this.handleReset);
-			}
-			return null;
+			return this.state.fallback;
 		}
 
 		return this.props.children;

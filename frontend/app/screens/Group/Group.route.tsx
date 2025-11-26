@@ -1,5 +1,5 @@
 import { Trans, useLingui } from "@lingui/react/macro";
-import { type RouteOutputParams, useRouter } from "expo-router";
+import { useRouter } from "expo-router";
 import type { ExtendedStackNavigationOptions } from "expo-router/build/layouts/StackClient";
 import { View } from "react-native";
 import { StyleSheet } from "react-native-unistyles";
@@ -8,8 +8,6 @@ import { Button as UIButton } from "@/ui/components/Button";
 import { Icon } from "@/ui/components/Icon";
 import { IconButton } from "@/ui/components/IconButton";
 import { ScreenContentFooter } from "@/ui/components/ScreenContentFooter";
-
-type GroupRouteParams = RouteOutputParams<"/Groups/[groupId]">;
 
 export const GroupRouteOptions: ExtendedStackNavigationOptions = {
 	headerBackTitle: "Groups",

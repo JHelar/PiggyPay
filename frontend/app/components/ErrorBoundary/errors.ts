@@ -1,10 +1,10 @@
+import { router } from "expo-router";
 import type { ReactNode } from "react";
 import { signOut } from "@/api/user";
 import { queryClient } from "@/query";
 
 export interface ErrorBoundaryError {
-	render(reset: () => void): ReactNode;
-	handle(reset: () => void): boolean;
+	handle(reset: () => void): ReactNode;
 }
 
 export function isErrorBoundaryError(
@@ -17,6 +17,10 @@ export function isErrorBoundaryError(
 }
 
 export class NetworkError extends Error implements ErrorBoundaryError {
+	public static Codes = {
+		UNAUTHORIZED: 401,
+	};
+
 	constructor(
 		public statusCode: number,
 		error: Error,
@@ -24,17 +28,17 @@ export class NetworkError extends Error implements ErrorBoundaryError {
 		super(`[NetworkError (${statusCode})] ${error.message}`, { cause: error });
 	}
 
-	public render(): ReactNode {
-		return null;
-	}
-
-	public handle(reset: () => void): boolean {
-		if (this.statusCode === 401) {
-			console.log("I AM RESETTING?!");
-			reset();
-			queryClient.getMutationCache().build(queryClient, signOut()).execute();
-			return true;
+	public handle(reset: () => void): ReactNode {
+		if (this.statusCode === NetworkError.Codes.UNAUTHORIZED) {
+			queryClient
+				.getMutationCache()
+				.build(queryClient, signOut())
+				.execute()
+				.finally(() => {
+					reset();
+					router.replace("/");
+				});
 		}
-		return false;
+		return null;
 	}
 }
