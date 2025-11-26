@@ -146,15 +146,32 @@ func createGroup(c *fiber.Ctx, db *db.DB) error {
 	})
 }
 
+type GroupResponseRow struct {
+	generated.GetGroupsByUserIdRow
+	Members []generated.GetGroupMembersForUserRow `json:"members"`
+}
+
 func getGroups(c *fiber.Ctx, db *db.DB) error {
 	ctx := context.Background()
 
 	session := mustGetUserSession(c)
 
-	groups, err := db.Queries.GetGroupsByUserId(ctx, session.UserID.Int64)
+	group_rows, err := db.Queries.GetGroupsByUserId(ctx, session.UserID.Int64)
 	if err != nil {
 		log.Printf("getGroups, error getting user groups")
 		return fiber.ErrInternalServerError
+	}
+
+	var groups []GroupResponseRow
+	for _, group := range group_rows {
+		members, _ := db.Queries.GetGroupMembersForUser(ctx, generated.GetGroupMembersForUserParams{
+			GroupID: group.ID,
+			UserID: session.UserID.Int64,
+		})
+		groups = append(groups, GroupResponseRow{
+			GetGroupsByUserIdRow: group,
+			Members: members,
+		})
 	}
 
 	return c.JSON(groups)

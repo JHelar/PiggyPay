@@ -1,5 +1,4 @@
 import { cloneElement, isValidElement, type ReactNode } from "react";
-import { StyleSheet } from "react-native-unistyles";
 import { isDefined } from "@/utils/isDefined";
 import type { Extendable } from "../ui.types";
 
@@ -9,7 +8,7 @@ export type RenderSlot<Props = {}> =
 	| null
 	| undefined;
 
-const EXTENDABLE_STYLE_PROP: keyof Extendable = "containerStyles";
+const EXTENDABLE_STYLE_PROP: keyof Extendable = "style";
 
 function mergeStyleProps<Props extends Record<string, unknown>>(
 	slotProps: Props,
@@ -23,10 +22,10 @@ function mergeStyleProps<Props extends Record<string, unknown>>(
 	) {
 		return {
 			...propsOverride,
-			[EXTENDABLE_STYLE_PROP]: StyleSheet.flatten([
+			[EXTENDABLE_STYLE_PROP]: [
 				slotProps[EXTENDABLE_STYLE_PROP],
 				propsOverride[EXTENDABLE_STYLE_PROP],
-			]),
+			],
 		};
 	}
 	return propsOverride;

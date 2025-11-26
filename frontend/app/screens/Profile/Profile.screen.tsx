@@ -46,7 +46,7 @@ export function ProfileScreen({ query }: ProfileScreenProps) {
 				firstName={user.first_name}
 				lastName={user.last_name}
 				size={170}
-				containerStyles={styles.icon}
+				style={styles.icon}
 			/>
 			<View style={styles.content}>
 				<DataRow label={t`First name`} data={user.first_name} />

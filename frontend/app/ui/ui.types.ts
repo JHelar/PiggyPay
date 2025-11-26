@@ -5,7 +5,7 @@ export type A11YProps = {
 };
 
 export type Extendable<Style = ViewStyle> = {
-	containerStyles?: StyleProp<Style>;
+	style?: StyleProp<Style>;
 };
 
 export type PressableComponent = {

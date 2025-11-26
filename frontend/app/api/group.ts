@@ -6,6 +6,14 @@ import { Snackbar } from "@/components/SnackbarRoot";
 import { queryClient } from "@/query";
 import { fetchJSON } from "@/query/fetch";
 
+export const Member = z.object({
+	first_name: z.string(),
+	last_name: z.string(),
+	member_id: z.int(),
+	member_role: z.string(),
+});
+export type Member = z.output<typeof Member>;
+
 export const Group = z.object({
 	id: z.number(),
 	group_name: z.string(),
@@ -15,10 +23,16 @@ export const Group = z.object({
 	updated_at: z.coerce.date(),
 	total_expenses: z.number(),
 });
-
 export type Group = z.output<typeof Group>;
 
-export const Groups = z.array(Group);
+export const GroupWithMembers = Group.and(
+	z.object({
+		members: z.array(Member),
+	}),
+);
+export type GroupWithMembers = z.output<typeof GroupWithMembers>;
+
+export const Groups = z.array(GroupWithMembers);
 export type Groups = z.output<typeof Groups>;
 
 export function getGroups() {

@@ -17,7 +17,7 @@ export function ScreenLayout({
 		<ScreenContent
 			variant={variant}
 			footer={footer}
-			containerStyles={styles.header(headerHeight, variant)}
+			style={styles.header(headerHeight, variant)}
 		>
 			<Suspense fallback={<Spinner />}>{children}</Suspense>
 		</ScreenContent>

@@ -10,13 +10,13 @@ export function Snackbar({ text, action, onClose }: SnackbarProps) {
 	const { t } = useLingui();
 	return (
 		<View style={styles.container}>
-			<Text variant="body" containerStyles={styles.text}>
+			<Text variant="body" style={styles.text}>
 				{text}
 			</Text>
 			{action && (
 				<Button
 					onPress={action.onAction}
-					containerStyles={styles.action}
+					style={styles.action}
 					variant="ghost-inverted"
 				>
 					{action.text}
@@ -27,7 +27,7 @@ export function Snackbar({ text, action, onClose }: SnackbarProps) {
 					name="close"
 					onPress={onClose}
 					accessibilityLabel={t`Close`}
-					containerStyles={styles.icon}
+					style={styles.icon}
 				/>
 			)}
 		</View>

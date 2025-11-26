@@ -39,7 +39,7 @@ export function FormField<
 			<Text variant="xsmall">{label}</Text>
 			{Input}
 			{fieldState.error && (
-				<Text variant="small" containerStyles={styles.error}>
+				<Text variant="small" style={styles.error}>
 					{fieldState.error.message}
 				</Text>
 			)}

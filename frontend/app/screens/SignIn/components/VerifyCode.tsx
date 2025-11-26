@@ -63,7 +63,7 @@ export function VerifyCode() {
 			{isPending && <Spinner />}
 			{!isPending && (
 				<Animated.View style={styles.content} exiting={FadeOut.duration(250)}>
-					<Text variant="body" containerStyles={styles.helpText}>
+					<Text variant="body" style={styles.helpText}>
 						<Trans>An email with code has been sent to {email}</Trans>
 					</Text>
 					<FormField

@@ -5,7 +5,7 @@ import type { TextProps } from "./Text.types";
 
 export function Text({
 	children,
-	containerStyles,
+	style: containerStyles,
 	variant = "body",
 }: TextProps) {
 	styles.useVariants({ variant });

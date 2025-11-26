@@ -1,9 +1,9 @@
-import { Button, ContextMenu, Host } from "@expo/ui/swift-ui";
 import { Trans, useLingui } from "@lingui/react/macro";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
 import type { ExtendedStackNavigationOptions } from "expo-router/build/layouts/StackClient";
 import { getUser, signOut } from "@/api/user";
+import { ContextMenu } from "@/components/ContextMenu";
 import { Button as UIButton } from "@/ui/components/Button";
 import { Icon } from "@/ui/components/Icon";
 import { IconButton } from "@/ui/components/IconButton";
@@ -27,40 +27,33 @@ export const GroupsRouteOptions: ExtendedStackNavigationOptions = {
 		if (data === undefined) return;
 
 		return (
-			<Host>
-				<ContextMenu>
-					<ContextMenu.Items>
-						<Button
-							systemImage="person.circle"
-							onPress={() => router.navigate("/(screens)/User")}
-						>
-							{data.first_name} {data.last_name}
-						</Button>
-						<Button
-							variant="bordered"
-							systemImage="pencil"
-							onPress={() => router.navigate("/(modals)/User/Edit")}
-						>
-							{t`Edit profile`}
-						</Button>
-						<Button
-							variant="bordered"
-							systemImage="rectangle.portrait.and.arrow.right"
-							onPress={signOutMutation}
-						>
-							{t`Sign out`}
-						</Button>
-					</ContextMenu.Items>
-					<ContextMenu.Trigger>
-						<IconButton
-							name="initials"
-							accessibilityLabel={t`Open menu`}
-							firstName={data.first_name}
-							lastName={data.last_name}
-						/>
-					</ContextMenu.Trigger>
-				</ContextMenu>
-			</Host>
+			<ContextMenu
+				actions={[
+					{
+						icon: "user",
+						title: `${data.first_name} ${data.last_name}`,
+						onPress: () => router.navigate("/(screens)/User"),
+					},
+					{
+						icon: "edit",
+						title: t`Edit profile`,
+						onPress: () => router.navigate("/(modals)/User/Edit"),
+					},
+					{
+						icon: "signOut",
+						title: t`Sign out`,
+						onPress: signOutMutation,
+					},
+				]}
+				trigger={
+					<IconButton
+						name="initials"
+						accessibilityLabel={t`Open menu`}
+						firstName={data.first_name}
+						lastName={data.last_name}
+					/>
+				}
+			/>
 		);
 	},
 	unstable_sheetFooter() {

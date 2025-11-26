@@ -5,13 +5,13 @@ import type { ScreenContentProps } from "./ScreenContent.types";
 
 export function ScreenContent({
 	children,
-	containerStyles,
+	style: containerStyles,
 	variant,
 	footer,
 }: ScreenContentProps) {
 	styles.useVariants({ variant });
 
-	const Footer = renderSlot(footer, { containerStyles: styles.footer });
+	const Footer = renderSlot(footer, { style: styles.footer });
 
 	return (
 		<View style={[styles.container, containerStyles]}>

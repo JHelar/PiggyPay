@@ -9,7 +9,7 @@ import {
 } from "./Icon.consts";
 import type { IconProps } from "./Icon.types";
 
-export function Icon({ containerStyles, size, ...props }: IconProps) {
+export function Icon({ style: containerStyles, size, ...props }: IconProps) {
 	if (props.name === "initials") {
 		return (
 			<View
@@ -21,7 +21,7 @@ export function Icon({ containerStyles, size, ...props }: IconProps) {
 					variant="xsmall"
 					importantForAccessibility="no"
 					accessibilityElementsHidden
-					containerStyles={styles.initialsText(size)}
+					style={styles.initialsText(size)}
 				>
 					{`${props.firstName.at(0)}${props.lastName.at(0)}`.toLocaleUpperCase()}
 				</Text>
@@ -43,7 +43,7 @@ const styles = StyleSheet.create((theme) => ({
 			width: size,
 			height: size,
 			borderRadius: size,
-			backgroundColor: theme.background.secondary,
+			backgroundColor: theme.background.surface,
 			alignItems: "center",
 			justifyContent: "center",
 			textAlign: "center",
@@ -52,7 +52,7 @@ const styles = StyleSheet.create((theme) => ({
 	initialsText(size = DEFAULT_ICON_INITIALS_SIZE) {
 		return {
 			fontSize: size * INITIALS_FONT_SIZE_MULTIPLIER,
-			lineHeight: size * INITIALS_FONT_SIZE_MULTIPLIER,
+			lineHeight: size * INITIALS_FONT_SIZE_MULTIPLIER * 1.2,
 			color: theme.text.color.accent,
 		};
 	},

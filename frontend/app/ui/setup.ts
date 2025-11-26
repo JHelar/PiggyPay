@@ -97,12 +97,12 @@ const baseTheme: Pick<AppTheme, "radius" | "typography" | "gap" | "elevation"> =
 			body: {
 				fontSize: 16,
 				fontWeight: 400,
-				lineHeight: 16,
+				lineHeight: 18,
 			},
 			small: {
 				fontSize: 14,
 				fontWeight: 600,
-				lineHeight: 14,
+				lineHeight: 16,
 			},
 			xsmall: {
 				fontSize: 12,

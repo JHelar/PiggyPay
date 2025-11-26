@@ -6,7 +6,7 @@ import type { ScreenContentFooterProps } from "./ScreenContentFooter.types";
 export function ScreenContentFooter({
 	primary,
 	secondary,
-	containerStyles,
+	style: containerStyles,
 }: ScreenContentFooterProps) {
 	const Primary = renderSlot(primary, { variant: "filled" });
 	const Secondary = renderSlot(secondary, { variant: "ghost" });

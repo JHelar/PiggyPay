@@ -10,7 +10,7 @@ export function Button({
 	onPress,
 	children,
 	variant = "filled",
-	containerStyles,
+	style: containerStyles,
 	icon,
 	loading = false,
 	...a11yProps
@@ -18,7 +18,7 @@ export function Button({
 	styles.useVariants({ variant });
 
 	const Icon = renderSlot(icon, {
-		containerStyles: styles.icon,
+		style: styles.icon,
 	});
 
 	const Content = useMemo(() => {
@@ -27,7 +27,7 @@ export function Button({
 		return (
 			<>
 				{Icon}
-				<Text containerStyles={styles.text} variant="body">
+				<Text style={styles.text} variant="body">
 					{children}
 				</Text>
 			</>

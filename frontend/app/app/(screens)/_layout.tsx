@@ -2,6 +2,7 @@ import { Stack } from "expo-router";
 import { StyleSheet } from "react-native-unistyles";
 import { AuthState, useAuth } from "@/auth";
 import { ScreenLayout } from "@/components/ScreenLayout";
+import { GroupRouteOptions } from "@/screens/Group";
 import { GroupsRouteOptions } from "@/screens/Groups";
 import { HomeRouteOptions } from "@/screens/Home";
 import { ProfileRouteOptions } from "@/screens/Profile";
@@ -35,6 +36,10 @@ export default function ScreenLayoutRoot() {
 			</Stack.Protected>
 			<Stack.Protected guard={authState === AuthState.AUTHORIZED}>
 				<Stack.Screen name="Groups/index" options={GroupsRouteOptions} />
+				<Stack.Screen
+					name="Groups/[groupId]/index"
+					options={GroupRouteOptions}
+				/>
 				<Stack.Screen name="User/index" options={ProfileRouteOptions} />
 			</Stack.Protected>
 		</Stack>
