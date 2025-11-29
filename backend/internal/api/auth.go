@@ -18,7 +18,7 @@ type UserSession struct {
 	Bearer string `reqHeader:"Authorization"`
 }
 
-const SESSION_EXPIRE_TIME = time.Minute * 10
+const SESSION_EXPIRE_TIME = time.Minute * 30
 const SIGN_IN_TOKEN_EXPIRE_TIME = time.Minute * 10
 
 const BEARER = "Bearer "

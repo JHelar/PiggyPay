@@ -1,5 +1,5 @@
 import { Stack } from "expo-router";
-import { StyleSheet } from "react-native-unistyles";
+import { useUnistyles } from "react-native-unistyles";
 import { AuthState, useAuth } from "@/auth";
 import { ScreenLayout } from "@/components/ScreenLayout";
 import { GroupRouteOptions } from "@/screens/Group";
@@ -11,12 +11,13 @@ import type { RenderSlot } from "@/ui/utils/renderSlot";
 
 export default function ScreenLayoutRoot() {
 	const authState = useAuth(({ state }) => state);
+	const { theme } = useUnistyles();
 
 	return (
 		<Stack
 			screenOptions={{
 				headerTransparent: true,
-				headerTintColor: styles.backButton.color,
+				headerTintColor: theme.text.color.default,
 				headerTitle: "",
 			}}
 			screenLayout={({ children, options }) => {
@@ -45,14 +46,3 @@ export default function ScreenLayoutRoot() {
 		</Stack>
 	);
 }
-
-const styles = StyleSheet.create((theme) => ({
-	backButton: {
-		color: theme.text.color.default,
-	},
-	header(headerHeight) {
-		return {
-			paddingTop: theme.gap(1) + headerHeight,
-		};
-	},
-}));

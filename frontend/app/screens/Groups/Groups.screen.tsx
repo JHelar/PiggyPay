@@ -54,14 +54,14 @@ export function GroupsScreen({ query }: GroupsScreenProps) {
 			renderItem={({ item }) => (
 				<GroupListItem
 					group={item}
-					onPress={() =>
+					onPress={() => {
 						router.navigate({
 							pathname: "/(screens)/Groups/[groupId]",
 							params: {
 								groupId: item.id,
 							},
-						})
-					}
+						});
+					}}
 				/>
 			)}
 			ItemSeparatorComponent={() => <View style={styles.spacer} />}

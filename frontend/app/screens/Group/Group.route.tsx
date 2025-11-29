@@ -3,7 +3,7 @@ import { useRouter } from "expo-router";
 import type { ExtendedStackNavigationOptions } from "expo-router/build/layouts/StackClient";
 import { View } from "react-native";
 import { StyleSheet } from "react-native-unistyles";
-import { ContextMenu } from "@/components/ContextMenu";
+import { UserContextMenu } from "@/components/ContextMenu";
 import { Button as UIButton } from "@/ui/components/Button";
 import { Icon } from "@/ui/components/Icon";
 import { IconButton } from "@/ui/components/IconButton";
@@ -17,23 +17,8 @@ export const GroupRouteOptions: ExtendedStackNavigationOptions = {
 		return (
 			<View style={styles.buttonContainer}>
 				<IconButton name="ios-share" accessibilityLabel={t`Share group`} />
-				<ContextMenu
-					trigger={
-						<IconButton name="circle" accessibilityLabel={t`Open menu`} />
-					}
-					actions={[
-						{
-							icon: "edit",
-							title: t`Edit group`,
-							onPress: () => {},
-						},
-						{
-							icon: "delete",
-							title: t`Delete group`,
-							onPress: () => {},
-						},
-					]}
-				/>
+				<IconButton name="edit" accessibilityLabel={t`Edit group`} />
+				<UserContextMenu />
 			</View>
 		);
 	},

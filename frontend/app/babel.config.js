@@ -19,7 +19,9 @@ module.exports = function (api) {
 					// all files under this folder will be processed by the Babel plugin
 					// if you need to include more folders, or customize discovery process
 					// check available babel options
-					root: "src",
+					root: "app",
+					autoProcessImports: ["@/ui", "@/components", "@/screens"],
+					debug: true,
 				},
 			],
 		],

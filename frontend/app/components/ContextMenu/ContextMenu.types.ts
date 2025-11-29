@@ -2,7 +2,7 @@ import type { RenderSlot } from "@/ui/utils/renderSlot";
 
 export type ContextMenuIcon = "user" | "edit" | "signOut" | "delete";
 
-type ContextMenuAction = {
+export type ContextMenuAction = {
 	title: string;
 	icon: ContextMenuIcon;
 	onPress(): void;
