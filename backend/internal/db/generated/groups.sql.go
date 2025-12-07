@@ -183,7 +183,7 @@ UPDATE groups
             ON group_members.group_id=groups.id
         WHERE groups.id=? AND group_members.user_id=?
     )
-    RETURNING id, display_name, state, color_theme, created_at, updated_at
+    RETURNING id, display_name as group_name, state, color_theme as group_theme, created_at, updated_at
 `
 
 type UpdateGroupByIdParams struct {

@@ -55,7 +55,7 @@ export function getGroups() {
 
 export function getGroup(groupId: number | string) {
 	return queryOptions({
-		queryKey: ["group", groupId],
+		queryKey: ["group", { id: groupId }],
 		async queryFn() {
 			return await fetchJSON(`groups/${groupId}`, {
 				method: "GET",
@@ -65,16 +65,16 @@ export function getGroup(groupId: number | string) {
 	});
 }
 
-export const CreateGroup = z.object({
+export const UpsertGroup = z.object({
 	display_name: z.string(),
 	color_theme: ColorTheme,
 });
-export type CreateGroup = z.output<typeof CreateGroup>;
+export type UpsertGroup = z.output<typeof UpsertGroup>;
 
 const createGroupSuccessTitle = msg`Group crated`;
 export function createGroup() {
 	return mutationOptions({
-		async mutationFn(group: CreateGroup) {
+		async mutationFn(group: UpsertGroup) {
 			return await fetchJSON("groups", {
 				method: "POST",
 				output: z.object({
@@ -87,6 +87,48 @@ export function createGroup() {
 		onSuccess() {
 			Snackbar.toast({
 				text: i18n._(createGroupSuccessTitle),
+			});
+		},
+		onSettled(data, error, variables, onMutateResult, context) {
+			queryClient.invalidateQueries({
+				queryKey: ["groups"],
+			});
+		},
+	});
+}
+
+type UpdateGroup = {
+	groupId: number;
+	payload: UpsertGroup;
+};
+const updateGroupSuccessTitle = msg`Group updated`;
+export function updateGroup() {
+	return mutationOptions({
+		async mutationFn({ groupId, payload }: UpdateGroup) {
+			return await fetchJSON(`groups/${groupId}`, {
+				method: "PATCH",
+				body: JSON.stringify(payload),
+				output: Group.pick({ id: true }),
+			});
+		},
+		async onSuccess(data, variables, onMutateResult, context) {
+			Snackbar.toast({
+				text: i18n._(updateGroupSuccessTitle),
+			});
+			context.client.setQueryData(
+				["group", { id: variables.groupId }],
+				(data: Group) => {
+					return {
+						...data,
+						group_name: variables.payload.display_name,
+						group_theme: variables.payload.color_theme,
+					} satisfies Group;
+				},
+			);
+		},
+		onSettled(data, error, variables, onMutateResult, context) {
+			queryClient.invalidateQueries({
+				queryKey: ["group", variables.groupId],
 			});
 			queryClient.invalidateQueries({
 				queryKey: ["groups"],

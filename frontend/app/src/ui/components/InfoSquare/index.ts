@@ -1,0 +1,1 @@
+export { InfoSquare } from "./InfoSquare";

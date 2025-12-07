@@ -7,6 +7,7 @@ import { StyleSheet } from "react-native-unistyles";
 import type { GroupWithMembers } from "@/api/group";
 import { Button } from "@/ui/components/Button";
 import { Icon } from "@/ui/components/Icon";
+import { InfoSquare } from "@/ui/components/InfoSquare";
 import { ListItem } from "@/ui/components/ListItem";
 import { Text } from "@/ui/components/Text";
 import type { GroupsScreenProps } from "./Groups.types";
@@ -51,6 +52,15 @@ export function GroupsScreen({ query }: GroupsScreenProps) {
 		<FlashList
 			data={groups}
 			keyExtractor={({ id }) => id.toString()}
+			style={styles.container}
+			ListHeaderComponent={
+				<InfoSquare
+					title={<Text>Latest expense</Text>}
+					cta={<Button>Go to group</Button>}
+					info={<View></View>}
+				/>
+			}
+			ListHeaderComponentStyle={styles.header}
 			renderItem={({ item }) => (
 				<GroupListItem
 					group={item}
@@ -83,6 +93,12 @@ export function GroupsScreen({ query }: GroupsScreenProps) {
 }
 
 const styles = StyleSheet.create((theme) => ({
+	container: {
+		paddingTop: theme.gap(1),
+	},
+	header: {
+		paddingBottom: theme.gap(4),
+	},
 	spacer: {
 		height: theme.gap(1),
 	},

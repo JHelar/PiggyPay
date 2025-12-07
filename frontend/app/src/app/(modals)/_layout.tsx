@@ -2,6 +2,7 @@ import { Stack } from "expo-router";
 import { StyleSheet } from "react-native-unistyles";
 import { AuthState, useAuth } from "@/auth";
 import { ScreenLayout } from "@/components/ScreenLayout";
+import { EditGroupRouteOptions } from "@/screens/EditGroup/EditGroup.route";
 import { EditProfileRouteOptions } from "@/screens/EditProfile";
 import { NewGroupRouteOptions } from "@/screens/NewGroup";
 
@@ -23,6 +24,10 @@ export default function ModalLayoutRoot() {
 			<Stack.Protected guard={authState === AuthState.AUTHORIZED}>
 				<Stack.Screen name="User/Edit" options={EditProfileRouteOptions} />
 				<Stack.Screen name="Groups/New" options={NewGroupRouteOptions} />
+				<Stack.Screen
+					name="Groups/[groupId]/Edit"
+					options={EditGroupRouteOptions}
+				/>
 			</Stack.Protected>
 		</Stack>
 	);

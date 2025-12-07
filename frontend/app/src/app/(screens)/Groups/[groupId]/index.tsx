@@ -1,10 +1,8 @@
 import { useRoute } from "@react-navigation/native";
 import { useQuery } from "@tanstack/react-query";
-import type { RouteParams } from "expo-router";
 import { getGroup } from "@/api/group";
 import { GroupScreen } from "@/screens/Group";
-
-type GroupRouteParams = RouteParams<"/(screens)/Groups/[groupId]">;
+import type { GroupRouteParams } from "@/screens/Group/Group.route";
 
 export default function Group() {
 	const router = useRoute();

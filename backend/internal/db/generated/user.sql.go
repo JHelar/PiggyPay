@@ -114,16 +114,6 @@ func (q *Queries) DeleteUser(ctx context.Context, id int64) error {
 	return err
 }
 
-const deleteUserSession = `-- name: DeleteUserSession :exec
-DELETE FROM user_sessions
-    WHERE id=?
-`
-
-func (q *Queries) DeleteUserSession(ctx context.Context, id string) error {
-	_, err := q.db.ExecContext(ctx, deleteUserSession, id)
-	return err
-}
-
 const deleteUserSessionById = `-- name: DeleteUserSessionById :exec
 DELETE FROM user_sessions
     WHERE id=?
