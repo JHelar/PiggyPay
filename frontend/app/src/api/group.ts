@@ -55,7 +55,7 @@ export function getGroups() {
 
 export function getGroup(groupId: number | string) {
 	return queryOptions({
-		queryKey: ["group", { id: groupId }],
+		queryKey: ["groups", { id: groupId }],
 		async queryFn() {
 			return await fetchJSON(`groups/${groupId}`, {
 				method: "GET",
@@ -114,21 +114,6 @@ export function updateGroup() {
 		async onSuccess(data, variables, onMutateResult, context) {
 			Snackbar.toast({
 				text: i18n._(updateGroupSuccessTitle),
-			});
-			context.client.setQueryData(
-				["group", { id: variables.groupId }],
-				(data: Group) => {
-					return {
-						...data,
-						group_name: variables.payload.display_name,
-						group_theme: variables.payload.color_theme,
-					} satisfies Group;
-				},
-			);
-		},
-		onSettled(data, error, variables, onMutateResult, context) {
-			queryClient.invalidateQueries({
-				queryKey: ["group", variables.groupId],
 			});
 			queryClient.invalidateQueries({
 				queryKey: ["groups"],

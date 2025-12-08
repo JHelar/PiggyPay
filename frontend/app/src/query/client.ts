@@ -3,7 +3,7 @@ import "./onlineManager";
 
 import "@tanstack/react-query";
 
-type QueryKey = ["user" | "groups" | "group", ...(readonly unknown[])];
+type QueryKey = ["user" | "groups", ...(readonly unknown[])];
 
 declare module "@tanstack/react-query" {
 	interface Register {
