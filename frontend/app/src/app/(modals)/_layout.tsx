@@ -4,6 +4,7 @@ import { AuthState, useAuth } from "@/auth";
 import { ScreenLayout } from "@/components/ScreenLayout";
 import { EditGroupRouteOptions } from "@/screens/EditGroup/EditGroup.route";
 import { EditProfileRouteOptions } from "@/screens/EditProfile";
+import { NewExpenseRouteOptions } from "@/screens/NewExpense/NewExpense.route";
 import { NewGroupRouteOptions } from "@/screens/NewGroup";
 
 export default function ModalLayoutRoot() {
@@ -27,6 +28,10 @@ export default function ModalLayoutRoot() {
 				<Stack.Screen
 					name="Groups/[groupId]/Edit"
 					options={EditGroupRouteOptions}
+				/>
+				<Stack.Screen
+					name="Groups/[groupId]/NewExpense"
+					options={NewExpenseRouteOptions}
 				/>
 			</Stack.Protected>
 		</Stack>
