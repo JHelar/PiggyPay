@@ -6,7 +6,6 @@ import { useForm } from "react-hook-form";
 import { View } from "react-native";
 import { StyleSheet } from "react-native-unistyles";
 import { createExpense, UpsertExpense } from "@/api/expense";
-import { Snackbar } from "@/components/SnackbarRoot";
 import { useScreenOptionsEffect } from "@/hooks/useScreenOptionsEffect";
 import { Button } from "@/ui/components/Button";
 import { FormField } from "@/ui/components/FormField";
@@ -27,11 +26,6 @@ export function NewExpenseScreen() {
 			await mutateAsync({
 				groupId,
 				payload: data,
-			});
-		} catch (error) {
-			console.error(error);
-			Snackbar.toast({
-				text: t`Failed to crate expense, something went wrong`,
 			});
 		} finally {
 			router.back();

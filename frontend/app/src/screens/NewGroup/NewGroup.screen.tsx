@@ -7,7 +7,6 @@ import { View } from "react-native";
 import { StyleSheet } from "react-native-unistyles";
 import { createGroup, UpsertGroup } from "@/api/group";
 import { ColorThemePicker } from "@/components/ColorThemePicker";
-import { Snackbar } from "@/components/SnackbarRoot";
 import { useScreenOptionsEffect } from "@/hooks/useScreenOptionsEffect";
 import { Button } from "@/ui/components/Button";
 import { FormField } from "@/ui/components/FormField";
@@ -24,11 +23,6 @@ export function NewGroupScreen() {
 	const onSubmit = form.handleSubmit(async (data) => {
 		try {
 			await mutateAsync(data);
-		} catch (error) {
-			console.error(error);
-			Snackbar.toast({
-				text: t`Failed to crate group, something went wrong`,
-			});
 		} finally {
 			router.back();
 		}

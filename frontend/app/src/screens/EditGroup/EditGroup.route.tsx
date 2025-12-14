@@ -23,7 +23,7 @@ export const EditGroupRouteOptions: ExtendedStackNavigationOptions = {
 	headerRight() {
 		return (
 			<Button variant="ghost">
-				<Trans>Save</Trans>
+				<Trans>Done</Trans>
 			</Button>
 		);
 	},

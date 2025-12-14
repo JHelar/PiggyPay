@@ -29,6 +29,7 @@ const (
 	GroupStateGenerating GroupState = "group_state:generating"
 	GroupStatePaying     GroupState = "group_state:paying"
 	GroupStateResolved   GroupState = "group_state:resolved"
+	GroupStateArchived   GroupState = "group_state:archived"
 )
 
 const (
@@ -101,22 +102,6 @@ func createGroup(c *fiber.Ctx, db *db.DB) error {
 
 	session := mustGetUserSession(c)
 
-	user_groups, err := db.Queries.GetGroupsByUserId(ctx, session.UserID.Int64)
-	if err != nil {
-		log.Printf("createGroup: %v\n", err.Error())
-		return fiber.ErrInternalServerError
-	}
-
-	for _, groups := range user_groups {
-		if groups.GroupName == payload.DisplayName {
-			log.Printf("createGroup: name already in use %s\n", payload.DisplayName)
-			return fiber.NewError(
-				fiber.ErrBadRequest.Code,
-				"name already in use",
-			)
-		}
-	}
-
 	group_result, err := db.Queries.CreateGroup(ctx, generated.CreateGroupParams{
 		DisplayName: payload.DisplayName,
 		ColorTheme:  payload.ColorTheme,
@@ -166,11 +151,11 @@ func getGroups(c *fiber.Ctx, db *db.DB) error {
 	for _, group := range group_rows {
 		members, _ := db.Queries.GetGroupMembersForUser(ctx, generated.GetGroupMembersForUserParams{
 			GroupID: group.ID,
-			UserID: session.UserID.Int64,
+			UserID:  session.UserID.Int64,
 		})
 		groups = append(groups, GroupResponseRow{
 			GetGroupsByUserIdRow: group,
-			Members: members,
+			Members:              members,
 		})
 	}
 
@@ -181,6 +166,7 @@ type GetGroupResponse struct {
 	generated.GetGroupForUserByIdRow
 	Expenses []generated.GetGroupExpensesRow `json:"expenses"`
 }
+
 func getGroup(c *fiber.Ctx, db *db.DB) error {
 	ctx := context.Background()
 	session := mustGetGroupSession(c)
@@ -205,9 +191,9 @@ func getGroup(c *fiber.Ctx, db *db.DB) error {
 		return fiber.ErrNotFound
 	}
 
-	response := GetGroupResponse {
+	response := GetGroupResponse{
 		GetGroupForUserByIdRow: group,
-		Expenses: expenses,
+		Expenses:               expenses,
 	}
 	return c.JSON(response)
 }
@@ -252,13 +238,13 @@ func deleteGroup(c *fiber.Ctx, db *db.DB) error {
 	ctx := context.Background()
 
 	session := mustGetGroupSession(c)
-
-	if err := db.Queries.DeleteGroupById(ctx, generated.DeleteGroupByIdParams{
-		ID:     session.GroupID,
-		Role:   string(MemberRoleAdmin),
-		UserID: session.UserID,
+	log.Printf("Trying to archive groupId(%d) userID(%d)", session.GroupID, session.UserID)
+	if err := db.Queries.ArchiveGroupById(ctx, generated.ArchiveGroupByIdParams{
+		GroupID:    session.GroupID,
+		MemberRole: string(MemberRoleAdmin),
+		UserID:     session.UserID,
 	}); err != nil {
-		log.Printf("deleteGroup failed to delete group\n")
+		log.Printf("deleteGroup failed to delete group: %v\n", err.Error())
 		return fiber.DefaultErrorHandler(c, err)
 	}
 

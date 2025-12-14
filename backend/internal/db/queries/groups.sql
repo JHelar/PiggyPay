@@ -13,7 +13,7 @@ SELECT groups.id AS id,
     FROM groups
     INNER JOIN group_members
         ON group_members.group_id=groups.id
-    WHERE group_members.user_id=?
+    WHERE group_members.user_id=? AND groups.state!='group_state:archived'
     ORDER BY group_members.created_at DESC;
 
 -- name: CreateGroup :one
@@ -64,7 +64,7 @@ SELECT groups.id AS id,
     FROM groups
     INNER JOIN group_members
         ON group_members.group_id=groups.id
-    WHERE groups.id=? AND group_members.user_id=?
+    WHERE groups.id=? AND group_members.user_id=? AND groups.state!='group_state:archived'
     LIMIT 1;
 
 -- name: UpdateGroupStateIfMembersIsInState :exec
@@ -77,13 +77,42 @@ WHERE id = @group_id AND groups.state = @check_group_state
         WHERE group_id=groups.id
     );
 
--- name: DeleteGroupById :exec
-DELETE FROM groups
-    WHERE id=(
+-- name: ArchiveGroupById :exec
+UPDATE groups
+SET state = "group_state:archived", updated_at = CURRENT_TIMESTAMP
+    WHERE id IN (
         SELECT groups.id
         FROM groups
         INNER JOIN group_members
             ON groups.id=group_members.group_id
-        WHERE groups.id=? AND group_members.role=? AND group_members.user_id=?
-        LIMIT 1
+        WHERE groups.id=@group_id AND group_members.role=@member_role AND group_members.user_id=@user_id
     );
+
+CREATE TRIGGER prevent_expense_insert_on_archived_group
+BEFORE INSERT ON group_expenses
+FOR EACH ROW
+WHEN (
+    SELECT state FROM groups WHERE id = NEW.group_id
+) = 'group_state:archived'
+BEGIN
+    SELECT RAISE(FAIL, 'Cannot add expenses to an archived group');
+END;
+
+CREATE TRIGGER prevent_expense_update_on_archived_group
+BEFORE UPDATE ON group_expenses
+FOR EACH ROW
+WHEN (
+    SELECT state FROM groups WHERE id = OLD.group_id
+) = 'group_state:archived'
+BEGIN
+    SELECT RAISE(FAIL, 'Cannot modify expenses of an archived group');
+END;
+
+
+CREATE TRIGGER prevent_update_on_archived_groups
+BEFORE UPDATE ON groups
+FOR EACH ROW
+WHEN OLD.state = 'group_state:archived'
+BEGIN
+    SELECT RAISE(FAIL, 'Cannot modify an archived group');
+END;

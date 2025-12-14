@@ -2,22 +2,26 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Trans, useLingui } from "@lingui/react/macro";
 import { useMutation } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
-import { use } from "react";
+import { use, useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { View } from "react-native";
 import { StyleSheet } from "react-native-unistyles";
-import { UpsertGroup, updateGroup } from "@/api/group";
+import { deleteGroup, UpsertGroup, updateGroup } from "@/api/group";
+import { Alert } from "@/components/AlertRoot";
 import { ColorThemePicker } from "@/components/ColorThemePicker";
-import { Snackbar } from "@/components/SnackbarRoot";
 import { useScreenOptionsEffect } from "@/hooks/useScreenOptionsEffect";
 import { Button } from "@/ui/components/Button";
 import { FormField } from "@/ui/components/FormField";
+import { Icon } from "@/ui/components/Icon";
 import { TextInput } from "@/ui/components/TextInput";
 import type { EditGroupScreenProps } from "./EditGroup.types";
 
 export function EditGroupScreen({ query }: EditGroupScreenProps) {
 	const group = use(query.promise);
-	const { mutateAsync, isPending } = useMutation(updateGroup());
+	const { mutateAsync: updateGroupMutation, isPending: isUpdating } =
+		useMutation(updateGroup());
+	const { mutateAsync: deleteGroupMutation, isPending: isDeleting } =
+		useMutation(deleteGroup());
 	const { t } = useLingui();
 	const router = useRouter();
 
@@ -31,14 +35,9 @@ export function EditGroupScreen({ query }: EditGroupScreenProps) {
 
 	const onSubmit = form.handleSubmit(async (updateData) => {
 		try {
-			await mutateAsync({
+			await updateGroupMutation({
 				groupId: group.id,
 				payload: updateData,
-			});
-		} catch (error) {
-			console.error(error);
-			Snackbar.toast({
-				text: t`Update failed, something went wrong`,
 			});
 		} finally {
 			router.back();
@@ -48,33 +47,63 @@ export function EditGroupScreen({ query }: EditGroupScreenProps) {
 	useScreenOptionsEffect({
 		headerRight() {
 			return (
-				<Button variant="ghost" onPress={onSubmit} loading={isPending}>
-					<Trans>Save</Trans>
+				<Button variant="ghost" onPress={onSubmit} loading={isUpdating}>
+					<Trans>Done</Trans>
 				</Button>
 			);
 		},
 	});
 
+	const onDelete = useCallback(async () => {
+		const result = await Alert.destructive({
+			title: t`Delete group?`,
+			body: t`Are you sure you want to delete ${group.group_name}`,
+			cancelText: t`Cancel`,
+			primaryText: t`Delete`,
+		});
+		if (result === "success") {
+			try {
+				await deleteGroupMutation(group.id);
+			} finally {
+				router.replace("/(screens)/Groups");
+			}
+		}
+	}, [group.group_name, t, deleteGroupMutation, group.id, router.dismissAll]);
+
 	return (
 		<View style={styles.container}>
-			<FormField
-				control={form.control}
-				label={t`Group name`}
-				name="display_name"
-				input={<TextInput autoCapitalize="words" keyboardType="default" />}
-			/>
-			<FormField
-				control={form.control}
-				label={t`Color theme`}
-				name="color_theme"
-				input={<ColorThemePicker />}
-			/>
+			<View style={styles.content}>
+				<FormField
+					control={form.control}
+					label={t`Group name`}
+					name="display_name"
+					input={<TextInput autoCapitalize="words" keyboardType="default" />}
+				/>
+				<FormField
+					control={form.control}
+					label={t`Color theme`}
+					name="color_theme"
+					input={<ColorThemePicker />}
+				/>
+			</View>
+			<Button
+				variant="destructive"
+				onPress={onDelete}
+				icon={<Icon name="delete-outline" />}
+				loading={isDeleting}
+			>
+				<Trans>Delete group</Trans>
+			</Button>
 		</View>
 	);
 }
 
 const styles = StyleSheet.create((theme) => ({
 	container: {
+		rowGap: theme.gap(2),
+		flex: 1,
+	},
+	content: {
 		rowGap: theme.gap(2),
 	},
 }));

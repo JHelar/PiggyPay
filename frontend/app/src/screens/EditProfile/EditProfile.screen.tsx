@@ -8,7 +8,6 @@ import { View } from "react-native";
 import { StyleSheet } from "react-native-unistyles";
 import z from "zod";
 import { updateUser } from "@/api/user";
-import { Snackbar } from "@/components/SnackbarRoot";
 import { useScreenOptionsEffect } from "@/hooks/useScreenOptionsEffect";
 import { Button } from "@/ui/components/Button";
 import { FormField } from "@/ui/components/FormField";
@@ -45,10 +44,6 @@ export function EditProfileScreen({ query }: EditProfileScreenProps) {
 				last_name: updateData.lastName,
 				email: updateData.email,
 				phone_number: updateData.phoneNumber,
-			});
-		} catch {
-			Snackbar.toast({
-				text: t`Update failed, something went wrong`,
 			});
 		} finally {
 			router.back();

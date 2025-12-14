@@ -4,7 +4,7 @@ import { mutationOptions, queryOptions } from "@tanstack/react-query";
 import z from "zod";
 import { Snackbar } from "@/components/SnackbarRoot";
 import { queryClient } from "@/query";
-import { fetchJSON } from "@/query/fetch";
+import { fetchJSON, fetchRaw } from "@/query/fetch";
 import { Expense } from "./expense";
 
 export const Member = z.object({
@@ -74,6 +74,8 @@ export const UpsertGroup = z.object({
 export type UpsertGroup = z.output<typeof UpsertGroup>;
 
 const createGroupSuccessTitle = msg`Group crated`;
+const createGroupFailedTitle = msg`Failed to crate group, something went wrong`;
+
 export function createGroup() {
 	return mutationOptions({
 		async mutationFn(group: UpsertGroup) {
@@ -96,6 +98,11 @@ export function createGroup() {
 				queryKey: ["groups"],
 			});
 		},
+		onError(error, variables, onMutateResult, context) {
+			Snackbar.toast({
+				text: i18n._(createGroupFailedTitle),
+			});
+		},
 	});
 }
 
@@ -104,6 +111,7 @@ type UpdateGroup = {
 	payload: UpsertGroup;
 };
 const updateGroupSuccessTitle = msg`Group updated`;
+const updateGroupFailedTitle = msg`Failed to update group`;
 export function updateGroup() {
 	return mutationOptions({
 		async mutationFn({ groupId, payload }: UpdateGroup) {
@@ -119,6 +127,40 @@ export function updateGroup() {
 			});
 			queryClient.invalidateQueries({
 				queryKey: ["groups"],
+			});
+		},
+		onError(error, variables, onMutateResult, context) {
+			Snackbar.toast({
+				text: i18n._(updateGroupFailedTitle),
+			});
+		},
+	});
+}
+
+const deleteGroupSuccessTitle = msg`Group deleted`;
+const deleteGroupFailedTitle = msg`Failed to delete group, try again later`;
+export function deleteGroup() {
+	return mutationOptions({
+		async mutationFn(groupId: number) {
+			return await fetchRaw(`groups/${groupId}`, {
+				method: "DELETE",
+			});
+		},
+		async onSuccess(data, variables, onMutateResult, context) {
+			Snackbar.toast({
+				text: i18n._(deleteGroupSuccessTitle),
+			});
+			queryClient.removeQueries({
+				queryKey: ["groups", { id: variables }],
+			});
+			queryClient.invalidateQueries({
+				queryKey: ["groups"],
+				exact: true,
+			});
+		},
+		onError(error, variables, onMutateResult, context) {
+			Snackbar.toast({
+				text: i18n._(deleteGroupFailedTitle),
 			});
 		},
 	});

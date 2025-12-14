@@ -1,9 +1,10 @@
 import { Trans, useLingui } from "@lingui/react/macro";
 import { useMutation } from "@tanstack/react-query";
 import { use, useCallback } from "react";
-import { Alert, View } from "react-native";
+import { View } from "react-native";
 import { StyleSheet } from "react-native-unistyles";
 import { deleteUser, signOut } from "@/api/user";
+import { Alert } from "@/components/AlertRoot";
 import { Button } from "@/ui/components/Button";
 import { DataRow } from "@/ui/components/DataRow";
 import { Icon } from "@/ui/components/Icon";
@@ -15,28 +16,16 @@ export function ProfileScreen({ query }: ProfileScreenProps) {
 	const { mutate: signOutMutation } = useMutation(signOut());
 	const { mutate: deleteUserMutation } = useMutation(deleteUser());
 
-	const onDelete = useCallback(() => {
-		Alert.prompt(
-			t`Delete account?`,
-			t`You will be removed from any ongoing and archived groups, all expenses you have made will also be removed.`,
-			[
-				{
-					style: "destructive",
-					isPreferred: true,
-					text: t`Delete`,
-					onPress: () => deleteUserMutation(),
-				},
-				{
-					style: "cancel",
-					isPreferred: false,
-					text: t`Cancel`,
-				},
-			],
-			"default",
-			undefined,
-			undefined,
-			{ cancelable: true, userInterfaceStyle: "unspecified" },
-		);
+	const onDelete = useCallback(async () => {
+		const result = await Alert.destructive({
+			title: t`Delete account?`,
+			body: t`You will be removed from any ongoing and archived groups, all expenses you have made will also be removed.`,
+			primaryText: t`Delete`,
+			cancelText: t`Cancel`,
+		});
+		if (result === "success") {
+			deleteUserMutation();
+		}
 	}, [deleteUserMutation, t]);
 
 	return (

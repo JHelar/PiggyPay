@@ -10,6 +10,7 @@ import (
 
 type Querier interface {
 	AddExpense(ctx context.Context, arg AddExpenseParams) (AddExpenseRow, error)
+	ArchiveGroupById(ctx context.Context, arg ArchiveGroupByIdParams) error
 	CreateExistingUserSession(ctx context.Context, arg CreateExistingUserSessionParams) (string, error)
 	CreateGroup(ctx context.Context, arg CreateGroupParams) (Group, error)
 	CreateMemberTransaction(ctx context.Context, arg CreateMemberTransactionParams) error
@@ -17,7 +18,6 @@ type Querier interface {
 	CreateReceipt(ctx context.Context, arg CreateReceiptParams) (CreateReceiptRow, error)
 	CreateSignInToken(ctx context.Context, arg CreateSignInTokenParams) error
 	CreateUser(ctx context.Context, arg CreateUserParams) (CreateUserRow, error)
-	DeleteGroupById(ctx context.Context, arg DeleteGroupByIdParams) error
 	DeleteGroupMember(ctx context.Context, arg DeleteGroupMemberParams) error
 	DeleteUser(ctx context.Context, id int64) error
 	DeleteUserSessionById(ctx context.Context, id string) error

@@ -10,6 +10,29 @@ import (
 	"time"
 )
 
+const archiveGroupById = `-- name: ArchiveGroupById :exec
+UPDATE groups
+SET state = "group_state:archived", updated_at = CURRENT_TIMESTAMP
+    WHERE id IN (
+        SELECT groups.id
+        FROM groups
+        INNER JOIN group_members
+            ON groups.id=group_members.group_id
+        WHERE groups.id=?1 AND group_members.role=?2 AND group_members.user_id=?3
+    )
+`
+
+type ArchiveGroupByIdParams struct {
+	GroupID    int64  `json:"group_id"`
+	MemberRole string `json:"member_role"`
+	UserID     int64  `json:"user_id"`
+}
+
+func (q *Queries) ArchiveGroupById(ctx context.Context, arg ArchiveGroupByIdParams) error {
+	_, err := q.db.ExecContext(ctx, archiveGroupById, arg.GroupID, arg.MemberRole, arg.UserID)
+	return err
+}
+
 const createGroup = `-- name: CreateGroup :one
 INSERT INTO groups (display_name, state, color_theme) VALUES (?, ?, ?)
     RETURNING id, display_name, state, color_theme, created_at, updated_at
@@ -35,29 +58,6 @@ func (q *Queries) CreateGroup(ctx context.Context, arg CreateGroupParams) (Group
 	return i, err
 }
 
-const deleteGroupById = `-- name: DeleteGroupById :exec
-DELETE FROM groups
-    WHERE id=(
-        SELECT groups.id
-        FROM groups
-        INNER JOIN group_members
-            ON groups.id=group_members.group_id
-        WHERE groups.id=? AND group_members.role=? AND group_members.user_id=?
-        LIMIT 1
-    )
-`
-
-type DeleteGroupByIdParams struct {
-	ID     int64  `json:"id"`
-	Role   string `json:"role"`
-	UserID int64  `json:"user_id"`
-}
-
-func (q *Queries) DeleteGroupById(ctx context.Context, arg DeleteGroupByIdParams) error {
-	_, err := q.db.ExecContext(ctx, deleteGroupById, arg.ID, arg.Role, arg.UserID)
-	return err
-}
-
 const getGroupForUserById = `-- name: GetGroupForUserById :one
 SELECT groups.id AS id,
     groups.display_name AS group_name,
@@ -74,7 +74,7 @@ SELECT groups.id AS id,
     FROM groups
     INNER JOIN group_members
         ON group_members.group_id=groups.id
-    WHERE groups.id=? AND group_members.user_id=?
+    WHERE groups.id=? AND group_members.user_id=? AND groups.state!='group_state:archived'
     LIMIT 1
 `
 
@@ -125,7 +125,7 @@ SELECT groups.id AS id,
     FROM groups
     INNER JOIN group_members
         ON group_members.group_id=groups.id
-    WHERE group_members.user_id=?
+    WHERE group_members.user_id=? AND groups.state!='group_state:archived'
     ORDER BY group_members.created_at DESC
 `
 
@@ -183,7 +183,7 @@ UPDATE groups
             ON group_members.group_id=groups.id
         WHERE groups.id=? AND group_members.user_id=?
     )
-    RETURNING id, display_name as group_name, state, color_theme as group_theme, created_at, updated_at
+    RETURNING id, display_name, state, color_theme, created_at, updated_at
 `
 
 type UpdateGroupByIdParams struct {

@@ -1,13 +1,16 @@
-import { Trans } from "@lingui/react/macro";
+import { Trans, useLingui } from "@lingui/react/macro";
 import { FlashList } from "@shopify/flash-list";
+import { useMutation } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
 import { use } from "react";
 import { View } from "react-native";
 import { StyleSheet } from "react-native-unistyles";
-import type { Expense } from "@/api/expense";
+import { deleteExpense, type Expense } from "@/api/expense";
+import { ContextMenu } from "@/components/ContextMenu";
 import { useScreenFocusSetTheme } from "@/hooks/useScreenFocusSetTheme";
 import { Button } from "@/ui/components/Button";
 import { Icon } from "@/ui/components/Icon";
+import { IconButton } from "@/ui/components/IconButton";
 import { InfoSquare } from "@/ui/components/InfoSquare";
 import { ListItem } from "@/ui/components/ListItem";
 import { Text } from "@/ui/components/Text";
@@ -15,9 +18,14 @@ import type { GroupScreenProps } from "./Group.types";
 
 type ExpenseListItemProps = {
 	expense: Expense;
+	groupId: number;
 	onPress(): void;
 };
-function ExpenseListItem({ expense, onPress }: ExpenseListItemProps) {
+function ExpenseListItem({ expense, groupId, onPress }: ExpenseListItemProps) {
+	const { t } = useLingui();
+	const router = useRouter();
+	const { mutateAsync: deleteExpenseMutation } = useMutation(deleteExpense());
+
 	return (
 		<ListItem
 			onPress={onPress}
@@ -35,7 +43,34 @@ function ExpenseListItem({ expense, onPress }: ExpenseListItemProps) {
 			right={
 				<View>
 					<Text variant="body">{expense.cost}kr</Text>
-					<Icon name="chevron-right" />
+					<ContextMenu
+						trigger={
+							<IconButton
+								name="more-vert"
+								accessibilityLabel={t`Open expense menu`}
+							/>
+						}
+						actions={[
+							{
+								icon: "edit",
+								title: t`Edit expense`,
+								onPress() {},
+							},
+							{
+								icon: "delete",
+								title: t`Delete expense`,
+								async onPress() {
+									try {
+										await deleteExpenseMutation({
+											groupId,
+											expenseId: expense.id,
+										});
+									} finally {
+									}
+								},
+							},
+						]}
+					/>
 				</View>
 			}
 		/>
@@ -62,7 +97,7 @@ export function GroupScreen({ query }: GroupScreenProps) {
 			}
 			ListHeaderComponentStyle={styles.header}
 			renderItem={({ item }) => (
-				<ExpenseListItem expense={item} onPress={() => {}} />
+				<ExpenseListItem expense={item} groupId={group.id} onPress={() => {}} />
 			)}
 			ItemSeparatorComponent={() => <View style={styles.spacer} />}
 			ListEmptyComponent={
@@ -72,14 +107,14 @@ export function GroupScreen({ query }: GroupScreenProps) {
 					</Text>
 					<Button
 						variant="filled"
-						onPress={() =>
+						onPress={() => {
 							router.navigate({
 								pathname: "/(modals)/Groups/[groupId]/NewExpense",
 								params: {
 									groupId: group.id,
 								},
-							})
-						}
+							});
+						}}
 					>
 						<Trans>Add new expense</Trans>
 					</Button>

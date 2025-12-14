@@ -118,13 +118,14 @@ export function deleteUser() {
 	});
 }
 
-const userUpdatedToastText = msg`User updated`;
 type UpdateUserArguments = {
 	first_name: string;
 	last_name: string;
 	phone_number: string;
 	email: string;
 };
+const updateUserSuccessTitle = msg`User updated`;
+const updateUserFailedTitle = msg`Update failed, something went wrong`;
 export function updateUser() {
 	return mutationOptions({
 		mutationKey: ["user"],
@@ -137,10 +138,15 @@ export function updateUser() {
 		},
 		onSuccess() {
 			Snackbar.toast({
-				text: i18n._(userUpdatedToastText),
+				text: i18n._(updateUserSuccessTitle),
 			});
 			queryClient.invalidateQueries({
 				queryKey: ["user"],
+			});
+		},
+		onError(error, variables, onMutateResult, context) {
+			Snackbar.toast({
+				text: i18n._(updateUserFailedTitle),
 			});
 		},
 	});
