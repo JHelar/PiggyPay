@@ -177,6 +177,10 @@ func getGroups(c *fiber.Ctx, db *db.DB) error {
 	return c.JSON(groups)
 }
 
+type GetGroupResponse struct {
+	generated.GetGroupForUserByIdRow
+	Expenses []generated.GetGroupExpensesRow `json:"expenses"`
+}
 func getGroup(c *fiber.Ctx, db *db.DB) error {
 	ctx := context.Background()
 	session := mustGetGroupSession(c)
@@ -191,7 +195,21 @@ func getGroup(c *fiber.Ctx, db *db.DB) error {
 		return fiber.ErrNotFound
 	}
 
-	return c.JSON(group)
+	expenses, err := db.Queries.GetGroupExpenses(ctx, generated.GetGroupExpensesParams{
+		GroupID: session.GroupID,
+		UserID:  session.UserID,
+	})
+
+	if err != nil {
+		log.Printf("getGroup, error getting group expenses")
+		return fiber.ErrNotFound
+	}
+
+	response := GetGroupResponse {
+		GetGroupForUserByIdRow: group,
+		Expenses: expenses,
+	}
+	return c.JSON(response)
 }
 
 type UpdateGroup struct {
