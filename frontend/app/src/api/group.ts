@@ -57,7 +57,7 @@ export function getGroups() {
 
 export function getGroup(groupId: number | string) {
 	return queryOptions({
-		queryKey: ["groups", { id: groupId }],
+		queryKey: ["groups", { id: groupId.toString() }],
 		async queryFn() {
 			return await fetchJSON(`groups/${groupId}`, {
 				method: "GET",

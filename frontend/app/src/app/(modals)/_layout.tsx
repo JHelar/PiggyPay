@@ -2,6 +2,7 @@ import { Stack } from "expo-router";
 import { StyleSheet } from "react-native-unistyles";
 import { AuthState, useAuth } from "@/auth";
 import { ScreenLayout } from "@/components/ScreenLayout";
+import { EditExpenseRouteOptions } from "@/screens/EditExpense";
 import { EditGroupRouteOptions } from "@/screens/EditGroup/EditGroup.route";
 import { EditProfileRouteOptions } from "@/screens/EditProfile";
 import { NewExpenseRouteOptions } from "@/screens/NewExpense/NewExpense.route";
@@ -32,6 +33,10 @@ export default function ModalLayoutRoot() {
 				<Stack.Screen
 					name="Groups/[groupId]/NewExpense"
 					options={NewExpenseRouteOptions}
+				/>
+				<Stack.Screen
+					name="Groups/[groupId]/[expenseId]/Edit"
+					options={EditExpenseRouteOptions}
 				/>
 			</Stack.Protected>
 		</Stack>

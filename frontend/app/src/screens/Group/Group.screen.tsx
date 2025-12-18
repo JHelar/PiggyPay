@@ -54,7 +54,15 @@ function ExpenseListItem({ expense, groupId, onPress }: ExpenseListItemProps) {
 							{
 								icon: "edit",
 								title: t`Edit expense`,
-								onPress() {},
+								onPress() {
+									router.navigate({
+										pathname: "/(modals)/Groups/[groupId]/[expenseId]/Edit",
+										params: {
+											expenseId: expense.id,
+											groupId,
+										},
+									});
+								},
 							},
 							{
 								icon: "delete",
