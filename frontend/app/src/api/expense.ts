@@ -96,7 +96,7 @@ const deleteExpenseDisclaimerDelete = msg`Delete`;
 
 type DeleteExpenseArguments = {
 	groupId: number;
-	expenseId: number;
+	expenseId: number | string;
 };
 export function deleteExpense() {
 	return mutationOptions({
