@@ -253,18 +253,16 @@ func deleteGroup(c *fiber.Ctx, db *db.DB) error {
 
 func checkGroupReadyState(groupId int64, db *db.DB) {
 	ctx := context.Background()
+	if err := db.Queries.UpdateGroupStateIfMembersIsInState(ctx, generated.UpdateGroupStateIfMembersIsInStateParams{
+		GroupID:          groupId,
+		ToGroupState:     string(GroupStateGenerating),
+		CheckGroupState:  string(GroupStateExpenses),
+		CheckMemberState: string(MemberStateReady),
+	}); err != nil {
+		log.Printf("checkGroupReadyState failed to update group state: %v", err.Error())
+		return
+	}
 	if err := db.RunAsTransaction(ctx, func(q *generated.Queries) error {
-		err := q.UpdateGroupStateIfMembersIsInState(ctx, generated.UpdateGroupStateIfMembersIsInStateParams{
-			GroupID:          groupId,
-			ToGroupState:     string(GroupStateGenerating),
-			CheckGroupState:  string(GroupStateGenerating),
-			CheckMemberState: string(MemberStateReady),
-		})
-
-		if err == sql.ErrNoRows {
-			return fmt.Errorf("checkGroupReadyState group not updated")
-		}
-
 		// Create members
 		members, err := q.GetGroupMemberTotals(ctx, groupId)
 
@@ -309,15 +307,33 @@ func checkGroupReadyState(groupId int64, db *db.DB) {
 				Amount:        transaction.Cost,
 			})
 		}
-
-		if err := q.UpdateGroupStateIfMembersIsInState(ctx, generated.UpdateGroupStateIfMembersIsInStateParams{
-			GroupID:          groupId,
-			ToGroupState:     string(GroupStatePaying),
-			CheckGroupState:  string(GroupStateGenerating),
-			CheckMemberState: string(MemberStateReady),
-		}); err != nil {
-			return fmt.Errorf("checkGroupReadyState error updating group state: %v", err.Error())
+		if len(transactions) == 0 {
+			log.Printf("checkGroupReadyState no transactions created, group already balanced")
+			if err := q.UpdateGroupStateById(ctx, generated.UpdateGroupStateByIdParams{
+				GroupState: string(GroupStateResolved),
+				GroupID:    groupId,
+			}); err != nil {
+				return fmt.Errorf("checkGroupReadyState error updating group state: %v", err.Error())
+			}
+			for _, member := range members {
+				if err := q.UpsertGroupMember(ctx, generated.UpsertGroupMemberParams{
+					GroupID: groupId,
+					UserID:  member.UserID,
+					State:   string(MemberStateResolved),
+					Role:    member.Role,
+				}); err != nil {
+					return fmt.Errorf("checkGroupReadyState error updating member user(%d) state: %v", member.UserID, err.Error())
+				}
+			}
+		} else {
+			if err := q.UpdateGroupStateById(ctx, generated.UpdateGroupStateByIdParams{
+				GroupState: string(GroupStatePaying),
+				GroupID:    groupId,
+			}); err != nil {
+				return fmt.Errorf("checkGroupReadyState error updating group state: %v", err.Error())
+			}
 		}
+
 		return nil
 	}); err != nil {
 		log.Printf("checkGroupReadyState failed to create receipts: %v", err.Error())

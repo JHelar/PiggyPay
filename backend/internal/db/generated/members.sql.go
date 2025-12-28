@@ -60,7 +60,8 @@ SELECT user_id, (
         FROM group_expenses
         WHERE group_expenses.group_id = group_members.group_id 
             AND group_expenses.user_id=group_members.user_id
-    ) as total
+    ) as total,
+    group_members.role AS role
     FROM group_members
     WHERE group_members.group_id=?
 `
@@ -68,6 +69,7 @@ SELECT user_id, (
 type GetGroupMemberTotalsRow struct {
 	UserID int64       `json:"user_id"`
 	Total  interface{} `json:"total"`
+	Role   string      `json:"role"`
 }
 
 func (q *Queries) GetGroupMemberTotals(ctx context.Context, groupID int64) ([]GetGroupMemberTotalsRow, error) {
@@ -79,7 +81,7 @@ func (q *Queries) GetGroupMemberTotals(ctx context.Context, groupID int64) ([]Ge
 	items := []GetGroupMemberTotalsRow{}
 	for rows.Next() {
 		var i GetGroupMemberTotalsRow
-		if err := rows.Scan(&i.UserID, &i.Total); err != nil {
+		if err := rows.Scan(&i.UserID, &i.Total, &i.Role); err != nil {
 			return nil, err
 		}
 		items = append(items, i)

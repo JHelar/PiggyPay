@@ -66,6 +66,7 @@ SELECT groups.id AS id,
     groups.created_at AS created_at,
     groups.updated_at AS updated_at,
     group_members.role AS member_role,
+    group_members.state AS member_state,
     (
         SELECT IFNULL(SUM(group_expenses.cost), 0.0)
         FROM group_expenses
@@ -91,6 +92,7 @@ type GetGroupForUserByIdRow struct {
 	CreatedAt     time.Time   `json:"created_at"`
 	UpdatedAt     time.Time   `json:"updated_at"`
 	MemberRole    string      `json:"member_role"`
+	MemberState   string      `json:"member_state"`
 	TotalExpenses interface{} `json:"total_expenses"`
 }
 
@@ -105,6 +107,7 @@ func (q *Queries) GetGroupForUserById(ctx context.Context, arg GetGroupForUserBy
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.MemberRole,
+		&i.MemberState,
 		&i.TotalExpenses,
 	)
 	return i, err
@@ -234,6 +237,22 @@ type UpdateGroupStateParams struct {
 
 func (q *Queries) UpdateGroupState(ctx context.Context, arg UpdateGroupStateParams) error {
 	_, err := q.db.ExecContext(ctx, updateGroupState, arg.State, arg.ID, arg.UserID)
+	return err
+}
+
+const updateGroupStateById = `-- name: UpdateGroupStateById :exec
+UPDATE groups
+SET state = ?1, updated_at = CURRENT_TIMESTAMP
+WHERE id = ?2
+`
+
+type UpdateGroupStateByIdParams struct {
+	GroupState string `json:"group_state"`
+	GroupID    int64  `json:"group_id"`
+}
+
+func (q *Queries) UpdateGroupStateById(ctx context.Context, arg UpdateGroupStateByIdParams) error {
+	_, err := q.db.ExecContext(ctx, updateGroupStateById, arg.GroupState, arg.GroupID)
 	return err
 }
 

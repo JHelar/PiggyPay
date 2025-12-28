@@ -56,6 +56,7 @@ SELECT groups.id AS id,
     groups.created_at AS created_at,
     groups.updated_at AS updated_at,
     group_members.role AS member_role,
+    group_members.state AS member_state,
     (
         SELECT IFNULL(SUM(group_expenses.cost), 0.0)
         FROM group_expenses
@@ -66,6 +67,11 @@ SELECT groups.id AS id,
         ON group_members.group_id=groups.id
     WHERE groups.id=? AND group_members.user_id=? AND groups.state!='group_state:archived'
     LIMIT 1;
+
+-- name: UpdateGroupStateById :exec
+UPDATE groups
+SET state = @group_state, updated_at = CURRENT_TIMESTAMP
+WHERE id = @group_id;
 
 -- name: UpdateGroupStateIfMembersIsInState :exec
 UPDATE groups

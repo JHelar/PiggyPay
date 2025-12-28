@@ -36,7 +36,8 @@ SELECT user_id, (
         FROM group_expenses
         WHERE group_expenses.group_id = group_members.group_id 
             AND group_expenses.user_id=group_members.user_id
-    ) as total
+    ) as total,
+    group_members.role AS role
     FROM group_members
     WHERE group_members.group_id=?;
         

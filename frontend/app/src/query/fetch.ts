@@ -1,4 +1,4 @@
-import type z from "zod";
+import z from "zod";
 import { getAccessToken } from "@/auth/auth.store";
 import { NetworkError } from "@/components/ErrorBoundary";
 
@@ -61,5 +61,12 @@ export async function fetchJSON<
 
 	if (output === undefined) return response.text() as Return;
 	const json = await response.json();
-	return output.parse(json) as Return;
+	const result = output.safeParse(json);
+	if (result.success) {
+		return result.data as Return;
+	}
+	const errorMessage = z.formatError(result.error);
+	console.error("Parse error:", errorMessage);
+	console.error("Origin:", json);
+	throw result.error;
 }

@@ -3,6 +3,7 @@ package api
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"log"
 	"strconv"
 
@@ -64,39 +65,27 @@ func addMember(c *fiber.Ctx, db *db.DB) error {
 	return c.SendString("Member added")
 }
 
-type UpdateMemberState struct {
-	State MemberState
-}
-
-func updateMemberState(c *fiber.Ctx, db *db.DB) error {
+func memberReadyToPay(c *fiber.Ctx, db *db.DB) error {
 	ctx := context.Background()
-	payload := new(UpdateMemberState)
-
-	if err := c.BodyParser(payload); err != nil {
-		log.Printf("updateMemberState failed to parse body")
-		return fiber.DefaultErrorHandler(c, err)
-	}
-
 	session := mustGetGroupSession(c)
 
+	if session.MemberState != string(MemberStateAdding) {
+		err := fmt.Errorf("member in incorrect state '%s'", session.MemberState)
+		log.Printf("memberReadyToPay %s", err.Error())
+		return fiber.DefaultErrorHandler(c, err)
+	}
 	if err := db.Queries.UpsertGroupMember(ctx, generated.UpsertGroupMemberParams{
 		GroupID: session.GroupID,
 		UserID:  session.UserID,
-		State:   string(payload.State),
+		State:   string(MemberStateReady),
 		Role:    session.MemberRole,
 	}); err != nil {
-		log.Printf("updateMemberState failed to update member state group(%v) for user(%v)", session.GroupID, session.UserID)
+		log.Printf("memberReadyToPay failed to update member state group(%v) for user(%v)", session.GroupID, session.UserID)
 		return fiber.DefaultErrorHandler(c, err)
 	}
 
 	go func() {
-		group, _ := db.Queries.GetGroupForUserById(ctx, generated.GetGroupForUserByIdParams{
-			ID:     session.GroupID,
-			UserID: session.UserID,
-		})
-		if group.GroupState == string(GroupStateExpenses) {
-			checkGroupReadyState(session.GroupID, db)
-		}
+		checkGroupReadyState(session.GroupID, db)
 	}()
 
 	return c.SendString("Member updated")

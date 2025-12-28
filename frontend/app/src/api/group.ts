@@ -6,39 +6,49 @@ import { Snackbar } from "@/components/SnackbarRoot";
 import { queryClient } from "@/query";
 import { fetchJSON, fetchRaw } from "@/query/fetch";
 import { Expense } from "./expense";
-
-export const Member = z.object({
-	first_name: z.string(),
-	last_name: z.string(),
-	member_id: z.int(),
-	member_role: z.string(),
-});
-export type Member = z.output<typeof Member>;
+import { Member, MemberRole, MemberState } from "./member";
 
 export const ColorTheme = z.enum({
 	Blue: "color_theme:blue",
 	Green: "color_theme:green",
 });
-export type ColorTheme = z.output<typeof ColorTheme>;
+export type ColorTheme = z.infer<typeof ColorTheme>;
 
-export const Group = z.object({
+export const GroupState = z.enum({
+	Expenses: "group_state:expenses",
+	Generating: "group_state:generating",
+	Paying: "group_state:paying",
+	Resolved: "group_state:resolved",
+	Archived: "group_state:archived",
+});
+export type GroupState = z.infer<typeof GroupState>;
+
+const GroupBase = z.object({
 	id: z.number(),
 	group_name: z.string(),
-	group_state: z.string(),
+	group_state: GroupState,
 	group_theme: ColorTheme,
 	created_at: z.coerce.date(),
 	updated_at: z.coerce.date(),
 	total_expenses: z.number(),
 	expenses: z.array(Expense),
 });
-export type Group = z.output<typeof Group>;
+type GroupBase = z.output<typeof GroupBase>;
 
-export const GroupWithMembers = Group.omit({ expenses: true }).and(
+export const GroupWithMembers = GroupBase.omit({ expenses: true }).and(
 	z.object({
 		members: z.array(Member),
 	}),
 );
 export type GroupWithMembers = z.output<typeof GroupWithMembers>;
+
+export const Group = GroupBase.and(
+	z.object({
+		member_role: MemberRole,
+		member_state: MemberState,
+	}),
+);
+export type Group = z.output<typeof Group>;
 
 export const Groups = z.array(GroupWithMembers);
 export type Groups = z.output<typeof Groups>;
@@ -118,7 +128,7 @@ export function updateGroup() {
 			return await fetchJSON(`groups/${groupId}`, {
 				method: "PATCH",
 				body: JSON.stringify(payload),
-				output: Group.pick({ id: true }),
+				output: GroupBase.pick({ id: true }),
 			});
 		},
 		async onSuccess(data, variables, onMutateResult, context) {

@@ -6,22 +6,33 @@ import { use } from "react";
 import { View } from "react-native";
 import { StyleSheet } from "react-native-unistyles";
 import { deleteExpense, type Expense } from "@/api/expense";
+import { GroupState } from "@/api/group";
+import { MemberState, memberReadyToPay } from "@/api/member";
 import { ContextMenu } from "@/components/ContextMenu";
 import { useScreenFocusSetTheme } from "@/hooks/useScreenFocusSetTheme";
+import { useScreenOptionsEffect } from "@/hooks/useScreenOptionsEffect";
 import { Button } from "@/ui/components/Button";
 import { Icon } from "@/ui/components/Icon";
 import { IconButton } from "@/ui/components/IconButton";
 import { InfoSquare } from "@/ui/components/InfoSquare";
 import { ListItem } from "@/ui/components/ListItem";
+import { ScreenContentFooter } from "@/ui/components/ScreenContentFooter";
 import { Text } from "@/ui/components/Text";
+import { includes } from "@/utils/typedIncludes";
 import type { GroupScreenProps } from "./Group.types";
 
 type ExpenseListItemProps = {
 	expense: Expense;
 	groupId: number;
+	groupState: GroupState;
 	onPress(): void;
 };
-function ExpenseListItem({ expense, groupId, onPress }: ExpenseListItemProps) {
+function ExpenseListItem({
+	expense,
+	groupId,
+	onPress,
+	groupState,
+}: ExpenseListItemProps) {
 	const { t } = useLingui();
 	const router = useRouter();
 	const { mutateAsync: deleteExpenseMutation } = useMutation(deleteExpense());
@@ -43,42 +54,49 @@ function ExpenseListItem({ expense, groupId, onPress }: ExpenseListItemProps) {
 			right={
 				<View>
 					<Text variant="body">{expense.cost}kr</Text>
-					<ContextMenu
-						trigger={
-							<IconButton
-								name="more-vert"
-								accessibilityLabel={t`Open expense menu`}
-							/>
-						}
-						actions={[
-							{
-								icon: "edit",
-								title: t`Edit expense`,
-								onPress() {
-									router.navigate({
-										pathname: "/(modals)/Groups/[groupId]/[expenseId]/Edit",
-										params: {
-											expenseId: expense.id,
-											groupId,
-										},
-									});
-								},
-							},
-							{
-								icon: "delete",
-								title: t`Delete expense`,
-								async onPress() {
-									try {
-										await deleteExpenseMutation({
-											groupId,
-											expenseId: expense.id,
+					{includes(
+						[GroupState.enum.Paying, GroupState.enum.Generating],
+						groupState,
+					) && <Icon name="lock-outline" />}
+					{groupState === GroupState.enum.Resolved && <Icon name="check" />}
+					{groupState === GroupState.enum.Expenses && (
+						<ContextMenu
+							trigger={
+								<IconButton
+									name="more-vert"
+									accessibilityLabel={t`Open expense menu`}
+								/>
+							}
+							actions={[
+								{
+									icon: "edit",
+									title: t`Edit expense`,
+									onPress() {
+										router.navigate({
+											pathname: "/(modals)/Groups/[groupId]/[expenseId]/Edit",
+											params: {
+												expenseId: expense.id,
+												groupId,
+											},
 										});
-									} finally {
-									}
+									},
 								},
-							},
-						]}
-					/>
+								{
+									icon: "delete",
+									title: t`Delete expense`,
+									async onPress() {
+										try {
+											await deleteExpenseMutation({
+												groupId,
+												expenseId: expense.id,
+											});
+										} finally {
+										}
+									},
+								},
+							]}
+						/>
+					)}
 				</View>
 			}
 		/>
@@ -88,8 +106,60 @@ function ExpenseListItem({ expense, groupId, onPress }: ExpenseListItemProps) {
 export function GroupScreen({ query }: GroupScreenProps) {
 	const group = use(query.promise);
 	const router = useRouter();
+	const { mutate: setReadyToPay, isPending } = useMutation(memberReadyToPay());
 
 	useScreenFocusSetTheme(group.group_theme);
+
+	useScreenOptionsEffect({
+		unstable_sheetFooter() {
+			return (
+				<ScreenContentFooter
+					primary={
+						group.group_state === GroupState.enum.Expenses ? (
+							<Button
+								onPress={() =>
+									router.navigate({
+										pathname: "/(modals)/Groups/[groupId]/NewExpense",
+										params: {
+											groupId: group.id,
+										},
+									})
+								}
+								icon={<Icon name="add-circle-outline" />}
+							>
+								<Trans>New Expense</Trans>
+							</Button>
+						) : group.group_state === GroupState.enum.Paying ? (
+							<Button
+								onPress={() =>
+									router.navigate({
+										pathname: "/(modals)/Groups/[groupId]/NewExpense",
+										params: {
+											groupId: group.id,
+										},
+									})
+								}
+								icon={<Icon name="add-circle-outline" />}
+							>
+								<Trans>Pay</Trans>
+							</Button>
+						) : undefined
+					}
+					secondary={
+						group.member_state === MemberState.enum.Adding ? (
+							<Button
+								icon={<Icon name="check" />}
+								onPress={() => setReadyToPay(group.id.toString())}
+								loading={isPending}
+							>
+								<Trans>Ready to pay</Trans>
+							</Button>
+						) : undefined
+					}
+				/>
+			);
+		},
+	});
 
 	return (
 		<FlashList
@@ -105,7 +175,12 @@ export function GroupScreen({ query }: GroupScreenProps) {
 			}
 			ListHeaderComponentStyle={styles.header}
 			renderItem={({ item }) => (
-				<ExpenseListItem expense={item} groupId={group.id} onPress={() => {}} />
+				<ExpenseListItem
+					expense={item}
+					groupId={group.id}
+					onPress={() => {}}
+					groupState={group.group_state}
+				/>
 			)}
 			ItemSeparatorComponent={() => <View style={styles.spacer} />}
 			ListEmptyComponent={

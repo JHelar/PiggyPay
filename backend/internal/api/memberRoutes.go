@@ -14,9 +14,9 @@ func registerMemberRoutes(app fiber.Router, db *db.DB) {
 		return addMember(ctx, db)
 	}).Name("addMember")
 
-	app.Patch("/state", func(ctx *fiber.Ctx) error {
-		return updateMemberState(ctx, db)
-	}).Name("updateMemberState")
+	app.Patch("/ready", func(ctx *fiber.Ctx) error {
+		return memberReadyToPay(ctx, db)
+	}).Name("memberReadyToPay")
 
 	app.Delete("/", func(ctx *fiber.Ctx) error {
 		return removeMember(ctx, db)

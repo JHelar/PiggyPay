@@ -39,6 +39,7 @@ type Querier interface {
 	UpdateExpense(ctx context.Context, arg UpdateExpenseParams) (UpdateExpenseRow, error)
 	UpdateGroupById(ctx context.Context, arg UpdateGroupByIdParams) (Group, error)
 	UpdateGroupState(ctx context.Context, arg UpdateGroupStateParams) error
+	UpdateGroupStateById(ctx context.Context, arg UpdateGroupStateByIdParams) error
 	UpdateGroupStateIfMembersIsInState(ctx context.Context, arg UpdateGroupStateIfMembersIsInStateParams) error
 	UpdateReceiptDeptById(ctx context.Context, arg UpdateReceiptDeptByIdParams) (GroupMemberReceipt, error)
 	UpdateUser(ctx context.Context, arg UpdateUserParams) (UpdateUserRow, error)
