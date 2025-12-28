@@ -3,6 +3,7 @@ import { useUnistyles } from "react-native-unistyles";
 import { AuthState, useAuth } from "@/auth";
 import { ScreenLayout } from "@/components/ScreenLayout";
 import { GroupRouteOptions } from "@/screens/Group";
+import { GroupInviteRouteOptions } from "@/screens/GroupInvite";
 import { GroupsRouteOptions } from "@/screens/Groups";
 import { HomeRouteOptions } from "@/screens/Home";
 import { ProfileRouteOptions } from "@/screens/Profile";
@@ -31,10 +32,14 @@ export default function ScreenLayoutRoot() {
 				);
 			}}
 		>
-			<Stack.Protected guard={authState === AuthState.UNAUTHORIZED}>
+			<Stack.Protected guard={authState !== AuthState.AUTHORIZED}>
 				<Stack.Screen name="index" options={HomeRouteOptions} />
 				<Stack.Screen name="SignIn" options={SignInRouteOptions} />
 			</Stack.Protected>
+			<Stack.Screen
+				name="Groups/[groupId]/Invite"
+				options={GroupInviteRouteOptions}
+			/>
 			<Stack.Protected guard={authState === AuthState.AUTHORIZED}>
 				<Stack.Screen name="Groups/index" options={GroupsRouteOptions} />
 				<Stack.Screen

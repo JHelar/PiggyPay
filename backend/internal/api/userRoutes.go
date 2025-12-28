@@ -6,7 +6,7 @@ import (
 )
 
 func registerUserRoutes(app fiber.Router, db *db.DB) {
-	app.Use([]string{"/create", "/me", "/signOut"}, func(c *fiber.Ctx) error {
+	app.Use([]string{"/create", "/me"}, func(c *fiber.Ctx) error {
 		return verifyUserSession(c, db)
 	})
 

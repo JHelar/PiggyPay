@@ -1,17 +1,22 @@
 import { Trans } from "@lingui/react/macro";
+import { useRouter } from "expo-router";
+import { useCallback } from "react";
 import { View } from "react-native";
 import { StyleSheet } from "react-native-unistyles";
 import { Button } from "@/ui/components/Button";
 import { Text } from "@/ui/components/Text/Text";
-import { useSignInStore } from "../SignIn";
 
 export function HomeScreen() {
+	const router = useRouter();
+	const onSignIn = useCallback(async () => {
+		router.navigate("/SignIn");
+	}, [router.navigate]);
 	return (
 		<View style={styles.container}>
 			<Text variant="headline">
 				<Trans>Welcome</Trans>
 			</Text>
-			<Button onPress={useSignInStore.getState().start}>
+			<Button onPress={onSignIn}>
 				<Trans>Sign in</Trans>
 			</Button>
 		</View>

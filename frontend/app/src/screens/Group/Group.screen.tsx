@@ -18,7 +18,7 @@ import { InfoSquare } from "@/ui/components/InfoSquare";
 import { ListItem } from "@/ui/components/ListItem";
 import { ScreenContentFooter } from "@/ui/components/ScreenContentFooter";
 import { Text } from "@/ui/components/Text";
-import { includes } from "@/utils/typedIncludes";
+import { includes } from "@/utils/includes";
 import type { GroupScreenProps } from "./Group.types";
 
 type ExpenseListItemProps = {

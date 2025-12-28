@@ -24,6 +24,21 @@ export const Member = z.object({
 });
 export type Member = z.output<typeof Member>;
 
+export function addMember() {
+	return mutationOptions({
+		async mutationFn(groupId: string) {
+			return await fetchRaw(`groups/${groupId}/member`, {
+				method: "POST",
+			});
+		},
+		async onSuccess(data, variables, onMutateResult, context) {
+			await context.client.invalidateQueries({
+				queryKey: ["groups"],
+			});
+		},
+	});
+}
+
 const memberReadyToPayError = "Unable to set state to ready to pay";
 export function memberReadyToPay() {
 	return mutationOptions({

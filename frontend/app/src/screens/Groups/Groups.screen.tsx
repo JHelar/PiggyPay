@@ -23,15 +23,17 @@ function GroupListItem({ group, onPress }: GroupListItemProps) {
 			middle={
 				<View style={styles.itemMiddle}>
 					<Text variant="small">{group.group_name}</Text>
-					{group.members.map((member) => (
-						<Icon
-							key={member.member_id}
-							name="initials"
-							firstName={member.first_name}
-							lastName={member.last_name}
-							style={styles.icon}
-						/>
-					))}
+					<View style={styles.membersRow}>
+						{group.members.map((member, index, members) => (
+							<Icon
+								key={member.member_id}
+								name="initials"
+								firstName={member.first_name}
+								lastName={member.last_name}
+								style={[styles.icon, { zIndex: members.length - index }]}
+							/>
+						))}
+					</View>
 				</View>
 			}
 			right={
@@ -111,5 +113,10 @@ const styles = StyleSheet.create((theme) => ({
 			height: 0,
 			width: 1,
 		},
+		marginLeft: -theme.gap(1),
+	},
+	membersRow: {
+		paddingLeft: theme.gap(1),
+		flexDirection: "row",
 	},
 }));

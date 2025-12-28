@@ -36,7 +36,7 @@ export class NetworkError extends Error implements ErrorBoundaryError {
 				.execute()
 				.finally(() => {
 					reset();
-					router.replace("/");
+					router.replace("/(screens)");
 				});
 		}
 		return null;

@@ -36,29 +36,34 @@ func getMembers(c *fiber.Ctx, db *db.DB) error {
 
 func addMember(c *fiber.Ctx, db *db.DB) error {
 	ctx := context.Background()
+	groupId, err := strconv.ParseInt(c.Params(GroupIdParam), 10, 64)
+	if err != nil {
+		log.Printf("addMember failed to convert group id")
+		return fiber.ErrInternalServerError
+	}
 
-	session := mustGetGroupSession(c)
+	session := mustGetUserSession(c)
 
-	_, err := db.Queries.GetGroupMember(ctx, generated.GetGroupMemberParams{
-		GroupID: session.GroupID,
-		UserID:  session.UserID,
+	_, err = db.Queries.GetGroupMember(ctx, generated.GetGroupMemberParams{
+		GroupID: groupId,
+		UserID:  session.UserID.Int64,
 	})
 	if err == nil {
-		log.Printf("addMember user(%v) already member in group(%v)\n", session.UserID, session.GroupID)
+		log.Printf("addMember user(%v) already member in group(%v)\n", session.UserID, groupId)
 		return c.SendString("user already a member")
 	}
 	if err != sql.ErrNoRows {
-		log.Printf("addMember error getting member info for user(%v) in group(%v)", session.UserID, session.GroupID)
+		log.Printf("addMember error getting member info for user(%v) in group(%v)", session.UserID, groupId)
 		return fiber.DefaultErrorHandler(c, err)
 	}
 
 	if err = db.Queries.UpsertGroupMember(ctx, generated.UpsertGroupMemberParams{
-		GroupID: session.GroupID,
-		UserID:  session.UserID,
+		GroupID: groupId,
+		UserID:  session.UserID.Int64,
 		State:   string(MemberStateAdding),
 		Role:    string(MemberRoleRegular),
 	}); err != nil {
-		log.Printf("addMember failed to add member(%v) to group(%v)", session.UserID, session.GroupID)
+		log.Printf("addMember failed to add member(%v) to group(%v)", session.UserID, groupId)
 		return err
 	}
 

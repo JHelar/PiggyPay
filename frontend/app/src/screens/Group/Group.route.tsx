@@ -1,8 +1,8 @@
 import { useLingui } from "@lingui/react/macro";
+import { createURL } from "expo-linking";
 import { type RouteParams, router } from "expo-router";
 import type { ExtendedStackNavigationOptions } from "expo-router/build/layouts/StackClient";
-import * as Sharing from "expo-sharing";
-import { View } from "react-native";
+import { Share, View } from "react-native";
 import { StyleSheet } from "react-native-unistyles";
 import { UserContextMenu } from "@/components/ContextMenu";
 import { useLazyLocalSearchParams } from "@/hooks/useLazyLocalSearchParams";
@@ -23,8 +23,9 @@ export const GroupRouteOptions: ExtendedStackNavigationOptions = {
 					name="ios-share"
 					accessibilityLabel={t`Share group`}
 					onPress={() =>
-						Sharing.shareAsync("https://google.com", {
-							dialogTitle: t`Share group`,
+						Share.share({
+							url: createURL(`groups/${params.groupId}/invite`),
+							title: t`Invite members`,
 						})
 					}
 				/>

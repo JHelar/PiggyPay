@@ -33,12 +33,8 @@ export function signOut() {
 				method: "GET",
 			});
 		},
-		onError() {
-			queryClient.clear();
-			unauthorize();
-		},
-		onSuccess() {
-			queryClient.clear();
+		onSettled(data, error, variables, onMutateResult, context) {
+			context.client.clear();
 			unauthorize();
 		},
 	});

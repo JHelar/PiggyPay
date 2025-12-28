@@ -33,7 +33,7 @@ func verifyUserSession(c *fiber.Ctx, db *db.DB) error {
 	}
 
 	if len(header.Bearer) == 0 {
-		log.Println("Missing token")
+		log.Printf("Missing token on route %s", string(c.Request().URI().FullURI()))
 		return fiber.ErrUnauthorized
 	}
 
@@ -85,12 +85,12 @@ func newUserSignIn(c *fiber.Ctx, db *db.DB) error {
 	if err := c.BodyParser(payload); err != nil {
 		return err
 	}
-	code:= generateSignInCode()
+	code := generateSignInCode()
 
 	expires := time.Now().Add(SESSION_EXPIRE_TIME)
 	err := db.Queries.CreateSignInToken(ctx, generated.CreateSignInTokenParams{
 		Email:     payload.Email,
-		Code: code,
+		Code:      code,
 		ExpiresAt: expires,
 	})
 
@@ -164,6 +164,10 @@ func verifyUserSignIn(c *fiber.Ctx, db *db.DB) error {
 
 func signOut(c *fiber.Ctx, db *db.DB) error {
 	ctx := context.Background()
+	if err := verifyUserSession(c, db); err != nil {
+		return c.SendString("Nothing to sign out")
+	}
+
 	session := mustGetUserSession(c)
 
 	if err := db.Queries.DeleteUserSessionById(ctx, session.ID); err != nil {

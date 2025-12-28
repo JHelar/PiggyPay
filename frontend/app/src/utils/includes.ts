@@ -5,6 +5,10 @@
  * @param searchValue
  * @returns type narrow `searchValue` to be a value of `array`
  */
+export function includes<const Values extends readonly string[]>(
+	array: Values,
+	searchValue: Values[number] | (string & {}),
+): searchValue is Values[number];
 export function includes<const Values extends string[]>(
 	array: Values,
 	searchValue: Values[number] | (string & {}),

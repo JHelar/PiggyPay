@@ -1,46 +1,57 @@
-import { router } from "expo-router";
 import { create } from "zustand";
 import type { User } from "@/api/user";
 import { authorize } from "@/auth/auth.store";
+import { includes } from "@/utils/includes";
 
 const SignInState = ["EmailSubmit", "VerifyCode", "NewUser"] as const;
 type SignInState = (typeof SignInState)[number];
 
+const SignInResult = ["success", "failure", "aborted"] as const;
+type SignInResult = (typeof SignInResult)[number];
+
 type SignInStateTransition =
-	| ((payload: SignInStoreStatePayloads) => Promise<SignInState | void> | void)
-	| SignInState;
+	| ((
+			payload: SignInStoreStatePayloads,
+	  ) =>
+			| Promise<SignInState | SignInResult | void>
+			| void
+			| SignInState
+			| SignInResult)
+	| SignInState
+	| SignInResult;
 type SignInStateTransitionType = "next" | "back" | "error";
 
 const SignInStateMachine: Record<
 	SignInState,
 	Record<SignInStateTransitionType, SignInStateTransition>
 > = {
-	EmailSubmit: { next: "VerifyCode", back: router.back, error: router.back },
+	EmailSubmit: { next: "VerifyCode", back: "aborted", error: "failure" },
 	VerifyCode: {
 		async next(payload) {
 			if (payload === undefined) {
-				router.back();
-				return;
+				return "failure";
 			}
 			if (payload.VerifyCode?.newUser) {
 				return "NewUser";
 			} else if (payload.VerifyCode?.sessionId) {
-				return authorize(payload.VerifyCode?.sessionId);
+				authorize(payload.VerifyCode.sessionId);
+				return "success";
 			}
-			router.back();
+			return "failure";
 		},
 		back: "EmailSubmit",
-		error: router.back,
+		error: "failure",
 	},
 	NewUser: {
 		next(payload) {
 			if (payload?.NewUser?.user && payload.VerifyCode?.sessionId) {
-				return authorize(payload.VerifyCode?.sessionId);
+				authorize(payload.VerifyCode.sessionId);
+				return "success";
 			}
-			return router.back();
+			return "failure";
 		},
-		back: router.back,
-		error: router.back,
+		back: "failure",
+		error: "failure",
 	},
 };
 
@@ -68,7 +79,8 @@ type SignInStoreState = {
 	currentState: SignInState;
 	statePayload: SignInStoreStatePayloads;
 	isTransitioning: boolean;
-	start(): void;
+	signInHandle?: (result: SignInResult) => void;
+	start(): Promise<SignInResult>;
 	transition(
 		type: SignInStateTransitionType,
 		payload?: AuthPayload,
@@ -78,10 +90,17 @@ type SignInStoreState = {
 export const useSignInStore = create<SignInStoreState>((set, get) => ({
 	currentState: "EmailSubmit" as const,
 	isTransitioning: false,
-	statePayload: new Map(),
+	statePayload: {},
 	start() {
-		set({ currentState: "EmailSubmit", statePayload: {} });
-		router.navigate("/SignIn");
+		get().signInHandle?.("aborted");
+
+		return new Promise<SignInResult>((resolve) => {
+			set({
+				currentState: "EmailSubmit",
+				statePayload: {},
+				signInHandle: resolve,
+			});
+		});
 	},
 	async transition(type, payload) {
 		try {
@@ -94,8 +113,18 @@ export const useSignInStore = create<SignInStoreState>((set, get) => ({
 				type,
 				get().statePayload,
 			);
-			if (typeof nextState === "string") {
+			if (!nextState) {
+				return;
+			}
+			if (includes(SignInState, nextState)) {
 				set({ currentState: nextState });
+			} else {
+				set({
+					currentState: "EmailSubmit" as const,
+					isTransitioning: false,
+					statePayload: {},
+				});
+				get().signInHandle?.(nextState);
 			}
 		} catch {
 			const nextState = await getNextState(
@@ -103,8 +132,18 @@ export const useSignInStore = create<SignInStoreState>((set, get) => ({
 				"error",
 				get().statePayload,
 			);
-			if (typeof nextState === "string") {
+			if (!nextState) {
+				return;
+			}
+			if (includes(SignInState, nextState)) {
 				set({ currentState: nextState });
+			} else {
+				set({
+					currentState: "EmailSubmit" as const,
+					isTransitioning: false,
+					statePayload: {},
+				});
+				get().signInHandle?.(nextState);
 			}
 		} finally {
 			set({ isTransitioning: false });
