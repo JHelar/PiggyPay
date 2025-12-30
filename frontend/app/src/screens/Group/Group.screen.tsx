@@ -133,7 +133,7 @@ export function GroupScreen({ query }: GroupScreenProps) {
 							<Button
 								onPress={() =>
 									router.navigate({
-										pathname: "/(modals)/Groups/[groupId]/NewExpense",
+										pathname: "/(screens)/Groups/[groupId]/Pay",
 										params: {
 											groupId: group.id,
 										},

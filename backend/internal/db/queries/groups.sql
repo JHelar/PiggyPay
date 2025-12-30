@@ -73,16 +73,6 @@ UPDATE groups
 SET state = @group_state, updated_at = CURRENT_TIMESTAMP
 WHERE id = @group_id;
 
--- name: UpdateGroupStateIfMembersIsInState :exec
-UPDATE groups
-SET state = @to_group_state, updated_at = CURRENT_TIMESTAMP
-WHERE id = @group_id AND groups.state = @check_group_state
-    AND (
-        SELECT COUNT(*) = SUM(group_members.state = @check_member_state)
-        FROM group_members
-        WHERE group_id=groups.id
-    );
-
 -- name: ArchiveGroupById :exec
 UPDATE groups
 SET state = "group_state:archived", updated_at = CURRENT_TIMESTAMP

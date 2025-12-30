@@ -8,7 +8,6 @@ import { queryClient } from "@/query";
 export const AuthState = {
 	INITIALIZING: "AuthState(INITIALIZING)",
 	UNAUTHORIZED: "AuthState(UNAUTHORIZED)",
-	VERIFYING: "AuthState(VERIFYING)",
 	AUTHORIZED: "AuthState(AUTHORIZED)",
 } as const;
 
@@ -48,14 +47,17 @@ export const useAuth = create<AuthStoreState>()(
 									state: AuthState.UNAUTHORIZED,
 									accessToken: undefined,
 								});
+							})
+							.finally(() => {
+								SplashScreen.hideAsync();
 							});
 					} else {
 						useAuth.setState({
 							state: AuthState.UNAUTHORIZED,
 							accessToken: undefined,
 						});
+						SplashScreen.hideAsync();
 					}
-					SplashScreen.hideAsync();
 				};
 			},
 			partialize(state) {

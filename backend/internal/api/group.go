@@ -147,7 +147,7 @@ func getGroups(c *fiber.Ctx, db *db.DB) error {
 		return fiber.ErrInternalServerError
 	}
 
-	var groups []GroupResponseRow
+	groups := []GroupResponseRow{}
 	for _, group := range group_rows {
 		members, _ := db.Queries.GetGroupMembersForUser(ctx, generated.GetGroupMembersForUserParams{
 			GroupID: group.ID,
@@ -253,23 +253,30 @@ func deleteGroup(c *fiber.Ctx, db *db.DB) error {
 
 func checkGroupReadyState(groupId int64, db *db.DB) {
 	ctx := context.Background()
-	if err := db.Queries.UpdateGroupStateIfMembersIsInState(ctx, generated.UpdateGroupStateIfMembersIsInStateParams{
-		GroupID:          groupId,
-		ToGroupState:     string(GroupStateGenerating),
-		CheckGroupState:  string(GroupStateExpenses),
-		CheckMemberState: string(MemberStateReady),
+
+	members, err := db.Queries.GetGroupMemberTotals(ctx, groupId)
+
+	if err != nil {
+		log.Printf("checkGroupReadyState failed to get group member totals")
+		return
+	}
+	for _, member := range members {
+		if member.State != string(MemberStateReady) {
+			return
+		}
+	}
+
+	log.Printf("checkGroupReadyState group(%d) is ready to pay", groupId)
+
+	if err := db.Queries.UpdateGroupStateById(ctx, generated.UpdateGroupStateByIdParams{
+		GroupState: string(GroupStateGenerating),
+		GroupID:    groupId,
 	}); err != nil {
 		log.Printf("checkGroupReadyState failed to update group state: %v", err.Error())
 		return
 	}
 	if err := db.RunAsTransaction(ctx, func(q *generated.Queries) error {
 		// Create members
-		members, err := q.GetGroupMemberTotals(ctx, groupId)
-
-		if err != nil {
-			return fmt.Errorf("checkGroupReadyState failed to get group member totals")
-		}
-
 		groupTotal := 0.0
 		for _, member := range members {
 			groupTotal = groupTotal + member.Total.(float64)
@@ -288,6 +295,13 @@ func checkGroupReadyState(groupId int64, db *db.DB) {
 				CurrentDept: total_dept,
 			})
 
+			// Is owed aka resolved
+			if total_dept < 0 {
+				member.State = string(MemberStateResolved)
+			} else {
+				member.State = string(MemberStatePaying)
+			}
+
 			if err != nil {
 				return err
 			}
@@ -298,14 +312,6 @@ func checkGroupReadyState(groupId int64, db *db.DB) {
 		transactions, err := utils.BalanceReceipts(receipts)
 		if err != nil {
 			return fmt.Errorf("checkGroupReadyState failed to balance receipts, %v", err.Error())
-		}
-		for _, transaction := range transactions {
-			q.CreateMemberTransaction(ctx, generated.CreateMemberTransactionParams{
-				FromReceiptID: transaction.FromID,
-				ToReceiptID:   transaction.ToID,
-				State:         string(TransactionStateUnpaid),
-				Amount:        transaction.Cost,
-			})
 		}
 		if len(transactions) == 0 {
 			log.Printf("checkGroupReadyState no transactions created, group already balanced")
@@ -326,6 +332,14 @@ func checkGroupReadyState(groupId int64, db *db.DB) {
 				}
 			}
 		} else {
+			for _, transaction := range transactions {
+				q.CreateMemberTransaction(ctx, generated.CreateMemberTransactionParams{
+					FromReceiptID: transaction.FromID,
+					ToReceiptID:   transaction.ToID,
+					State:         string(TransactionStateUnpaid),
+					Amount:        transaction.Cost,
+				})
+			}
 			if err := q.UpdateGroupStateById(ctx, generated.UpdateGroupStateByIdParams{
 				GroupState: string(GroupStatePaying),
 				GroupID:    groupId,
@@ -343,11 +357,22 @@ func checkGroupReadyState(groupId int64, db *db.DB) {
 
 func checkGroupResolvedState(groupId int64, db *db.DB) {
 	ctx := context.Background()
-	if err := db.Queries.UpdateGroupStateIfMembersIsInState(ctx, generated.UpdateGroupStateIfMembersIsInStateParams{
-		GroupID:          groupId,
-		ToGroupState:     string(GroupStateResolved),
-		CheckGroupState:  string(GroupStatePaying),
-		CheckMemberState: string(MemberStateResolved),
+	members, err := db.Queries.GetGroupMemberTotals(ctx, groupId)
+
+	if err != nil {
+		log.Printf("checkGroupResolvedState failed to get group member totals")
+		return
+	}
+	for _, member := range members {
+		if member.State != string(MemberStateResolved) {
+			return
+		}
+	}
+
+	log.Printf("checkGroupResolvedState group(%d) is resolved", groupId)
+	if err := db.Queries.UpdateGroupStateById(ctx, generated.UpdateGroupStateByIdParams{
+		GroupID:    groupId,
+		GroupState: string(GroupStateResolved),
 	}); err != nil {
 		log.Printf("checkGroupResolvedState failed to update group state: %v", err.Error())
 		return

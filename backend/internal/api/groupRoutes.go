@@ -39,6 +39,9 @@ func registerGroupRoutes(public fiber.Router, db *db.DB) {
 	publicMemberRouter := public.Group(fmt.Sprintf("/:%s/member", GroupIdParam))
 	registerMemberRoutes(publicMemberRouter, db)
 
+	transactionRouter := public.Group(fmt.Sprintf("/:%s/transaction", GroupIdParam), verifyGroupMemberHandle)
+	registerTransactionRoutes(transactionRouter, db)
+
 	expenseRouter := public.Group(fmt.Sprintf("/:%s/expense", GroupIdParam), verifyGroupMemberHandle)
 	registerExpenseRoutes(expenseRouter, db)
 }

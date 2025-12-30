@@ -9,7 +9,7 @@ export default function SignIn() {
 			.start()
 			.then((result) => {
 				if (result === "success") {
-					router.replace("/(screens)/Groups");
+					router.dismissTo("/(screens)/Groups");
 				} else {
 					router.back();
 				}

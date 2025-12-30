@@ -12,7 +12,7 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
-const DATABASE_NAME = "piggypay.db"
+const DATABASE_NAME = "piggysplit.db"
 
 //go:embed schema/schema.sql
 var ddl string

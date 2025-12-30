@@ -3,7 +3,7 @@ import type { User } from "@/api/user";
 import { authorize } from "@/auth/auth.store";
 import { includes } from "@/utils/includes";
 
-const SignInState = ["EmailSubmit", "VerifyCode", "NewUser"] as const;
+const SignInState = ["EmailSubmit", "VerifyCode", "NewUser", "Idle"] as const;
 type SignInState = (typeof SignInState)[number];
 
 const SignInResult = ["success", "failure", "aborted"] as const;
@@ -25,6 +25,7 @@ const SignInStateMachine: Record<
 	SignInState,
 	Record<SignInStateTransitionType, SignInStateTransition>
 > = {
+	Idle: { next: "EmailSubmit", back: "aborted", error: "failure" },
 	EmailSubmit: { next: "VerifyCode", back: "aborted", error: "failure" },
 	VerifyCode: {
 		async next(payload) {
@@ -79,7 +80,7 @@ type SignInStoreState = {
 	currentState: SignInState;
 	statePayload: SignInStoreStatePayloads;
 	isTransitioning: boolean;
-	signInHandle?: (result: SignInResult) => void;
+	signInHandle: ((result: SignInResult) => void) | null;
 	start(): Promise<SignInResult>;
 	transition(
 		type: SignInStateTransitionType,
@@ -87,10 +88,15 @@ type SignInStoreState = {
 	): Promise<void>;
 };
 
-export const useSignInStore = create<SignInStoreState>((set, get) => ({
-	currentState: "EmailSubmit" as const,
+const DefaultState = {
+	currentState: "Idle" as const,
 	isTransitioning: false,
 	statePayload: {},
+	signInHandle: null,
+};
+
+export const useSignInStore = create<SignInStoreState>((set, get) => ({
+	...DefaultState,
 	start() {
 		get().signInHandle?.("aborted");
 
@@ -119,12 +125,8 @@ export const useSignInStore = create<SignInStoreState>((set, get) => ({
 			if (includes(SignInState, nextState)) {
 				set({ currentState: nextState });
 			} else {
-				set({
-					currentState: "EmailSubmit" as const,
-					isTransitioning: false,
-					statePayload: {},
-				});
 				get().signInHandle?.(nextState);
+				set(DefaultState);
 			}
 		} catch {
 			const nextState = await getNextState(
@@ -138,12 +140,8 @@ export const useSignInStore = create<SignInStoreState>((set, get) => ({
 			if (includes(SignInState, nextState)) {
 				set({ currentState: nextState });
 			} else {
-				set({
-					currentState: "EmailSubmit" as const,
-					isTransitioning: false,
-					statePayload: {},
-				});
 				get().signInHandle?.(nextState);
+				set(DefaultState);
 			}
 		} finally {
 			set({ isTransitioning: false });

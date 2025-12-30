@@ -6,6 +6,7 @@ import { GroupRouteOptions } from "@/screens/Group";
 import { GroupInviteRouteOptions } from "@/screens/GroupInvite";
 import { GroupsRouteOptions } from "@/screens/Groups";
 import { HomeRouteOptions } from "@/screens/Home";
+import { PayRouteOptions } from "@/screens/Pay";
 import { ProfileRouteOptions } from "@/screens/Profile";
 import { SignInRouteOptions } from "@/screens/SignIn";
 import type { RenderSlot } from "@/ui/utils/renderSlot";
@@ -32,21 +33,24 @@ export default function ScreenLayoutRoot() {
 				);
 			}}
 		>
-			<Stack.Protected guard={authState !== AuthState.AUTHORIZED}>
+			<Stack.Protected guard={authState === AuthState.UNAUTHORIZED}>
 				<Stack.Screen name="index" options={HomeRouteOptions} />
 				<Stack.Screen name="SignIn" options={SignInRouteOptions} />
 			</Stack.Protected>
-			<Stack.Screen
-				name="Groups/[groupId]/Invite"
-				options={GroupInviteRouteOptions}
-			/>
 			<Stack.Protected guard={authState === AuthState.AUTHORIZED}>
 				<Stack.Screen name="Groups/index" options={GroupsRouteOptions} />
+				<Stack.Screen name="User/index" options={ProfileRouteOptions} />
 				<Stack.Screen
 					name="Groups/[groupId]/index"
 					options={GroupRouteOptions}
 				/>
-				<Stack.Screen name="User/index" options={ProfileRouteOptions} />
+				<Stack.Screen name="Groups/[groupId]/Pay" options={PayRouteOptions} />
+			</Stack.Protected>
+			<Stack.Protected guard={authState !== AuthState.INITIALIZING}>
+				<Stack.Screen
+					name="Groups/[groupId]/Invite"
+					options={GroupInviteRouteOptions}
+				/>
 			</Stack.Protected>
 		</Stack>
 	);

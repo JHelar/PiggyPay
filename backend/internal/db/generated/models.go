@@ -48,13 +48,13 @@ type GroupMemberReceipt struct {
 }
 
 type GroupMemberTransaction struct {
-	ID            int64          `json:"id"`
-	FromReceiptID int64          `json:"from_receipt_id"`
-	ToReceiptID   int64          `json:"to_receipt_id"`
-	State         string         `json:"state"`
-	Amount        float64        `json:"amount"`
-	CreatedAt     time.Time      `json:"created_at"`
-	PayedAt       sql.NullString `json:"payed_at"`
+	ID            int64        `json:"id"`
+	FromReceiptID int64        `json:"from_receipt_id"`
+	ToReceiptID   int64        `json:"to_receipt_id"`
+	State         string       `json:"state"`
+	Amount        float64      `json:"amount"`
+	CreatedAt     time.Time    `json:"created_at"`
+	PayedAt       sql.NullTime `json:"payed_at"`
 }
 
 type User struct {

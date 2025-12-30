@@ -25,7 +25,4 @@ func registerMemberRoutes(public fiber.Router, db *db.DB) {
 	public.Delete("/", verifyGroupMemberHandle, func(ctx *fiber.Ctx) error {
 		return removeMember(ctx, db)
 	}).Name("removeMember")
-
-	transactionRouter := public.Group("/transaction", verifyGroupMemberHandle)
-	registerTransactionRoutes(transactionRouter, db)
 }

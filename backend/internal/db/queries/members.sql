@@ -37,7 +37,8 @@ SELECT user_id, (
         WHERE group_expenses.group_id = group_members.group_id 
             AND group_expenses.user_id=group_members.user_id
     ) as total,
-    group_members.role AS role
+    group_members.role AS role,
+    group_members.state AS state
     FROM group_members
     WHERE group_members.group_id=?;
         

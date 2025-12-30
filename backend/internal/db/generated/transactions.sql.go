@@ -98,7 +98,7 @@ SELECT
     INNER JOIN group_member_receipts to_receipts
         ON group_member_transactions.to_receipt_id=to_receipts.id
     INNER JOIN users to_users
-        ON to_users.id=from_receipts.user_id
+        ON to_users.id=to_receipts.user_id
     WHERE
         from_receipts.user_id=?
         AND from_receipts.group_id=?

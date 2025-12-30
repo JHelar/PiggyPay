@@ -255,31 +255,3 @@ func (q *Queries) UpdateGroupStateById(ctx context.Context, arg UpdateGroupState
 	_, err := q.db.ExecContext(ctx, updateGroupStateById, arg.GroupState, arg.GroupID)
 	return err
 }
-
-const updateGroupStateIfMembersIsInState = `-- name: UpdateGroupStateIfMembersIsInState :exec
-UPDATE groups
-SET state = ?1, updated_at = CURRENT_TIMESTAMP
-WHERE id = ?2 AND groups.state = ?3
-    AND (
-        SELECT COUNT(*) = SUM(group_members.state = ?4)
-        FROM group_members
-        WHERE group_id=groups.id
-    )
-`
-
-type UpdateGroupStateIfMembersIsInStateParams struct {
-	ToGroupState     string `json:"to_group_state"`
-	GroupID          int64  `json:"group_id"`
-	CheckGroupState  string `json:"check_group_state"`
-	CheckMemberState string `json:"check_member_state"`
-}
-
-func (q *Queries) UpdateGroupStateIfMembersIsInState(ctx context.Context, arg UpdateGroupStateIfMembersIsInStateParams) error {
-	_, err := q.db.ExecContext(ctx, updateGroupStateIfMembersIsInState,
-		arg.ToGroupState,
-		arg.GroupID,
-		arg.CheckGroupState,
-		arg.CheckMemberState,
-	)
-	return err
-}

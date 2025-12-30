@@ -9,7 +9,7 @@ import { SignInScreen, useSignInStore } from "@/screens/SignIn";
 import { Spinner } from "@/ui/components/Spinner";
 import { includes } from "@/utils/includes";
 
-const LoadingAuth = [AuthState.INITIALIZING, AuthState.VERIFYING];
+const LoadingAuth = [AuthState.INITIALIZING];
 
 export default function GroupInvite() {
 	const authState = useAuth(({ state }) => state);
@@ -47,7 +47,15 @@ export default function GroupInvite() {
 			}
 		}
 		process();
-	}, [inviteMember, params.groupId, router.replace, t, authState]);
+	}, [
+		inviteMember,
+		params.groupId,
+		router.replace,
+		t,
+		authState,
+		router.dismissTo,
+		router.push,
+	]);
 
 	if (authState === AuthState.UNAUTHORIZED) {
 		return <SignInScreen />;

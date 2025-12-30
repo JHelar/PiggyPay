@@ -11,6 +11,7 @@ export function HomeScreen() {
 	const onSignIn = useCallback(async () => {
 		router.navigate("/SignIn");
 	}, [router.navigate]);
+
 	return (
 		<View style={styles.container}>
 			<Text variant="headline">

@@ -96,7 +96,7 @@ CREATE TABLE IF NOT EXISTS group_member_transactions (
     amount REAL NOT NULL,
 
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    payed_at TEXT DEFAULT CURRENT_TIMESTAMP,
+    payed_at TIMESTAMP,
 
     FOREIGN KEY (from_receipt_id) REFERENCES group_member_receipts(id),
     FOREIGN KEY (to_receipt_id) REFERENCES group_member_receipts(id)

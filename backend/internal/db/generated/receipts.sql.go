@@ -41,7 +41,7 @@ func (q *Queries) CreateReceipt(ctx context.Context, arg CreateReceiptParams) (C
 
 const updateReceiptDeptById = `-- name: UpdateReceiptDeptById :one
 UPDATE group_member_receipts
-SET current_dept=current_dept-?1,updated_at=CURRENT_TIMESTAMP
+SET current_dept=current_dept+?1,updated_at=CURRENT_TIMESTAMP
 WHERE id=?2
 RETURNING id, group_id, user_id, total_dept, current_dept, updated_at, create_at
 `
