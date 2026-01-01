@@ -3,6 +3,7 @@ INSERT INTO group_member_transactions (from_receipt_id, to_receipt_id, state, am
 
 -- name: GetUserGroupTransactions :many
 SELECT 
+    group_member_transactions.id AS transaction_id,
     group_member_transactions.from_receipt_id AS from_receipt_id,
     group_member_transactions.to_receipt_id AS to_receipt_id, 
     group_member_transactions.state AS transaction_state, 
@@ -46,14 +47,13 @@ SELECT
 UPDATE group_member_transactions
 SET state=@to_state,payed_at=CURRENT_TIMESTAMP
 WHERE id=(
-        SELECT id FROM group_member_transactions
+        SELECT group_member_transactions.id FROM group_member_transactions
             INNER JOIN group_member_receipts
                 ON group_member_receipts.id=group_member_transactions.from_receipt_id
             WHERE 
-                group_member_receipts.user_id=? 
-                AND group_member_receipts.current_dept > 0
-                AND group_member_receipts.group_id=?
-                AND group_member_transactions.id=?
+                group_member_receipts.user_id=@user_id 
+                AND group_member_receipts.group_id=@group_id
+                AND group_member_transactions.id=@transaction_id
                 AND group_member_transactions.state=@from_state
     )
 RETURNING *;

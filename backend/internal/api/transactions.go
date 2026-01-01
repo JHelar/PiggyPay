@@ -81,18 +81,20 @@ func payTransaction(c *fiber.Ctx, db *db.DB) error {
 	ctx := context.Background()
 
 	session := mustGetTransactionSession(c)
+	log.Printf("payTransaction for user(%v) transaction(%v) group(%v)", session.UserID, session.TransactionID, session.GroupID)
 
 	var currentUserDept float64
 	err := db.RunAsTransaction(ctx, func(q *generated.Queries) error {
 		transaction, err := q.PayUserGroupTransaction(ctx, generated.PayUserGroupTransactionParams{
-			FromState: string(TransactionStateUnpaid),
-			ToState:   string(TransactionStatePaid),
-			UserID:    session.UserID,
-			GroupID:   session.GroupID,
-			ID:        session.TransactionID,
+			FromState:     string(TransactionStateUnpaid),
+			ToState:       string(TransactionStatePaid),
+			UserID:        session.UserID,
+			GroupID:       session.GroupID,
+			TransactionID: session.TransactionID,
 		})
 		if err != nil {
-			fmt.Printf("payTransaction failed to pay transaction(%v) for user(%v) and group(%v)", session.TransactionID, session.UserID, session.GroupID)
+			log.Printf("payTransaction failed to pay transaction(%v) for user(%v) and group(%v)", session.TransactionID, session.UserID, session.GroupID)
+			log.Printf("payTransaction err %v", err.Error())
 			return fiber.DefaultErrorHandler(c, err)
 		}
 
@@ -101,6 +103,14 @@ func payTransaction(c *fiber.Ctx, db *db.DB) error {
 			ReceiptID: transaction.FromReceiptID,
 		})
 		if err != nil {
+			fmt.Printf("payTransaction failed to update receipt(%v) for user(%v) and group(%v)", transaction.FromReceiptID, session.UserID, session.GroupID)
+			return fiber.DefaultErrorHandler(c, err)
+		}
+
+		if _, err := q.UpdateReceiptDeptById(ctx, generated.UpdateReceiptDeptByIdParams{
+			Amount:    -transaction.Amount,
+			ReceiptID: transaction.ToReceiptID,
+		}); err != nil {
 			fmt.Printf("payTransaction failed to update receipt(%v) for user(%v) and group(%v)", transaction.FromReceiptID, session.UserID, session.GroupID)
 			return fiber.DefaultErrorHandler(c, err)
 		}
@@ -121,7 +131,8 @@ func payTransaction(c *fiber.Ctx, db *db.DB) error {
 	})
 
 	if err != nil {
-		return err
+		log.Printf("payTransaction failed to pay transaction(%v)", session.TransactionID)
+		return fiber.DefaultErrorHandler(c, err)
 	}
 
 	if currentUserDept == 0 {

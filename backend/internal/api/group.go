@@ -295,15 +295,15 @@ func checkGroupReadyState(groupId int64, db *db.DB) {
 				CurrentDept: total_dept,
 			})
 
-			// Is owed aka resolved
-			if total_dept < 0 {
-				member.State = string(MemberStateResolved)
-			} else {
-				member.State = string(MemberStatePaying)
-			}
-
 			if err != nil {
 				return err
+			}
+
+			// Owes money
+			if total_dept < 0 {
+				member.State = string(MemberStatePaying)
+			} else {
+				member.State = string(MemberStateResolved)
 			}
 
 			receipts = append(receipts, receipt)
@@ -313,6 +313,16 @@ func checkGroupReadyState(groupId int64, db *db.DB) {
 		if err != nil {
 			return fmt.Errorf("checkGroupReadyState failed to balance receipts, %v", err.Error())
 		}
+		for _, member := range members {
+			if err := q.UpsertGroupMember(ctx, generated.UpsertGroupMemberParams{
+				GroupID: groupId,
+				UserID:  member.UserID,
+				State:   member.State,
+				Role:    member.Role,
+			}); err != nil {
+				return fmt.Errorf("checkGroupReadyState error updating member user(%d) state: %v", member.UserID, err.Error())
+			}
+		}
 		if len(transactions) == 0 {
 			log.Printf("checkGroupReadyState no transactions created, group already balanced")
 			if err := q.UpdateGroupStateById(ctx, generated.UpdateGroupStateByIdParams{
@@ -320,16 +330,6 @@ func checkGroupReadyState(groupId int64, db *db.DB) {
 				GroupID:    groupId,
 			}); err != nil {
 				return fmt.Errorf("checkGroupReadyState error updating group state: %v", err.Error())
-			}
-			for _, member := range members {
-				if err := q.UpsertGroupMember(ctx, generated.UpsertGroupMemberParams{
-					GroupID: groupId,
-					UserID:  member.UserID,
-					State:   string(MemberStateResolved),
-					Role:    member.Role,
-				}); err != nil {
-					return fmt.Errorf("checkGroupReadyState error updating member user(%d) state: %v", member.UserID, err.Error())
-				}
 			}
 		} else {
 			for _, transaction := range transactions {

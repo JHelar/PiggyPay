@@ -129,7 +129,7 @@ export function GroupScreen({ query }: GroupScreenProps) {
 							>
 								<Trans>New Expense</Trans>
 							</Button>
-						) : group.group_state === GroupState.enum.Paying ? (
+						) : group.member_state === MemberState.enum.Paying ? (
 							<Button
 								onPress={() =>
 									router.navigate({
@@ -170,7 +170,7 @@ export function GroupScreen({ query }: GroupScreenProps) {
 				<InfoSquare
 					title={<Text>{group.group_name}</Text>}
 					cta={<></>}
-					info={<View></View>}
+					info={<Text>{group.group_state}</Text>}
 				/>
 			}
 			ListHeaderComponentStyle={styles.header}

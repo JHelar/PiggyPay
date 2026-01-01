@@ -85,6 +85,7 @@ func (q *Queries) GetUserGroupTransaction(ctx context.Context, arg GetUserGroupT
 
 const getUserGroupTransactions = `-- name: GetUserGroupTransactions :many
 SELECT 
+    group_member_transactions.id AS transaction_id,
     group_member_transactions.from_receipt_id AS from_receipt_id,
     group_member_transactions.to_receipt_id AS to_receipt_id, 
     group_member_transactions.state AS transaction_state, 
@@ -110,6 +111,7 @@ type GetUserGroupTransactionsParams struct {
 }
 
 type GetUserGroupTransactionsRow struct {
+	TransactionID     int64   `json:"transaction_id"`
 	FromReceiptID     int64   `json:"from_receipt_id"`
 	ToReceiptID       int64   `json:"to_receipt_id"`
 	TransactionState  string  `json:"transaction_state"`
@@ -129,6 +131,7 @@ func (q *Queries) GetUserGroupTransactions(ctx context.Context, arg GetUserGroup
 	for rows.Next() {
 		var i GetUserGroupTransactionsRow
 		if err := rows.Scan(
+			&i.TransactionID,
 			&i.FromReceiptID,
 			&i.ToReceiptID,
 			&i.TransactionState,
@@ -152,27 +155,26 @@ func (q *Queries) GetUserGroupTransactions(ctx context.Context, arg GetUserGroup
 
 const payUserGroupTransaction = `-- name: PayUserGroupTransaction :one
 UPDATE group_member_transactions
-SET state=?,payed_at=CURRENT_TIMESTAMP
+SET state=?1,payed_at=CURRENT_TIMESTAMP
 WHERE id=(
-        SELECT id FROM group_member_transactions
+        SELECT group_member_transactions.id FROM group_member_transactions
             INNER JOIN group_member_receipts
                 ON group_member_receipts.id=group_member_transactions.from_receipt_id
             WHERE 
-                group_member_receipts.user_id=? 
-                AND group_member_receipts.current_dept > 0
-                AND group_member_receipts.group_id=?
-                AND group_member_transactions.id=?
-                AND group_member_transactions.state=?
+                group_member_receipts.user_id=?2 
+                AND group_member_receipts.group_id=?3
+                AND group_member_transactions.id=?4
+                AND group_member_transactions.state=?5
     )
 RETURNING id, from_receipt_id, to_receipt_id, state, amount, created_at, payed_at
 `
 
 type PayUserGroupTransactionParams struct {
-	ToState   string `json:"to_state"`
-	UserID    int64  `json:"user_id"`
-	GroupID   int64  `json:"group_id"`
-	ID        int64  `json:"id"`
-	FromState string `json:"from_state"`
+	ToState       string `json:"to_state"`
+	UserID        int64  `json:"user_id"`
+	GroupID       int64  `json:"group_id"`
+	TransactionID int64  `json:"transaction_id"`
+	FromState     string `json:"from_state"`
 }
 
 func (q *Queries) PayUserGroupTransaction(ctx context.Context, arg PayUserGroupTransactionParams) (GroupMemberTransaction, error) {
@@ -180,7 +182,7 @@ func (q *Queries) PayUserGroupTransaction(ctx context.Context, arg PayUserGroupT
 		arg.ToState,
 		arg.UserID,
 		arg.GroupID,
-		arg.ID,
+		arg.TransactionID,
 		arg.FromState,
 	)
 	var i GroupMemberTransaction

@@ -7,5 +7,5 @@ export default function Pay() {
 	const params = useLocalSearchParams<PayRouteParams>();
 	const query = useQuery(getTransactions(params.groupId));
 
-	return <PayScreen query={query} />;
+	return <PayScreen query={query} groupId={params.groupId} />;
 }
