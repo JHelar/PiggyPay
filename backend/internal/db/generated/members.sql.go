@@ -54,6 +54,47 @@ func (q *Queries) GetGroupMember(ctx context.Context, arg GetGroupMemberParams) 
 	return i, err
 }
 
+const getGroupMemberInfoForUser = `-- name: GetGroupMemberInfoForUser :one
+SELECT
+    users.first_name AS first_name, 
+    users.last_name AS last_name,  
+    group_members.role AS member_role,
+    group_members.state AS member_state,
+    users.id AS member_id
+    FROM group_members
+    INNER JOIN users
+        ON users.id=group_members.user_id
+    WHERE 
+        group_members.group_id=?1
+    AND group_members.user_id=?2
+`
+
+type GetGroupMemberInfoForUserParams struct {
+	GroupID int64 `json:"group_id"`
+	UserID  int64 `json:"user_id"`
+}
+
+type GetGroupMemberInfoForUserRow struct {
+	FirstName   string `json:"first_name"`
+	LastName    string `json:"last_name"`
+	MemberRole  string `json:"member_role"`
+	MemberState string `json:"member_state"`
+	MemberID    int64  `json:"member_id"`
+}
+
+func (q *Queries) GetGroupMemberInfoForUser(ctx context.Context, arg GetGroupMemberInfoForUserParams) (GetGroupMemberInfoForUserRow, error) {
+	row := q.db.QueryRowContext(ctx, getGroupMemberInfoForUser, arg.GroupID, arg.UserID)
+	var i GetGroupMemberInfoForUserRow
+	err := row.Scan(
+		&i.FirstName,
+		&i.LastName,
+		&i.MemberRole,
+		&i.MemberState,
+		&i.MemberID,
+	)
+	return i, err
+}
+
 const getGroupMemberTotals = `-- name: GetGroupMemberTotals :many
 SELECT user_id, (
         SELECT IFNULL(SUM(group_expenses.cost), 0.0)
@@ -105,9 +146,10 @@ func (q *Queries) GetGroupMemberTotals(ctx context.Context, groupID int64) ([]Ge
 const getGroupMembersForUser = `-- name: GetGroupMembersForUser :many
 SELECT 
     users.first_name AS first_name, 
-    users.last_name AS last_name, 
-    users.id AS member_id, 
-    group_members.role AS member_role
+    users.last_name AS last_name,  
+    group_members.role AS member_role,
+    group_members.state AS member_state,
+    users.id AS member_id
     FROM group_members
     INNER JOIN users
         ON users.id=group_members.user_id
@@ -127,10 +169,11 @@ type GetGroupMembersForUserParams struct {
 }
 
 type GetGroupMembersForUserRow struct {
-	FirstName  string `json:"first_name"`
-	LastName   string `json:"last_name"`
-	MemberID   int64  `json:"member_id"`
-	MemberRole string `json:"member_role"`
+	FirstName   string `json:"first_name"`
+	LastName    string `json:"last_name"`
+	MemberRole  string `json:"member_role"`
+	MemberState string `json:"member_state"`
+	MemberID    int64  `json:"member_id"`
 }
 
 func (q *Queries) GetGroupMembersForUser(ctx context.Context, arg GetGroupMembersForUserParams) ([]GetGroupMembersForUserRow, error) {
@@ -145,8 +188,9 @@ func (q *Queries) GetGroupMembersForUser(ctx context.Context, arg GetGroupMember
 		if err := rows.Scan(
 			&i.FirstName,
 			&i.LastName,
-			&i.MemberID,
 			&i.MemberRole,
+			&i.MemberState,
+			&i.MemberID,
 		); err != nil {
 			return nil, err
 		}
@@ -159,6 +203,27 @@ func (q *Queries) GetGroupMembersForUser(ctx context.Context, arg GetGroupMember
 		return nil, err
 	}
 	return items, nil
+}
+
+const updateGroupMemberState = `-- name: UpdateGroupMemberState :exec
+UPDATE group_members
+    SET
+        state=?1,
+        updated_at=CURRENT_TIMESTAMP
+    WHERE
+        user_id=?2 AND
+        group_id=?3
+`
+
+type UpdateGroupMemberStateParams struct {
+	MemberState string `json:"member_state"`
+	UserID      int64  `json:"user_id"`
+	GroupID     int64  `json:"group_id"`
+}
+
+func (q *Queries) UpdateGroupMemberState(ctx context.Context, arg UpdateGroupMemberStateParams) error {
+	_, err := q.db.ExecContext(ctx, updateGroupMemberState, arg.MemberState, arg.UserID, arg.GroupID)
+	return err
 }
 
 const upsertGroupMember = `-- name: UpsertGroupMember :exec

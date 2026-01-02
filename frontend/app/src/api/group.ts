@@ -32,14 +32,11 @@ const GroupBase = z.object({
 	updated_at: z.coerce.date(),
 	total_expenses: z.number(),
 	expenses: z.array(Expense),
+	members: z.array(Member),
 });
 type GroupBase = z.output<typeof GroupBase>;
 
-export const GroupWithMembers = GroupBase.omit({ expenses: true }).and(
-	z.object({
-		members: z.array(Member),
-	}),
-);
+export const GroupWithMembers = GroupBase.omit({ expenses: true });
 export type GroupWithMembers = z.output<typeof GroupWithMembers>;
 
 export const Group = GroupBase.and(

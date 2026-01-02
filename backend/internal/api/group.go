@@ -164,7 +164,8 @@ func getGroups(c *fiber.Ctx, db *db.DB) error {
 
 type GetGroupResponse struct {
 	generated.GetGroupForUserByIdRow
-	Expenses []generated.GetGroupExpensesRow `json:"expenses"`
+	Expenses []generated.GetGroupExpensesRow       `json:"expenses"`
+	Members  []generated.GetGroupMembersForUserRow `json:"members"`
 }
 
 func getGroup(c *fiber.Ctx, db *db.DB) error {
@@ -191,9 +192,20 @@ func getGroup(c *fiber.Ctx, db *db.DB) error {
 		return fiber.ErrNotFound
 	}
 
+	members, err := db.Queries.GetGroupMembersForUser(ctx, generated.GetGroupMembersForUserParams{
+		GroupID: group.ID,
+		UserID:  session.UserID,
+	})
+
+	if err != nil {
+		log.Printf("getGroup, error getting group members")
+		return fiber.ErrNotFound
+	}
+
 	response := GetGroupResponse{
 		GetGroupForUserByIdRow: group,
 		Expenses:               expenses,
+		Members:                members,
 	}
 	return c.JSON(response)
 }
@@ -301,9 +313,23 @@ func checkGroupReadyState(groupId int64, db *db.DB) {
 
 			// Owes money
 			if total_dept < 0 {
-				member.State = string(MemberStatePaying)
+				log.Printf("Set user(%v) to paying", member.UserID)
+				if err := q.UpdateGroupMemberState(ctx, generated.UpdateGroupMemberStateParams{
+					GroupID:     groupId,
+					UserID:      member.UserID,
+					MemberState: string(MemberStatePaying),
+				}); err != nil {
+					return fmt.Errorf("checkGroupReadyState error updating member user(%d) state: %v", member.UserID, err.Error())
+				}
 			} else {
-				member.State = string(MemberStateResolved)
+				log.Printf("Set user(%v) to resolved", member.UserID)
+				if err := q.UpdateGroupMemberState(ctx, generated.UpdateGroupMemberStateParams{
+					GroupID:     groupId,
+					UserID:      member.UserID,
+					MemberState: string(MemberStateResolved),
+				}); err != nil {
+					return fmt.Errorf("checkGroupReadyState error updating member user(%d) state: %v", member.UserID, err.Error())
+				}
 			}
 
 			receipts = append(receipts, receipt)
@@ -313,16 +339,7 @@ func checkGroupReadyState(groupId int64, db *db.DB) {
 		if err != nil {
 			return fmt.Errorf("checkGroupReadyState failed to balance receipts, %v", err.Error())
 		}
-		for _, member := range members {
-			if err := q.UpsertGroupMember(ctx, generated.UpsertGroupMemberParams{
-				GroupID: groupId,
-				UserID:  member.UserID,
-				State:   member.State,
-				Role:    member.Role,
-			}); err != nil {
-				return fmt.Errorf("checkGroupReadyState error updating member user(%d) state: %v", member.UserID, err.Error())
-			}
-		}
+
 		if len(transactions) == 0 {
 			log.Printf("checkGroupReadyState no transactions created, group already balanced")
 			if err := q.UpdateGroupStateById(ctx, generated.UpdateGroupStateByIdParams{

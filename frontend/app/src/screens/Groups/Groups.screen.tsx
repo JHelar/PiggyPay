@@ -26,7 +26,7 @@ function GroupListItem({ group, onPress }: GroupListItemProps) {
 					<View style={styles.membersRow}>
 						{group.members.map((member, index, members) => (
 							<Icon
-								key={member.member_id}
+								key={index}
 								name="initials"
 								firstName={member.first_name}
 								lastName={member.last_name}

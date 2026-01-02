@@ -48,7 +48,9 @@ func (db *DB) RunAsTransaction(ctx context.Context, queries func(*generated.Quer
 	if err != nil {
 		return err
 	}
-	defer tx.Rollback()
+	defer func() {
+		_ = tx.Rollback()
+	}()
 
 	qtx := db.Queries.WithTx(tx)
 	if err := queries(qtx); err != nil {

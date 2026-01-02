@@ -25,6 +25,7 @@ type Querier interface {
 	GetGroupExpenses(ctx context.Context, arg GetGroupExpensesParams) ([]GetGroupExpensesRow, error)
 	GetGroupForUserById(ctx context.Context, arg GetGroupForUserByIdParams) (GetGroupForUserByIdRow, error)
 	GetGroupMember(ctx context.Context, arg GetGroupMemberParams) (GetGroupMemberRow, error)
+	GetGroupMemberInfoForUser(ctx context.Context, arg GetGroupMemberInfoForUserParams) (GetGroupMemberInfoForUserRow, error)
 	GetGroupMemberTotals(ctx context.Context, groupID int64) ([]GetGroupMemberTotalsRow, error)
 	GetGroupMembersForUser(ctx context.Context, arg GetGroupMembersForUserParams) ([]GetGroupMembersForUserRow, error)
 	GetGroupsByUserId(ctx context.Context, userID int64) ([]GetGroupsByUserIdRow, error)
@@ -38,6 +39,7 @@ type Querier interface {
 	RemoveExpense(ctx context.Context, arg RemoveExpenseParams) error
 	UpdateExpense(ctx context.Context, arg UpdateExpenseParams) (UpdateExpenseRow, error)
 	UpdateGroupById(ctx context.Context, arg UpdateGroupByIdParams) (Group, error)
+	UpdateGroupMemberState(ctx context.Context, arg UpdateGroupMemberStateParams) error
 	UpdateGroupState(ctx context.Context, arg UpdateGroupStateParams) error
 	UpdateGroupStateById(ctx context.Context, arg UpdateGroupStateByIdParams) error
 	UpdateReceiptDeptById(ctx context.Context, arg UpdateReceiptDeptByIdParams) (GroupMemberReceipt, error)

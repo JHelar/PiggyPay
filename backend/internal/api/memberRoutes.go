@@ -10,6 +10,10 @@ func registerMemberRoutes(public fiber.Router, db *db.DB) {
 		return verifyGroupMember(c, db)
 	}
 
+	public.Get("/me", verifyGroupMemberHandle, func(ctx *fiber.Ctx) error {
+		return getMemberInfo(ctx, db)
+	}).Name("getMemberInfo")
+
 	public.Get("/", verifyGroupMemberHandle, func(ctx *fiber.Ctx) error {
 		return getMembers(ctx, db)
 	}).Name("getMembers")

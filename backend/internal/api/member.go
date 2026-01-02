@@ -12,6 +12,29 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
+type MemberInfo struct {
+	FirstName  string `json:"first_name"`
+	LastName   string `json:"last_name"`
+	MemberID   int64  `json:"member_id"`
+	MemberRole string `json:"member_role"`
+}
+
+func getMemberInfo(c *fiber.Ctx, db *db.DB) error {
+	ctx := context.Background()
+
+	session := mustGetGroupSession(c)
+	member, err := db.Queries.GetGroupMemberInfoForUser(ctx, generated.GetGroupMemberInfoForUserParams{
+		GroupID: session.GroupID,
+		UserID:  session.UserID,
+	})
+	if err != nil {
+		log.Printf("getMemberInfo failed to get member info for user(%v) in group(%v): %v", session.UserID, session.GroupID, err.Error())
+		return fiber.DefaultErrorHandler(c, err)
+	}
+
+	return c.JSON(member)
+}
+
 func getMembers(c *fiber.Ctx, db *db.DB) error {
 	ctx := context.Background()
 
