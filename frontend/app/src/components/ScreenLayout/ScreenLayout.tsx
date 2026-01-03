@@ -6,11 +6,7 @@ import {
 	useCallback,
 	useState,
 } from "react";
-import {
-	StyleSheet,
-	UnistylesRuntime,
-	useUnistyles,
-} from "react-native-unistyles";
+import { StyleSheet, UnistylesRuntime } from "react-native-unistyles";
 import type { ColorTheme } from "@/api/group";
 import {
 	ScreenContent,
@@ -51,7 +47,6 @@ export function ScreenLayout({
 	footer,
 }: PropsWithChildren<Pick<ScreenContentProps, "variant" | "footer">>) {
 	const headerHeight = useHeaderHeight();
-	const { theme } = useUnistyles();
 
 	return (
 		<ScreenContent

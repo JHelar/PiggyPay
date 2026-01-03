@@ -5,6 +5,7 @@ import { use } from "react";
 import { View } from "react-native";
 import { StyleSheet } from "react-native-unistyles";
 import type { GroupWithMembers } from "@/api/group";
+import { Clouds } from "@/components/SVG/Clouds";
 import { Button } from "@/ui/components/Button";
 import { Icon } from "@/ui/components/Icon";
 import { InfoSquare } from "@/ui/components/InfoSquare";
@@ -50,6 +51,25 @@ export function GroupsScreen({ query }: GroupsScreenProps) {
 	const groups = use(query.promise);
 	const router = useRouter();
 
+	if (groups.length === 0) {
+		return (
+			<>
+				<Clouds style={styles.clouds} />
+				<View style={styles.emptyContainer}>
+					<Text variant="title" style={styles.emptyHeadline}>
+						<Trans>Nothing to see here!</Trans>
+					</Text>
+					<Button
+						variant="filled"
+						onPress={() => router.navigate("/(modals)/Groups/New")}
+					>
+						<Trans>Create new group</Trans>
+					</Button>
+				</View>
+			</>
+		);
+	}
+
 	return (
 		<FlashList
 			data={groups}
@@ -77,24 +97,25 @@ export function GroupsScreen({ query }: GroupsScreenProps) {
 				/>
 			)}
 			ItemSeparatorComponent={() => <View style={styles.spacer} />}
-			ListEmptyComponent={
-				<View>
-					<Text variant="title">
-						<Trans>Nothing to see here!</Trans>
-					</Text>
-					<Button
-						variant="filled"
-						onPress={() => router.navigate("/(modals)/Groups/New")}
-					>
-						<Trans>Create new group</Trans>
-					</Button>
-				</View>
-			}
 		/>
 	);
 }
 
-const styles = StyleSheet.create((theme) => ({
+const styles = StyleSheet.create((theme, rt) => ({
+	clouds: {
+		position: "absolute",
+		top: 0,
+		height: rt.screen.height,
+		width: rt.screen.width,
+	},
+	emptyContainer: {
+		justifyContent: "center",
+		rowGap: theme.gap(4),
+		flex: 1,
+	},
+	emptyHeadline: {
+		textAlign: "center",
+	},
 	container: {
 		paddingTop: theme.gap(1),
 	},
