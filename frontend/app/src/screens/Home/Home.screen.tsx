@@ -1,5 +1,4 @@
 import { Trans } from "@lingui/react/macro";
-import { useRouter } from "expo-router";
 import { useCallback } from "react";
 import { View } from "react-native";
 import { StyleSheet, UnistylesRuntime } from "react-native-unistyles";
@@ -8,12 +7,13 @@ import { Logo } from "@/components/SVG/Logo";
 import { Pig } from "@/components/SVG/Pig";
 import { Button } from "@/ui/components/Button";
 import { ScreenContentFooterSpacer } from "@/ui/components/ScreenContentFooter/ScreenContentFooter";
+import { useSignInStore } from "../SignIn";
 
 export function HomeScreen() {
-	const router = useRouter();
+	const signIn = useSignInStore(({ start }) => start);
 	const onSignIn = useCallback(async () => {
-		router.navigate("/SignIn");
-	}, [router.navigate]);
+		await signIn();
+	}, [signIn]);
 
 	return (
 		<>
@@ -39,7 +39,7 @@ export function HomeScreen() {
 			</Clouds>
 			<View style={styles.container}>
 				<Button onPress={onSignIn}>
-					<Trans>Sign in</Trans>
+					<Trans>Start Piggy splitting!</Trans>
 				</Button>
 				<ScreenContentFooterSpacer />
 			</View>

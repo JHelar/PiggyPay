@@ -5,7 +5,7 @@ import { useEffect } from "react";
 import { addMember } from "@/api/member";
 import { AuthState, useAuth } from "@/auth";
 import { Snackbar } from "@/components/SnackbarRoot";
-import { SignInScreen, useSignInStore } from "@/screens/SignIn";
+import { useSignInStore } from "@/screens/SignIn";
 import { Spinner } from "@/ui/components/Spinner";
 import { includes } from "@/utils/includes";
 
@@ -56,10 +56,6 @@ export default function GroupInvite() {
 		router.dismissTo,
 		router.push,
 	]);
-
-	if (authState === AuthState.UNAUTHORIZED) {
-		return <SignInScreen />;
-	}
 
 	return <Spinner />;
 }

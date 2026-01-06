@@ -36,7 +36,7 @@ export function EmailSubmit() {
 	return (
 		<View style={styles.container}>
 			<Text variant="headline">
-				<Trans>Sign In</Trans>
+				<Trans>Enter email</Trans>
 			</Text>
 			<View style={styles.content}>
 				<FormField

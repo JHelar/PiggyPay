@@ -1,3 +1,4 @@
+import { router } from "expo-router";
 import { create } from "zustand";
 import type { User } from "@/api/user";
 import { authorize } from "@/auth/auth.store";
@@ -86,6 +87,7 @@ type SignInStoreState = {
 		type: SignInStateTransitionType,
 		payload?: AuthPayload,
 	): Promise<void>;
+	abort(): void;
 };
 
 const DefaultState = {
@@ -101,6 +103,7 @@ export const useSignInStore = create<SignInStoreState>((set, get) => ({
 		get().signInHandle?.("aborted");
 
 		return new Promise<SignInResult>((resolve) => {
+			router.navigate("/(modals)/SignIn");
 			set({
 				currentState: "EmailSubmit",
 				statePayload: {},
@@ -146,5 +149,9 @@ export const useSignInStore = create<SignInStoreState>((set, get) => ({
 		} finally {
 			set({ isTransitioning: false });
 		}
+	},
+	abort() {
+		get().signInHandle?.("aborted");
+		set(DefaultState);
 	},
 }));

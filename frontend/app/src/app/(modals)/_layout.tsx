@@ -7,6 +7,7 @@ import { EditGroupRouteOptions } from "@/screens/EditGroup/EditGroup.route";
 import { EditProfileRouteOptions } from "@/screens/EditProfile";
 import { NewExpenseRouteOptions } from "@/screens/NewExpense/NewExpense.route";
 import { NewGroupRouteOptions } from "@/screens/NewGroup";
+import { SignInRouteOptions } from "@/screens/SignIn";
 
 export default function ModalLayoutRoot() {
 	const authState = useAuth(({ state }) => state);
@@ -23,6 +24,9 @@ export default function ModalLayoutRoot() {
 				return <ScreenLayout variant="surface">{children}</ScreenLayout>;
 			}}
 		>
+			<Stack.Protected guard={authState === AuthState.UNAUTHORIZED}>
+				<Stack.Screen name="SignIn" options={SignInRouteOptions} />
+			</Stack.Protected>
 			<Stack.Protected guard={authState === AuthState.AUTHORIZED}>
 				<Stack.Screen name="User/Edit" options={EditProfileRouteOptions} />
 				<Stack.Screen name="Groups/New" options={NewGroupRouteOptions} />

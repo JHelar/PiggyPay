@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/JHelar/PiggyPay.git/internal/db"
@@ -20,15 +21,15 @@ type CreateNewUser struct {
 func createNewUser(c *fiber.Ctx, db *db.DB) error {
 	ctx := context.Background()
 	payload := new(CreateNewUser)
-	
+
 	if err := c.BodyParser(payload); err != nil {
 		return err
 	}
-	
+
 	session := mustGetUserSession(c)
 
 	user, err := db.Queries.CreateUser(ctx, generated.CreateUserParams{
-		Email:       session.Email.String,
+		Email:       strings.ToLower(session.Email.String),
 		FirstName:   payload.FirstName,
 		LastName:    payload.LastName,
 		PhoneNumber: payload.PhoneNumber,
@@ -91,7 +92,7 @@ func updateUser(c *fiber.Ctx, db *db.DB) error {
 		FirstName:   payload.FirstName,
 		LastName:    payload.LastName,
 		PhoneNumber: payload.PhoneNumber,
-		Email:       payload.Email,
+		Email:       strings.ToLower(payload.Email),
 	})
 
 	if err != nil {

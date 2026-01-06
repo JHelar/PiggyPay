@@ -8,7 +8,6 @@ import { GroupsRouteOptions } from "@/screens/Groups";
 import { HomeRouteOptions } from "@/screens/Home";
 import { PayRouteOptions } from "@/screens/Pay";
 import { ProfileRouteOptions } from "@/screens/Profile";
-import { SignInRouteOptions } from "@/screens/SignIn";
 import type { RenderSlot } from "@/ui/utils/renderSlot";
 
 export default function ScreenLayoutRoot() {
@@ -35,7 +34,6 @@ export default function ScreenLayoutRoot() {
 		>
 			<Stack.Protected guard={authState === AuthState.UNAUTHORIZED}>
 				<Stack.Screen name="index" options={HomeRouteOptions} />
-				<Stack.Screen name="SignIn" options={SignInRouteOptions} />
 			</Stack.Protected>
 			<Stack.Protected guard={authState === AuthState.AUTHORIZED}>
 				<Stack.Screen name="Groups/index" options={GroupsRouteOptions} />

@@ -89,7 +89,7 @@ func newUserSignIn(c *fiber.Ctx, db *db.DB) error {
 
 	expires := time.Now().Add(SESSION_EXPIRE_TIME)
 	err := db.Queries.CreateSignInToken(ctx, generated.CreateSignInTokenParams{
-		Email:     payload.Email,
+		Email:     strings.ToLower(payload.Email),
 		Code:      code,
 		ExpiresAt: expires,
 	})
