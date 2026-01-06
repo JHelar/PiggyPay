@@ -11,6 +11,7 @@ import { GroupState } from "@/api/group";
 import { MemberState, memberReadyToPay } from "@/api/member";
 import { ContextMenu } from "@/components/ContextMenu";
 import { Clouds } from "@/components/SVG/Clouds";
+import { Pig } from "@/components/SVG/Pig";
 import { useScreenFocusSetTheme } from "@/hooks/useScreenFocusSetTheme";
 import { useScreenOptionsEffect } from "@/hooks/useScreenOptionsEffect";
 import { Button } from "@/ui/components/Button";
@@ -224,18 +225,22 @@ export function GroupScreen({ query }: GroupScreenProps) {
 				<InfoSquare
 					title={<Text variant="title">{group.group_name}</Text>}
 					info={
-						<Gauge
-							driver={gauge}
-							icon={
-								<Icon
-									name={
-										group.group_state === GroupState.enum.Expenses
-											? "check"
-											: "euro-symbol"
-									}
-								/>
-							}
-						/>
+						group.group_state === GroupState.enum.Resolved ? (
+							<Pig canvas animation="bobbing" />
+						) : (
+							<Gauge
+								driver={gauge}
+								icon={
+									<Icon
+										name={
+											group.group_state === GroupState.enum.Expenses
+												? "check"
+												: "euro-symbol"
+										}
+									/>
+								}
+							/>
+						)
 					}
 					cta={
 						<Text variant="body">

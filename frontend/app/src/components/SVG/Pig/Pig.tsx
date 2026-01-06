@@ -1,4 +1,5 @@
 import {
+	Canvas,
 	Group,
 	Oval,
 	Path,
@@ -14,47 +15,61 @@ import {
 	withRepeat,
 	withTiming,
 } from "react-native-reanimated";
-import type { Extendable } from "@/ui/ui.types";
+import { StyleSheet } from "react-native-unistyles";
+import { curve } from "../utils/curve";
 import { LeftBackLeg } from "./LeftBackLeg";
 import { LeftEyebrow } from "./LeftEyebrow";
 import { LeftFrontLeg } from "./LeftFrontLeg";
 import { LeftWing } from "./LeftWing";
+import type { PigProps } from "./Pig.types";
 import { RightBackLeg } from "./RightBackLeg";
 import { RightEyebrow } from "./RightEyebrow";
 import { RightFrontLeg } from "./RightFrontLeg";
 import { RightWing } from "./RightWing";
 import { Tail } from "./Tail";
 
-function curve(progress: number, frequency: number, amplitude: number) {
-	"worklet";
-	return amplitude * (0.5 * (Math.sin(2 * Math.PI * frequency * progress) + 1));
-}
+const PIG_WIDTH = 193;
 
-export function Pig({ style }: Extendable) {
+export function Pig({ style, canvas, animation = "swoop" }: PigProps) {
 	const progress = useSharedValue(0);
 	const bezier = useRef(Easing.bezier(0.5, 1, 0.5, 0).factory());
 
 	useEffect(() => {
-		progress.value = withRepeat(
-			withDelay(
-				5000,
+		if (animation === "swoop") {
+			progress.value = withRepeat(
+				withDelay(
+					5000,
+					withTiming(1, {
+						easing: Easing.linear,
+						duration: 5250,
+					}),
+				),
+				-1,
+				false,
+			);
+		}
+		if (animation === "bobbing") {
+			progress.value = withRepeat(
 				withTiming(1, {
-					easing: Easing.linear,
-					duration: 5250,
+					easing: Easing.inOut(Easing.ease),
+					duration: 2250,
 				}),
-			),
-			-1,
-			false,
-		);
-	}, [progress]);
+				-1,
+				true,
+			);
+		}
+	}, [progress, animation]);
 
 	const body = useDerivedValue(() => {
-		const x = interpolate(
-			bezier.current(progress.value),
-			[0, 1],
-			[-193, 193 * 2],
+		let x = PIG_WIDTH / 2;
+		if (animation === "swoop") {
+			x = interpolate(bezier.current(progress.value), [0, 1], [-193, 193 * 2]);
+		}
+		const y = curve(
+			progress.value,
+			animation === "swoop" ? 2 : 1,
+			animation === "swoop" ? 250 : 10,
 		);
-		const y = curve(progress.value, 2, 250);
 
 		return [
 			{
@@ -68,7 +83,10 @@ export function Pig({ style }: Extendable) {
 
 	const wingSkew = useDerivedValue(() => {
 		const amplitude = Math.PI / 6;
-		return -amplitude * curve(progress.value, 6, amplitude);
+		return (
+			-amplitude *
+			curve(progress.value, animation === "swoop" ? 6 : 1, amplitude)
+		);
 	});
 
 	const rightWing = useDerivedValue(() => {
@@ -88,6 +106,8 @@ export function Pig({ style }: Extendable) {
 	});
 
 	const leg = useDerivedValue(() => {
+		if (animation === "bobbing") return [];
+
 		const amplitude = (Math.PI / 180) * 10;
 		const rotate = -curve(bezier.current(progress.value), 4, amplitude);
 
@@ -99,7 +119,11 @@ export function Pig({ style }: Extendable) {
 	});
 
 	const eyebrow = useDerivedValue(() => {
-		const y = curve(progress.value, 8, 5);
+		const y = curve(
+			animation === "swoop" ? progress.value : bezier.current(progress.value),
+			animation === "swoop" ? 8 : 2,
+			5,
+		);
 
 		return [
 			{
@@ -108,7 +132,7 @@ export function Pig({ style }: Extendable) {
 		] satisfies Transforms3d;
 	});
 
-	return (
+	const pig = (
 		<Group transform={body}>
 			<LeftWing transform={leftWing} />
 			<LeftBackLeg transform={leg} />
@@ -370,4 +394,17 @@ export function Pig({ style }: Extendable) {
 			<RightWing transform={rightWing} />
 		</Group>
 	);
+
+	if (canvas) {
+		return <Canvas style={[styles.canvas, style]}>{pig}</Canvas>;
+	}
+
+	return pig;
 }
+
+const styles = StyleSheet.create((_, rt) => ({
+	canvas: {
+		flex: 1,
+		width: rt.screen.width,
+	},
+}));

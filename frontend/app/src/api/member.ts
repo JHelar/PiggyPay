@@ -84,7 +84,7 @@ export function memberReadyToPay() {
 				method: "PATCH",
 			});
 		},
-		onSuccess(data, groupId, onMutateResult, context) {
+		async onSuccess(data, groupId, onMutateResult, context) {
 			context.client.setQueryData(
 				["groups", { id: groupId }],
 				(group: Group) =>
@@ -93,6 +93,9 @@ export function memberReadyToPay() {
 						member_state: MemberState.enum.Ready,
 					}) satisfies Group,
 			);
+			await context.client.invalidateQueries({
+				queryKey: ["groups", { id: groupId }],
+			});
 		},
 		onError(error, variables, onMutateResult, context) {
 			console.error(error);

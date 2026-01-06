@@ -60,6 +60,9 @@ export function payTransaction() {
 			await context.client.invalidateQueries({
 				queryKey: ["transactions"],
 			});
+			await context.client.invalidateQueries({
+				queryKey: ["groups", { id: variables.groupId }],
+			});
 		},
 		onError(error, variables, onMutateResult, context) {
 			Snackbar.toast({

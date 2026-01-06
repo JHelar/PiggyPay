@@ -7,15 +7,15 @@ import {
 import { type PropsWithChildren, useEffect, useRef } from "react";
 import {
 	Easing,
-	interpolate,
 	makeMutable,
 	useAnimatedReaction,
-	withDelay,
+	useSharedValue,
 	withRepeat,
 	withTiming,
 } from "react-native-reanimated";
 import { StyleSheet } from "react-native-unistyles";
 import type { Extendable } from "@/ui/ui.types";
+import { curve } from "./utils/curve";
 
 const CLOUDS_BACK = [
 	[
@@ -54,44 +54,38 @@ const CLOUDS_FRONT = [
 const CLOUD_COUNT = CLOUDS_BACK.length + CLOUDS_FRONT.length;
 
 const CLOUD_MIN_Y = 0;
-const CLOUD_MAX_Y = 10;
+const CLOUD_MAX_Y = 5;
 
 export function Clouds({ style, children }: PropsWithChildren<Extendable>) {
+	const progress = useSharedValue(0);
+
 	const cloudProgressRefs = useRef(
-		Array.from({ length: CLOUD_COUNT }, () => ({
-			progress: makeMutable(0),
-			transform: makeMutable([
-				{ translateY: CLOUD_MIN_Y },
-			] satisfies Transforms3d),
-		})),
+		Array.from({ length: CLOUD_COUNT }, () =>
+			makeMutable([{ translateY: CLOUD_MIN_Y }] satisfies Transforms3d),
+		),
 	);
 
 	useEffect(() => {
-		for (const [index, cloud] of cloudProgressRefs.current.entries()) {
-			cloud.progress.value = withDelay(
-				index * 250,
-				withRepeat(
-					withTiming(1, {
-						easing: Easing.inOut(Easing.ease),
-						duration: 1250,
-					}),
-					-1,
-					true,
-				),
-			);
-		}
-	}, []);
+		progress.value = withRepeat(
+			withTiming(1, {
+				easing: Easing.inOut(Easing.ease),
+				duration: 2250,
+			}),
+			-1,
+			true,
+		);
+	}, [progress]);
 
 	useAnimatedReaction(
-		() => cloudProgressRefs.current.map(({ progress }) => progress.value),
+		() => progress.value,
 		(cloudProgress) => {
-			for (const [index, progress] of cloudProgress.entries()) {
-				cloudProgressRefs.current[index].transform.value = [
+			for (const [index, cloudRef] of cloudProgressRefs.current.entries()) {
+				cloudRef.value = [
 					{
-						translateY: interpolate(
-							progress,
-							[0, 1],
-							[CLOUD_MIN_Y, CLOUD_MAX_Y],
+						translateY: curve(
+							cloudProgress + index / cloudProgressRefs.current.length,
+							1,
+							CLOUD_MAX_Y,
 						),
 					},
 				];
@@ -102,10 +96,7 @@ export function Clouds({ style, children }: PropsWithChildren<Extendable>) {
 	return (
 		<Canvas style={[styles.container, style]}>
 			{CLOUDS_BACK.map(([base, highlight], index) => (
-				<Group
-					key={index}
-					transform={cloudProgressRefs.current[index].transform}
-				>
+				<Group key={index} transform={cloudProgressRefs.current[index]}>
 					<Path path={base} color="#FAFDFD" style="fill" />
 					<Path path={highlight} color="#E3EFF3" style="fill" />
 				</Group>
@@ -114,9 +105,7 @@ export function Clouds({ style, children }: PropsWithChildren<Extendable>) {
 			{CLOUDS_FRONT.map(([base, highlight], index) => (
 				<Group
 					key={index}
-					transform={
-						cloudProgressRefs.current[index + CLOUDS_BACK.length].transform
-					}
+					transform={cloudProgressRefs.current[index + CLOUDS_BACK.length]}
 				>
 					<Path path={base} color="#FAFDFD" style="fill" />
 					<Path path={highlight} color="#E3EFF3" style="fill" />
