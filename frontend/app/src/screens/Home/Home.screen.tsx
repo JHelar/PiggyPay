@@ -7,6 +7,7 @@ import { Clouds } from "@/components/SVG/Clouds";
 import { Logo } from "@/components/SVG/Logo";
 import { Pig } from "@/components/SVG/Pig";
 import { Button } from "@/ui/components/Button";
+import { ScreenContentFooterSpacer } from "@/ui/components/ScreenContentFooter/ScreenContentFooter";
 
 export function HomeScreen() {
 	const router = useRouter();
@@ -38,6 +39,7 @@ export function HomeScreen() {
 				<Button onPress={onSignIn}>
 					<Trans>Sign in</Trans>
 				</Button>
+				<ScreenContentFooterSpacer />
 			</View>
 		</>
 	);
@@ -47,7 +49,6 @@ const styles = StyleSheet.create((theme) => ({
 	container: {
 		flex: 1,
 		justifyContent: "flex-end",
-		marginBottom: theme.gap(5),
 	},
 	text: {
 		textAlign: "center",

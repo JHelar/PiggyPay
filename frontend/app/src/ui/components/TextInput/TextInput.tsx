@@ -35,7 +35,7 @@ export function TextInput<
 
 const styles = StyleSheet.create((theme) => ({
 	input: {
-		backgroundColor: theme.background.surface,
+		backgroundColor: theme.surface.secondary,
 		borderRadius: theme.radius.medium,
 		color: theme.text.color.default,
 		borderColor: theme.border.primary,

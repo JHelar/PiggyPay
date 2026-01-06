@@ -60,10 +60,10 @@ const styles = StyleSheet.create((theme) => ({
 		variants: {
 			active: {
 				true: {
-					backgroundColor: theme.background.surfaceInverted,
+					backgroundColor: theme.surface.inverted,
 				},
 				false: {
-					backgroundColor: theme.background.surface,
+					backgroundColor: theme.surface.secondary,
 				},
 			},
 		},

@@ -51,7 +51,7 @@ const styles = StyleSheet.create((theme) => ({
 		rowGap: theme.gap(2),
 		flexDirection: "row",
 		alignItems: "center",
-		backgroundColor: theme.background.surface,
+		backgroundColor: theme.surface.secondary,
 		borderRadius: theme.radius.medium,
 	},
 	middle: {

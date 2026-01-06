@@ -10,6 +10,7 @@ import {
 	interpolate,
 	useDerivedValue,
 	useSharedValue,
+	withDelay,
 	withRepeat,
 	withTiming,
 } from "react-native-reanimated";
@@ -35,10 +36,13 @@ export function Pig({ style }: Extendable) {
 
 	useEffect(() => {
 		progress.value = withRepeat(
-			withTiming(1, {
-				easing: Easing.linear,
-				duration: 5250,
-			}),
+			withDelay(
+				5000,
+				withTiming(1, {
+					easing: Easing.linear,
+					duration: 5250,
+				}),
+			),
 			-1,
 			false,
 		);

@@ -3,13 +3,13 @@ import { FlashList } from "@shopify/flash-list";
 import { useRouter } from "expo-router";
 import { use } from "react";
 import { View } from "react-native";
-import { StyleSheet } from "react-native-unistyles";
+import { StyleSheet, useUnistyles } from "react-native-unistyles";
 import type { GroupWithMembers } from "@/api/group";
 import { Clouds } from "@/components/SVG/Clouds";
 import { Button } from "@/ui/components/Button";
 import { Icon } from "@/ui/components/Icon";
-import { InfoSquare } from "@/ui/components/InfoSquare";
 import { ListItem } from "@/ui/components/ListItem";
+import { ScreenContentFooterSpacer } from "@/ui/components/ScreenContentFooter/ScreenContentFooter";
 import { Text } from "@/ui/components/Text";
 import type { GroupsScreenProps } from "./Groups.types";
 
@@ -50,6 +50,7 @@ function GroupListItem({ group, onPress }: GroupListItemProps) {
 export function GroupsScreen({ query }: GroupsScreenProps) {
 	const groups = use(query.promise);
 	const router = useRouter();
+	const { theme } = useUnistyles();
 
 	if (groups.length === 0) {
 		return (
@@ -75,14 +76,8 @@ export function GroupsScreen({ query }: GroupsScreenProps) {
 			data={groups}
 			keyExtractor={({ id }) => id.toString()}
 			style={styles.container}
-			ListHeaderComponent={
-				<InfoSquare
-					title={<Text>Latest expense</Text>}
-					cta={<Button>Go to group</Button>}
-					info={<View></View>}
-				/>
-			}
 			ListHeaderComponentStyle={styles.header}
+			ListFooterComponent={<ScreenContentFooterSpacer />}
 			renderItem={({ item }) => (
 				<GroupListItem
 					group={item}
@@ -96,6 +91,9 @@ export function GroupsScreen({ query }: GroupsScreenProps) {
 					}}
 				/>
 			)}
+			scrollIndicatorInsets={{
+				right: -theme.gap(2),
+			}}
 			ItemSeparatorComponent={() => <View style={styles.spacer} />}
 		/>
 	);

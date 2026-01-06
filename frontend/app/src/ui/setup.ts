@@ -18,7 +18,7 @@ export type TypographyTheme = {
 	lineHeight: number;
 };
 
-type AppTheme = {
+export type AppTheme = {
 	radius: {
 		none: number;
 		small: number;
@@ -31,9 +31,13 @@ type AppTheme = {
 	background: {
 		primary: string;
 		secondary: string;
-		surfaceInverted: string;
-		surface: string;
-		footer: string;
+		transparent: string;
+	};
+	surface: {
+		primary: string;
+		secondary: string;
+		transparent: string;
+		inverted: string;
 	};
 	text: {
 		color: {
@@ -44,11 +48,6 @@ type AppTheme = {
 		};
 	};
 	typography: Record<TextVariants, TypographyTheme>;
-	button: {
-		primary: {
-			background: string;
-		};
-	};
 	colorPicker: {
 		blue: {
 			background: string;
@@ -157,9 +156,13 @@ const blueLight: AppTheme = {
 	background: {
 		primary: accentPalette.blueLight.accent400,
 		secondary: accentPalette.blueLight.accent200,
-		surfaceInverted: staticPalette.light.gray1200,
-		surface: staticPalette.light.gray200,
-		footer: staticPalette.light.grayOpacity200,
+		transparent: staticPalette.light.grayOpacity200,
+	},
+	surface: {
+		primary: accentPalette.blueLight.accent1100,
+		inverted: staticPalette.light.gray1200,
+		secondary: staticPalette.light.gray200,
+		transparent: staticPalette.light.grayOpacity400,
 	},
 	text: {
 		color: {
@@ -167,12 +170,6 @@ const blueLight: AppTheme = {
 			accent: accentPalette.blueLight.accent1200,
 			inverted: staticPalette.light.white,
 			error: "#FF0000",
-		},
-	},
-
-	button: {
-		primary: {
-			background: accentPalette.blueLight.accent1100,
 		},
 	},
 };
@@ -190,9 +187,13 @@ const greenLight: AppTheme = {
 	background: {
 		primary: accentPalette.greenLight.accent400,
 		secondary: accentPalette.greenLight.accent200,
-		surfaceInverted: staticPalette.light.gray1200,
-		surface: staticPalette.light.gray200,
-		footer: staticPalette.light.grayOpacity200,
+		transparent: staticPalette.light.grayOpacity300,
+	},
+	surface: {
+		inverted: staticPalette.light.gray1200,
+		secondary: staticPalette.light.gray200,
+		primary: accentPalette.greenLight.accent1100,
+		transparent: staticPalette.light.grayOpacity400,
 	},
 	text: {
 		color: {
@@ -200,11 +201,6 @@ const greenLight: AppTheme = {
 			accent: accentPalette.greenLight.accent1200,
 			inverted: staticPalette.light.white,
 			error: "#FF0000",
-		},
-	},
-	button: {
-		primary: {
-			background: accentPalette.greenLight.accent1100,
 		},
 	},
 };

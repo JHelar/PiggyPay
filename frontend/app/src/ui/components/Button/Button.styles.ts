@@ -12,7 +12,7 @@ export const styles = StyleSheet.create((theme) => ({
 		variants: {
 			variant: {
 				filled: {
-					backgroundColor: theme.button.primary.background,
+					backgroundColor: theme.surface.primary,
 				},
 				ghost: {},
 				"ghost-inverted": {},

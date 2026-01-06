@@ -1,36 +1,46 @@
+import { type MacroMessageDescriptor, msg } from "@lingui/core/macro";
 import { Trans, useLingui } from "@lingui/react/macro";
 import { FlashList } from "@shopify/flash-list";
 import { useMutation } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
-import { use } from "react";
+import { use, useCallback } from "react";
 import { View } from "react-native";
-import { StyleSheet } from "react-native-unistyles";
+import { StyleSheet, useUnistyles } from "react-native-unistyles";
 import { deleteExpense, type Expense } from "@/api/expense";
 import { GroupState } from "@/api/group";
 import { MemberState, memberReadyToPay } from "@/api/member";
 import { ContextMenu } from "@/components/ContextMenu";
+import { Clouds } from "@/components/SVG/Clouds";
 import { useScreenFocusSetTheme } from "@/hooks/useScreenFocusSetTheme";
 import { useScreenOptionsEffect } from "@/hooks/useScreenOptionsEffect";
 import { Button } from "@/ui/components/Button";
+import { Gauge, useGaugeDriver } from "@/ui/components/Gauge";
 import { Icon } from "@/ui/components/Icon";
 import { IconButton } from "@/ui/components/IconButton";
 import { InfoSquare } from "@/ui/components/InfoSquare";
 import { ListItem } from "@/ui/components/ListItem";
 import { ScreenContentFooter } from "@/ui/components/ScreenContentFooter";
+import { ScreenContentFooterSpacer } from "@/ui/components/ScreenContentFooter/ScreenContentFooter";
 import { Text } from "@/ui/components/Text";
 import { includes } from "@/utils/includes";
 import type { GroupScreenProps } from "./Group.types";
+
+const GroupStateToHumanReadable: Record<GroupState, MacroMessageDescriptor> = {
+	[GroupState.enum.Archived]: msg`Archived`,
+	[GroupState.enum.Expenses]: msg`Adding expenses`,
+	[GroupState.enum.Generating]: msg`Calculating group dept`,
+	[GroupState.enum.Paying]: msg`Resolving group dept`,
+	[GroupState.enum.Resolved]: msg`Group dept resolved`,
+};
 
 type ExpenseListItemProps = {
 	expense: Expense;
 	groupId: number;
 	groupState: GroupState;
-	onPress(): void;
 };
 function ExpenseListItem({
 	expense,
 	groupId,
-	onPress,
 	groupState,
 }: ExpenseListItemProps) {
 	const { t } = useLingui();
@@ -39,7 +49,6 @@ function ExpenseListItem({
 
 	return (
 		<ListItem
-			onPress={onPress}
 			middle={
 				<View style={styles.itemMiddle}>
 					<Icon
@@ -107,6 +116,25 @@ export function GroupScreen({ query }: GroupScreenProps) {
 	const group = use(query.promise);
 	const router = useRouter();
 	const { mutate: setReadyToPay, isPending } = useMutation(memberReadyToPay());
+	const { theme } = useUnistyles();
+	const { t } = useLingui();
+	const formatGaugeText = useCallback(
+		(currentValue: number, minValue: number, maxValue: number) => {
+			return `${currentValue} / ${maxValue}`;
+		},
+		[],
+	);
+
+	const gauge = useGaugeDriver({
+		currentValue: group.members.filter(({ member_state }) =>
+			group.group_state === GroupState.enum.Expenses
+				? MemberState.enum.Ready === member_state
+				: MemberState.enum.Resolved === member_state,
+		).length,
+		maxValue: group.members.length,
+		minValue: 0,
+		format: formatGaugeText,
+	});
 
 	useScreenFocusSetTheme(group.group_theme);
 
@@ -161,31 +189,12 @@ export function GroupScreen({ query }: GroupScreenProps) {
 		},
 	});
 
-	return (
-		<FlashList
-			data={group.expenses}
-			keyExtractor={({ id }) => id.toString()}
-			style={styles.container}
-			ListHeaderComponent={
-				<InfoSquare
-					title={<Text>{group.group_name}</Text>}
-					cta={<></>}
-					info={<Text>{group.group_state}</Text>}
-				/>
-			}
-			ListHeaderComponentStyle={styles.header}
-			renderItem={({ item }) => (
-				<ExpenseListItem
-					expense={item}
-					groupId={group.id}
-					onPress={() => {}}
-					groupState={group.group_state}
-				/>
-			)}
-			ItemSeparatorComponent={() => <View style={styles.spacer} />}
-			ListEmptyComponent={
-				<View>
-					<Text variant="title">
+	if (group.expenses.length === 0) {
+		return (
+			<>
+				<Clouds style={styles.clouds} />
+				<View style={styles.emptyContainer}>
+					<Text variant="title" style={styles.emptyHeadline}>
 						<Trans>No expenses yet!</Trans>
 					</Text>
 					<Button
@@ -202,12 +211,71 @@ export function GroupScreen({ query }: GroupScreenProps) {
 						<Trans>Add new expense</Trans>
 					</Button>
 				</View>
+			</>
+		);
+	}
+
+	return (
+		<FlashList
+			data={group.expenses}
+			keyExtractor={({ id }) => id.toString()}
+			style={styles.container}
+			ListHeaderComponent={
+				<InfoSquare
+					title={<Text variant="title">{group.group_name}</Text>}
+					info={
+						<Gauge
+							driver={gauge}
+							icon={
+								<Icon
+									name={
+										group.group_state === GroupState.enum.Expenses
+											? "check"
+											: "euro-symbol"
+									}
+								/>
+							}
+						/>
+					}
+					cta={
+						<Text variant="body">
+							{t(GroupStateToHumanReadable[group.group_state])}
+						</Text>
+					}
+				/>
 			}
+			ListHeaderComponentStyle={styles.header}
+			renderItem={({ item }) => (
+				<ExpenseListItem
+					expense={item}
+					groupId={group.id}
+					groupState={group.group_state}
+				/>
+			)}
+			scrollIndicatorInsets={{
+				right: -theme.gap(2),
+			}}
+			ListFooterComponent={<ScreenContentFooterSpacer />}
+			ItemSeparatorComponent={() => <View style={styles.spacer} />}
 		/>
 	);
 }
 
-const styles = StyleSheet.create((theme) => ({
+const styles = StyleSheet.create((theme, rt) => ({
+	clouds: {
+		position: "absolute",
+		top: 0,
+		height: rt.screen.height,
+		width: rt.screen.width,
+	},
+	emptyContainer: {
+		justifyContent: "center",
+		rowGap: theme.gap(4),
+		flex: 1,
+	},
+	emptyHeadline: {
+		textAlign: "center",
+	},
 	container: {
 		paddingTop: theme.gap(1),
 	},
