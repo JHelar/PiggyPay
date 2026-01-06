@@ -3,7 +3,7 @@ import { StyleSheet } from "react-native-unistyles";
 export const styles = StyleSheet.create((theme) => ({
 	container: {
 		paddingHorizontal: theme.gap(1),
-		paddingVertical: theme.gap(1.5),
+		paddingVertical: theme.gap(2),
 		justifyContent: "center",
 		borderRadius: theme.radius.medium,
 		columnGap: theme.gap(1),

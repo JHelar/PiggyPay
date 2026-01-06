@@ -71,12 +71,24 @@ export function Pig({ style, canvas, animation = "swoop" }: PigProps) {
 			animation === "swoop" ? 250 : 10,
 		);
 
+		const scale =
+			animation === "swoop"
+				? interpolate(
+						bezier.current(progress.value),
+						[0, 0.5, 1],
+						[0.3, 1, 1.3],
+					)
+				: 1;
+
 		return [
 			{
 				translateY: y,
 			},
 			{
 				translateX: x,
+			},
+			{
+				scale,
 			},
 		] satisfies Transforms3d;
 	});

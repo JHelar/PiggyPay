@@ -22,17 +22,19 @@ export function HomeScreen() {
 					position: "absolute",
 					top: 0,
 				}}
+				front={
+					<Logo
+						transform={[
+							{
+								translateY: UnistylesRuntime.screen.height / 2 - 80.1,
+							},
+							{
+								translateX: UnistylesRuntime.screen.width / 2 - 138.5,
+							},
+						]}
+					/>
+				}
 			>
-				<Logo
-					transform={[
-						{
-							translateY: UnistylesRuntime.screen.height / 2 - 80.1,
-						},
-						{
-							translateX: UnistylesRuntime.screen.width / 2 - 138.5,
-						},
-					]}
-				/>
 				<Pig />
 			</Clouds>
 			<View style={styles.container}>

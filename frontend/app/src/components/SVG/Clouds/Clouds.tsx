@@ -4,7 +4,7 @@ import {
 	Path,
 	type Transforms3d,
 } from "@shopify/react-native-skia";
-import { type PropsWithChildren, useEffect, useRef } from "react";
+import { useEffect, useRef } from "react";
 import {
 	Easing,
 	makeMutable,
@@ -14,8 +14,8 @@ import {
 	withTiming,
 } from "react-native-reanimated";
 import { StyleSheet } from "react-native-unistyles";
-import type { Extendable } from "@/ui/ui.types";
-import { curve } from "./utils/curve";
+import { curve } from "../utils/curve";
+import type { CloudsProps } from "./Clouds.types";
 
 const CLOUDS_BACK = [
 	[
@@ -56,7 +56,7 @@ const CLOUD_COUNT = CLOUDS_BACK.length + CLOUDS_FRONT.length;
 const CLOUD_MIN_Y = 0;
 const CLOUD_MAX_Y = 5;
 
-export function Clouds({ style, children }: PropsWithChildren<Extendable>) {
+export function Clouds({ style, children, front }: CloudsProps) {
 	const progress = useSharedValue(0);
 
 	const cloudProgressRefs = useRef(
@@ -111,6 +111,7 @@ export function Clouds({ style, children }: PropsWithChildren<Extendable>) {
 					<Path path={highlight} color="#E3EFF3" style="fill" />
 				</Group>
 			))}
+			{front}
 		</Canvas>
 	);
 }
