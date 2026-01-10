@@ -6,7 +6,6 @@ import (
 	"log"
 	"strconv"
 
-	"github.com/JHelar/PiggyPay.git/internal/db"
 	"github.com/JHelar/PiggyPay.git/internal/db/generated"
 	"github.com/gofiber/fiber/v2"
 )
@@ -40,12 +39,12 @@ func mustGetTransactionSession(c *fiber.Ctx) TransactionSession {
 	return c.Locals(TransactionSessionLocal).(TransactionSession)
 }
 
-func getTransactions(c *fiber.Ctx, db *db.DB) error {
+func getTransactions(c *fiber.Ctx, api *ApiContext) error {
 	ctx := context.Background()
 
 	session := mustGetGroupSession(c)
 
-	transactions, err := db.Queries.GetUserGroupTransactions(ctx, generated.GetUserGroupTransactionsParams{
+	transactions, err := api.DB.Queries.GetUserGroupTransactions(ctx, generated.GetUserGroupTransactionsParams{
 		UserID:  session.UserID,
 		GroupID: session.GroupID,
 	})
@@ -58,12 +57,12 @@ func getTransactions(c *fiber.Ctx, db *db.DB) error {
 	return c.JSON(transactions)
 }
 
-func getTransaction(c *fiber.Ctx, db *db.DB) error {
+func getTransaction(c *fiber.Ctx, api *ApiContext) error {
 	ctx := context.Background()
 
 	session := mustGetTransactionSession(c)
 
-	transaction, err := db.Queries.GetUserGroupTransaction(ctx, generated.GetUserGroupTransactionParams{
+	transaction, err := api.DB.Queries.GetUserGroupTransaction(ctx, generated.GetUserGroupTransactionParams{
 		ID:      session.TransactionID,
 		UserID:  session.UserID,
 		GroupID: session.GroupID,
@@ -77,14 +76,14 @@ func getTransaction(c *fiber.Ctx, db *db.DB) error {
 	return c.JSON(transaction)
 }
 
-func payTransaction(c *fiber.Ctx, db *db.DB) error {
+func payTransaction(c *fiber.Ctx, api *ApiContext) error {
 	ctx := context.Background()
 
 	session := mustGetTransactionSession(c)
 	log.Printf("payTransaction for user(%v) transaction(%v) group(%v)", session.UserID, session.TransactionID, session.GroupID)
 
 	var currentUserDept float64
-	err := db.RunAsTransaction(ctx, func(q *generated.Queries) error {
+	err := api.DB.RunAsTransaction(ctx, func(q *generated.Queries) error {
 		transaction, err := q.PayUserGroupTransaction(ctx, generated.PayUserGroupTransactionParams{
 			FromState:     string(TransactionStateUnpaid),
 			ToState:       string(TransactionStatePaid),
@@ -136,7 +135,7 @@ func payTransaction(c *fiber.Ctx, db *db.DB) error {
 	}
 
 	if currentUserDept == 0 {
-		go checkGroupResolvedState(session.GroupID, db)
+		go checkGroupResolvedState(session.GroupID, api)
 	}
 
 	return c.SendString("Transaction payed")

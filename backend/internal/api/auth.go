@@ -9,7 +9,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/JHelar/PiggyPay.git/internal/db"
 	"github.com/JHelar/PiggyPay.git/internal/db/generated"
 	"github.com/gofiber/fiber/v2"
 )
@@ -24,7 +23,8 @@ const SIGN_IN_TOKEN_EXPIRE_TIME = time.Minute * 10
 const BEARER = "Bearer "
 const USER_SESSION_LOCAL = "userSession"
 
-func verifyUserSession(c *fiber.Ctx, db *db.DB) error {
+func verifyUserSession(c *fiber.Ctx, api *ApiContext) error {
+	db := api.DB
 	ctx := context.Background()
 	header := new(UserSession)
 
@@ -78,7 +78,7 @@ type NewUserSignIn struct {
 	Email string `json:"email" xml:"email" form:"email"`
 }
 
-func newUserSignIn(c *fiber.Ctx, db *db.DB) error {
+func newUserSignIn(c *fiber.Ctx, api *ApiContext) error {
 	ctx := context.Background()
 	payload := new(NewUserSignIn)
 
@@ -88,7 +88,7 @@ func newUserSignIn(c *fiber.Ctx, db *db.DB) error {
 	code := generateSignInCode()
 
 	expires := time.Now().Add(SESSION_EXPIRE_TIME)
-	err := db.Queries.CreateSignInToken(ctx, generated.CreateSignInTokenParams{
+	err := api.DB.Queries.CreateSignInToken(ctx, generated.CreateSignInTokenParams{
 		Email:     strings.ToLower(payload.Email),
 		Code:      code,
 		ExpiresAt: expires,
@@ -102,8 +102,9 @@ func newUserSignIn(c *fiber.Ctx, db *db.DB) error {
 	return c.SendString("Email verification code sent")
 }
 
-func verifyUserSignIn(c *fiber.Ctx, db *db.DB) error {
+func verifyUserSignIn(c *fiber.Ctx, api *ApiContext) error {
 	ctx := context.Background()
+	db := api.DB
 	email := c.Query("email")
 	code := c.Query("code")
 
@@ -162,14 +163,14 @@ func verifyUserSignIn(c *fiber.Ctx, db *db.DB) error {
 	})
 }
 
-func signOut(c *fiber.Ctx, db *db.DB) error {
+func signOut(c *fiber.Ctx, api *ApiContext) error {
 	ctx := context.Background()
-	if err := verifyUserSession(c, db); err != nil {
+	if err := verifyUserSession(c, api); err != nil {
 		return c.SendString("Nothing to sign out")
 	}
 
 	session := mustGetUserSession(c)
-
+	db := api.DB
 	if err := db.Queries.DeleteUserSessionById(ctx, session.ID); err != nil {
 		log.Printf("error signOut %v", err.Error())
 	}

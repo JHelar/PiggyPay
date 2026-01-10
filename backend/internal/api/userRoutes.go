@@ -1,40 +1,43 @@
 package api
 
 import (
-	"github.com/JHelar/PiggyPay.git/internal/db"
 	"github.com/gofiber/fiber/v2"
 )
 
-func registerUserRoutes(app fiber.Router, db *db.DB) {
-	app.Use([]string{"/create", "/me"}, func(c *fiber.Ctx) error {
-		return verifyUserSession(c, db)
+func registerUserRoutes(app fiber.Router, api *ApiContext) {
+	app.Use([]string{"/create", "/me", "/sse"}, func(c *fiber.Ctx) error {
+		return verifyUserSession(c, api)
 	})
 
 	app.Post("/signIn", func(ctx *fiber.Ctx) error {
-		return newUserSignIn(ctx, db)
+		return newUserSignIn(ctx, api)
 	}).Name("newUserSignIn")
 
 	app.Get("/signIn", func(ctx *fiber.Ctx) error {
-		return verifyUserSignIn(ctx, db)
+		return verifyUserSignIn(ctx, api)
 	}).Name("verifyUserSignIn")
 
 	app.Get("/signOut", func(ctx *fiber.Ctx) error {
-		return signOut(ctx, db)
+		return signOut(ctx, api)
 	}).Name("signOut")
 
 	app.Post("/create", func(ctx *fiber.Ctx) error {
-		return createNewUser(ctx, db)
+		return createNewUser(ctx, api)
 	}).Name("createNewUser")
 
 	app.Get("/me", func(ctx *fiber.Ctx) error {
-		return getUser(ctx, db)
+		return getUser(ctx, api)
 	}).Name("getUser")
 
 	app.Patch("/me", func(ctx *fiber.Ctx) error {
-		return updateUser(ctx, db)
+		return updateUser(ctx, api)
 	}).Name("updateUser")
 
 	app.Delete("/me", func(ctx *fiber.Ctx) error {
-		return deleteUser(ctx, db)
+		return deleteUser(ctx, api)
 	}).Name("deleteUser")
+
+	app.Get("/sse", func(ctx *fiber.Ctx) error {
+		return userStream(ctx, api)
+	}).Name("stream")
 }

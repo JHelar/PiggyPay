@@ -7,7 +7,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/JHelar/PiggyPay.git/internal/db"
 	"github.com/JHelar/PiggyPay.git/internal/db/generated"
 	"github.com/gofiber/fiber/v2"
 )
@@ -18,7 +17,8 @@ type CreateNewUser struct {
 	PhoneNumber string `json:"phone_number" xml:"phone_number" form:"phone_number"`
 }
 
-func createNewUser(c *fiber.Ctx, db *db.DB) error {
+func createNewUser(c *fiber.Ctx, api *ApiContext) error {
+	db := api.DB
 	ctx := context.Background()
 	payload := new(CreateNewUser)
 
@@ -52,12 +52,12 @@ func createNewUser(c *fiber.Ctx, db *db.DB) error {
 	return c.JSON(user)
 }
 
-func getUser(c *fiber.Ctx, db *db.DB) error {
+func getUser(c *fiber.Ctx, api *ApiContext) error {
 	ctx := context.Background()
 
 	session := mustGetUserSession(c)
 
-	user, err := db.Queries.GetUserById(ctx, session.UserID.Int64)
+	user, err := api.DB.Queries.GetUserById(ctx, session.UserID.Int64)
 	if err != nil && err == sql.ErrNoRows {
 		return fiber.ErrUnauthorized
 	}
@@ -77,12 +77,12 @@ type UpdateUser struct {
 	Email       string `json:"email" xml:"email" form:"email"`
 }
 
-func updateUser(c *fiber.Ctx, db *db.DB) error {
+func updateUser(c *fiber.Ctx, api *ApiContext) error {
 	ctx := context.Background()
 	payload := new(UpdateUser)
 
 	session := mustGetUserSession(c)
-
+	db := api.DB
 	if err := c.BodyParser(payload); err != nil {
 		return err
 	}
@@ -103,17 +103,17 @@ func updateUser(c *fiber.Ctx, db *db.DB) error {
 	return c.JSON(user)
 }
 
-func deleteUser(c *fiber.Ctx, db *db.DB) error {
+func deleteUser(c *fiber.Ctx, api *ApiContext) error {
 	ctx := context.Background()
 
 	session := mustGetUserSession(c)
 
-	if err := db.Queries.DeleteUser(ctx, session.UserID.Int64); err != nil {
+	if err := api.DB.Queries.DeleteUser(ctx, session.UserID.Int64); err != nil {
 		log.Printf("updateUser error deleting user %v", err.Error())
 		return fiber.DefaultErrorHandler(c, err)
 	}
 
-	if err := db.Queries.DeleteUserSessionById(ctx, session.ID); err != nil {
+	if err := api.DB.Queries.DeleteUserSessionById(ctx, session.ID); err != nil {
 		log.Printf("updateUser error deleting user session %v", err.Error())
 	}
 

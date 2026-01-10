@@ -3,14 +3,15 @@ package server
 import (
 	"github.com/JHelar/PiggyPay.git/internal/api"
 	"github.com/JHelar/PiggyPay.git/internal/db"
+	"github.com/JHelar/PiggyPay.git/pkg/stream"
 	"github.com/gofiber/fiber/v2"
 )
 
 const APP_NAME = "PiggyPay"
 
 type Server struct {
-	app *fiber.App
-	db  *db.DB
+	app     *fiber.App
+	context *api.ApiContext
 }
 
 func New() *Server {
@@ -18,13 +19,16 @@ func New() *Server {
 		AppName: APP_NAME,
 	})
 	db := db.New()
+	pool := stream.New()
+
+	context := api.NewContext(db, pool)
 
 	apiGroup := app.Group("/api/v1")
-	api.RegisterRoutes(apiGroup, db)
+	api.RegisterRoutes(apiGroup, context)
 
 	return &Server{
 		app,
-		db,
+		context,
 	}
 }
 

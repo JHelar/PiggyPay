@@ -3,28 +3,27 @@ package api
 import (
 	"fmt"
 
-	"github.com/JHelar/PiggyPay.git/internal/db"
 	"github.com/gofiber/fiber/v2"
 )
 
-func registerExpenseRoutes(app fiber.Router, db *db.DB) {
+func registerExpenseRoutes(app fiber.Router, api *ApiContext) {
 	app.Get("/", func(ctx *fiber.Ctx) error {
-		return getExpenses(ctx, db)
+		return getExpenses(ctx, api)
 	}).Name("getExpenses")
 
 	app.Post("/", func(c *fiber.Ctx) error {
-		return addExpense(c, db)
+		return addExpense(c, api)
 	}).Name("addExpense")
 
 	app.Get(fmt.Sprintf("/:%s", ExpenseIdParam), func(ctx *fiber.Ctx) error {
-		return getExpense(ctx, db)
+		return getExpense(ctx, api)
 	}).Name("getExpense")
 
 	app.Patch(fmt.Sprintf("/:%s", ExpenseIdParam), func(ctx *fiber.Ctx) error {
-		return updateExpense(ctx, db)
+		return updateExpense(ctx, api)
 	}).Name("updateExpense")
 
 	app.Delete(fmt.Sprintf("/:%s", ExpenseIdParam), func(ctx *fiber.Ctx) error {
-		return removeExpense(ctx, db)
+		return removeExpense(ctx, api)
 	}).Name("removeExpense")
 }

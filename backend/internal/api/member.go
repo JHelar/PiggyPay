@@ -7,7 +7,6 @@ import (
 	"log"
 	"strconv"
 
-	"github.com/JHelar/PiggyPay.git/internal/db"
 	"github.com/JHelar/PiggyPay.git/internal/db/generated"
 	"github.com/gofiber/fiber/v2"
 )
@@ -19,11 +18,11 @@ type MemberInfo struct {
 	MemberRole string `json:"member_role"`
 }
 
-func getMemberInfo(c *fiber.Ctx, db *db.DB) error {
+func getMemberInfo(c *fiber.Ctx, api *ApiContext) error {
 	ctx := context.Background()
 
 	session := mustGetGroupSession(c)
-	member, err := db.Queries.GetGroupMemberInfoForUser(ctx, generated.GetGroupMemberInfoForUserParams{
+	member, err := api.DB.Queries.GetGroupMemberInfoForUser(ctx, generated.GetGroupMemberInfoForUserParams{
 		GroupID: session.GroupID,
 		UserID:  session.UserID,
 	})
@@ -35,12 +34,12 @@ func getMemberInfo(c *fiber.Ctx, db *db.DB) error {
 	return c.JSON(member)
 }
 
-func getMembers(c *fiber.Ctx, db *db.DB) error {
+func getMembers(c *fiber.Ctx, api *ApiContext) error {
 	ctx := context.Background()
 
 	session := mustGetGroupSession(c)
 
-	members, err := db.Queries.GetGroupMembersForUser(ctx, generated.GetGroupMembersForUserParams{
+	members, err := api.DB.Queries.GetGroupMembersForUser(ctx, generated.GetGroupMembersForUserParams{
 		GroupID: session.GroupID,
 		UserID:  session.UserID,
 	})
@@ -57,7 +56,8 @@ func getMembers(c *fiber.Ctx, db *db.DB) error {
 	return c.JSON(members)
 }
 
-func addMember(c *fiber.Ctx, db *db.DB) error {
+func addMember(c *fiber.Ctx, api *ApiContext) error {
+	db := api.DB
 	ctx := context.Background()
 	groupId, err := strconv.ParseInt(c.Params(GroupIdParam), 10, 64)
 	if err != nil {
@@ -93,7 +93,8 @@ func addMember(c *fiber.Ctx, db *db.DB) error {
 	return c.SendString("Member added")
 }
 
-func memberReadyToPay(c *fiber.Ctx, db *db.DB) error {
+func memberReadyToPay(c *fiber.Ctx, api *ApiContext) error {
+	db := api.DB
 	ctx := context.Background()
 	session := mustGetGroupSession(c)
 
@@ -113,13 +114,14 @@ func memberReadyToPay(c *fiber.Ctx, db *db.DB) error {
 	}
 
 	go func() {
-		checkGroupReadyState(session.GroupID, db)
+		checkGroupReadyState(session.GroupID, api)
 	}()
 
 	return c.SendString("Member updated")
 }
 
-func removeMember(c *fiber.Ctx, db *db.DB) error {
+func removeMember(c *fiber.Ctx, api *ApiContext) error {
+	db := api.DB
 	ctx := context.Background()
 
 	session := mustGetGroupSession(c)

@@ -7,8 +7,8 @@ import (
 	"log"
 	"strconv"
 
-	"github.com/JHelar/PiggyPay.git/internal/db"
 	"github.com/JHelar/PiggyPay.git/internal/db/generated"
+	"github.com/JHelar/PiggyPay.git/pkg/stream"
 	"github.com/JHelar/PiggyPay.git/pkg/utils"
 	"github.com/gofiber/fiber/v2"
 )
@@ -56,7 +56,9 @@ func canModifyExpenses(groupState GroupState) bool {
 const GroupSessionLocal = "groupSession"
 const GroupIdParam = "groupId"
 
-func verifyGroupMember(c *fiber.Ctx, db *db.DB) error {
+func verifyGroupMember(c *fiber.Ctx, api *ApiContext) error {
+	db := api.DB
+
 	ctx := context.Background()
 
 	groupId, err := strconv.ParseInt(c.Params(GroupIdParam), 10, 64)
@@ -90,7 +92,9 @@ type CreateGroup struct {
 	ColorTheme  string `json:"color_theme" xml:"color_theme" form:"color_theme"`
 }
 
-func createGroup(c *fiber.Ctx, db *db.DB) error {
+func createGroup(c *fiber.Ctx, api *ApiContext) error {
+	db := api.DB
+
 	ctx := context.Background()
 	payload := new(CreateGroup)
 
@@ -136,7 +140,8 @@ type GroupResponseRow struct {
 	Members []generated.GetGroupMembersForUserRow `json:"members"`
 }
 
-func getGroups(c *fiber.Ctx, db *db.DB) error {
+func getGroups(c *fiber.Ctx, api *ApiContext) error {
+	db := api.DB
 	ctx := context.Background()
 
 	session := mustGetUserSession(c)
@@ -162,51 +167,15 @@ func getGroups(c *fiber.Ctx, db *db.DB) error {
 	return c.JSON(groups)
 }
 
-type GetGroupResponse struct {
-	generated.GetGroupForUserByIdRow
-	Expenses []generated.GetGroupExpensesRow       `json:"expenses"`
-	Members  []generated.GetGroupMembersForUserRow `json:"members"`
-}
-
-func getGroup(c *fiber.Ctx, db *db.DB) error {
+func getGroup(c *fiber.Ctx, api *ApiContext) error {
 	ctx := context.Background()
 	session := mustGetGroupSession(c)
 
-	group, err := db.Queries.GetGroupForUserById(ctx, generated.GetGroupForUserByIdParams{
-		ID:     session.GroupID,
-		UserID: session.UserID,
-	})
-
+	response, err := getGroupForUser(session.UserID, session.GroupID, ctx, api)
 	if err != nil {
-		log.Printf("getGroup, error getting user group")
-		return fiber.ErrNotFound
+		return err
 	}
 
-	expenses, err := db.Queries.GetGroupExpenses(ctx, generated.GetGroupExpensesParams{
-		GroupID: session.GroupID,
-		UserID:  session.UserID,
-	})
-
-	if err != nil {
-		log.Printf("getGroup, error getting group expenses")
-		return fiber.ErrNotFound
-	}
-
-	members, err := db.Queries.GetGroupMembersForUser(ctx, generated.GetGroupMembersForUserParams{
-		GroupID: group.ID,
-		UserID:  session.UserID,
-	})
-
-	if err != nil {
-		log.Printf("getGroup, error getting group members")
-		return fiber.ErrNotFound
-	}
-
-	response := GetGroupResponse{
-		GetGroupForUserByIdRow: group,
-		Expenses:               expenses,
-		Members:                members,
-	}
 	return c.JSON(response)
 }
 
@@ -215,12 +184,12 @@ type UpdateGroup struct {
 	ColorTheme  string `json:"color_theme" xml:"color_theme" form:"color_theme"`
 }
 
-func updateGroup(c *fiber.Ctx, db *db.DB) error {
+func updateGroup(c *fiber.Ctx, api *ApiContext) error {
 	ctx := context.Background()
 	payload := new(UpdateGroup)
 
 	session := mustGetGroupSession(c)
-
+	db := api.DB
 	if err := c.BodyParser(payload); err != nil {
 		log.Printf("updateGroup failed to parse payload")
 		return fiber.DefaultErrorHandler(c, err)
@@ -246,12 +215,12 @@ func updateGroup(c *fiber.Ctx, db *db.DB) error {
 	return c.JSON(group)
 }
 
-func deleteGroup(c *fiber.Ctx, db *db.DB) error {
+func deleteGroup(c *fiber.Ctx, api *ApiContext) error {
 	ctx := context.Background()
 
 	session := mustGetGroupSession(c)
 	log.Printf("Trying to archive groupId(%d) userID(%d)", session.GroupID, session.UserID)
-	if err := db.Queries.ArchiveGroupById(ctx, generated.ArchiveGroupByIdParams{
+	if err := api.DB.Queries.ArchiveGroupById(ctx, generated.ArchiveGroupByIdParams{
 		GroupID:    session.GroupID,
 		MemberRole: string(MemberRoleAdmin),
 		UserID:     session.UserID,
@@ -263,7 +232,8 @@ func deleteGroup(c *fiber.Ctx, db *db.DB) error {
 	return c.SendString("Group deleted")
 }
 
-func checkGroupReadyState(groupId int64, db *db.DB) {
+func checkGroupReadyState(groupId int64, api *ApiContext) {
+	db := api.DB
 	ctx := context.Background()
 
 	members, err := db.Queries.GetGroupMemberTotals(ctx, groupId)
@@ -372,7 +342,8 @@ func checkGroupReadyState(groupId int64, db *db.DB) {
 	}
 }
 
-func checkGroupResolvedState(groupId int64, db *db.DB) {
+func checkGroupResolvedState(groupId int64, api *ApiContext) {
+	db := api.DB
 	ctx := context.Background()
 	members, err := db.Queries.GetGroupMemberTotals(ctx, groupId)
 
@@ -393,5 +364,15 @@ func checkGroupResolvedState(groupId int64, db *db.DB) {
 	}); err != nil {
 		log.Printf("checkGroupResolvedState failed to update group state: %v", err.Error())
 		return
+	}
+
+	// Notify members
+	for _, member := range members {
+		group, err := getGroupForUser(member.UserID, groupId, ctx, api)
+		if err != nil {
+			log.Printf("checkGroupResolvedState failed to get group for member")
+		}
+		message := stream.NewMessage(stream.MessageEventGroup, group)
+		api.Pool.SendMessage(member.UserID, message)
 	}
 }

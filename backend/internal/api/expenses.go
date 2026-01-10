@@ -6,19 +6,18 @@ import (
 	"log"
 	"strconv"
 
-	"github.com/JHelar/PiggyPay.git/internal/db"
 	"github.com/JHelar/PiggyPay.git/internal/db/generated"
 	"github.com/gofiber/fiber/v2"
 )
 
 const ExpenseIdParam = "expenseId"
 
-func getExpenses(c *fiber.Ctx, db *db.DB) error {
+func getExpenses(c *fiber.Ctx, api *ApiContext) error {
 	ctx := context.Background()
 
 	session := mustGetGroupSession(c)
 
-	expenses, err := db.Queries.GetGroupExpenses(ctx, generated.GetGroupExpensesParams{
+	expenses, err := api.DB.Queries.GetGroupExpenses(ctx, generated.GetGroupExpensesParams{
 		GroupID: session.GroupID,
 		UserID:  session.UserID,
 	})
@@ -31,7 +30,8 @@ func getExpenses(c *fiber.Ctx, db *db.DB) error {
 	return c.JSON(expenses)
 }
 
-func getExpense(c *fiber.Ctx, db *db.DB) error {
+func getExpense(c *fiber.Ctx, api *ApiContext) error {
+	db := api.DB
 	ctx := context.Background()
 
 	expenseId, err := strconv.ParseInt(c.Params(ExpenseIdParam), 10, 64)
@@ -61,7 +61,8 @@ type AddExpense struct {
 	ExpenseCost float64 `json:"expense_cost" xml:"expense_cost" form:"expense_cost"`
 }
 
-func addExpense(c *fiber.Ctx, db *db.DB) error {
+func addExpense(c *fiber.Ctx, api *ApiContext) error {
+	db := api.DB
 	ctx := context.Background()
 	payload := new(AddExpense)
 
@@ -124,7 +125,8 @@ type UpdateExpense struct {
 	ExpenseCost float64 `json:"expense_cost" xml:"expense_cost" form:"expense_cost"`
 }
 
-func updateExpense(c *fiber.Ctx, db *db.DB) error {
+func updateExpense(c *fiber.Ctx, api *ApiContext) error {
+	db := api.DB
 	ctx := context.Background()
 	payload := new(UpdateExpense)
 
@@ -193,8 +195,9 @@ func updateExpense(c *fiber.Ctx, db *db.DB) error {
 	return c.JSON(expense)
 }
 
-func removeExpense(c *fiber.Ctx, db *db.DB) error {
+func removeExpense(c *fiber.Ctx, api *ApiContext) error {
 	ctx := context.Background()
+	db := api.DB
 
 	expenseId, err := strconv.ParseInt(c.Params(ExpenseIdParam), 10, 64)
 	if err != nil {
