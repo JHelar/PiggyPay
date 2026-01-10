@@ -3,7 +3,7 @@ import { Trans, useLingui } from "@lingui/react/macro";
 import { FlashList } from "@shopify/flash-list";
 import { useMutation } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
-import { use, useCallback } from "react";
+import { use, useCallback, useMemo } from "react";
 import { View } from "react-native";
 import { StyleSheet, useUnistyles } from "react-native-unistyles";
 import { deleteExpense, type Expense } from "@/api/expense";
@@ -139,54 +139,68 @@ export function GroupScreen({ query }: GroupScreenProps) {
 
 	useScreenFocusSetTheme(group.group_theme);
 
+	const PrimaryFooterButton = useMemo(() => {
+		if (group.group_state === GroupState.enum.Expenses) {
+			return (
+				<Button
+					onPress={() =>
+						router.navigate({
+							pathname: "/(modals)/Groups/[groupId]/NewExpense",
+							params: {
+								groupId: group.id,
+							},
+						})
+					}
+					icon={<Icon name="add-circle-outline" />}
+				>
+					<Trans>New Expense</Trans>
+				</Button>
+			);
+		}
+		if (group.member_state === MemberState.enum.Paying) {
+			return (
+				<Button
+					onPress={() =>
+						router.navigate({
+							pathname: "/(screens)/Groups/[groupId]/Pay",
+							params: {
+								groupId: group.id,
+							},
+						})
+					}
+					icon={<Icon name="add-circle-outline" />}
+				>
+					<Trans>Pay</Trans>
+				</Button>
+			);
+		}
+	}, [group.group_state, group.id, group.member_state, router.navigate]);
+
+	const SecondaryFooterButton = useMemo(() => {
+		if (group.member_state === MemberState.enum.Adding) {
+			return (
+				<Button
+					icon={<Icon name="check" />}
+					onPress={() => setReadyToPay(group.id.toString())}
+					loading={isPending}
+				>
+					<Trans>Ready to pay</Trans>
+				</Button>
+			);
+		}
+	}, [group.id.toString, group.member_state, isPending, setReadyToPay]);
+
 	useScreenOptionsEffect({
 		unstable_sheetFooter() {
-			return (
-				<ScreenContentFooter
-					primary={
-						group.group_state === GroupState.enum.Expenses ? (
-							<Button
-								onPress={() =>
-									router.navigate({
-										pathname: "/(modals)/Groups/[groupId]/NewExpense",
-										params: {
-											groupId: group.id,
-										},
-									})
-								}
-								icon={<Icon name="add-circle-outline" />}
-							>
-								<Trans>New Expense</Trans>
-							</Button>
-						) : group.member_state === MemberState.enum.Paying ? (
-							<Button
-								onPress={() =>
-									router.navigate({
-										pathname: "/(screens)/Groups/[groupId]/Pay",
-										params: {
-											groupId: group.id,
-										},
-									})
-								}
-								icon={<Icon name="add-circle-outline" />}
-							>
-								<Trans>Pay</Trans>
-							</Button>
-						) : undefined
-					}
-					secondary={
-						group.member_state === MemberState.enum.Adding ? (
-							<Button
-								icon={<Icon name="check" />}
-								onPress={() => setReadyToPay(group.id.toString())}
-								loading={isPending}
-							>
-								<Trans>Ready to pay</Trans>
-							</Button>
-						) : undefined
-					}
-				/>
-			);
+			if (PrimaryFooterButton || SecondaryFooterButton) {
+				return (
+					<ScreenContentFooter
+						primary={PrimaryFooterButton}
+						secondary={SecondaryFooterButton}
+					/>
+				);
+			}
+			return null;
 		},
 	});
 

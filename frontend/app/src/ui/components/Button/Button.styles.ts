@@ -3,7 +3,6 @@ import { StyleSheet } from "react-native-unistyles";
 export const styles = StyleSheet.create((theme) => ({
 	container: {
 		paddingHorizontal: theme.gap(1),
-		paddingVertical: theme.gap(2),
 		justifyContent: "center",
 		borderRadius: theme.radius.medium,
 		columnGap: theme.gap(1),
@@ -18,10 +17,20 @@ export const styles = StyleSheet.create((theme) => ({
 				"ghost-inverted": {},
 				destructive: {},
 			},
+			header: {
+				true: {},
+				false: {
+					paddingVertical: theme.gap(2),
+				},
+			},
 		},
 	},
 	text: {
 		variants: {
+			header: {
+				true: {},
+				false: {},
+			},
 			variant: {
 				filled: {
 					color: theme.text.color.inverted,
@@ -40,6 +49,10 @@ export const styles = StyleSheet.create((theme) => ({
 	},
 	icon: {
 		variants: {
+			header: {
+				true: {},
+				false: {},
+			},
 			variant: {
 				filled: {
 					color: theme.text.color.inverted,

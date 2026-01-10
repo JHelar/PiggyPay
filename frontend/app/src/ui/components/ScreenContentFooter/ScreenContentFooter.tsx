@@ -6,7 +6,7 @@ import type { Extendable } from "@/ui/ui.types";
 import { renderSlot } from "@/ui/utils/renderSlot";
 import type { ScreenContentFooterProps } from "./ScreenContentFooter.types";
 
-export const FOOTER_HEIGHT = 60 + UnistylesRuntime.insets.bottom;
+export const FOOTER_HEIGHT = 44 + UnistylesRuntime.insets.bottom;
 
 export function ScreenContentFooterSpacer({ style }: Extendable) {
 	return <View style={[styles.spacer, style]}></View>;
@@ -17,8 +17,14 @@ export function ScreenContentFooter({
 	secondary,
 	style: containerStyles,
 }: ScreenContentFooterProps) {
-	const Primary = renderSlot(primary, { variant: "filled" });
-	const Secondary = renderSlot(secondary, { variant: "ghost" });
+	const Primary = renderSlot(primary, {
+		variant: "filled",
+		style: styles.button,
+	});
+	const Secondary = renderSlot(secondary, {
+		variant: "ghost",
+		style: styles.button,
+	});
 
 	if (isLiquidGlassAvailable()) {
 		return (
@@ -42,6 +48,9 @@ export function ScreenContentFooter({
 }
 
 const styles = StyleSheet.create((theme, rt) => ({
+	button: {
+		paddingVertical: theme.gap(0.5),
+	},
 	spacer: {
 		height: FOOTER_HEIGHT + theme.gap(2),
 	},

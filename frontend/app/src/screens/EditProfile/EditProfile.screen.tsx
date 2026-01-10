@@ -118,7 +118,7 @@ export function EditProfileScreen({ query }: EditProfileScreenProps) {
 	);
 }
 
-const styles = StyleSheet.create((theme) => ({
+const styles = StyleSheet.create((theme, rt) => ({
 	container: {
 		rowGap: theme.gap(2),
 	},

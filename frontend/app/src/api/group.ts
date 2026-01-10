@@ -100,8 +100,8 @@ export function createGroup() {
 				text: i18n._(createGroupSuccessTitle),
 			});
 		},
-		onSettled(data, error, variables, onMutateResult, context) {
-			queryClient.invalidateQueries({
+		async onSettled(data, error, variables, onMutateResult, context) {
+			await queryClient.invalidateQueries({
 				queryKey: ["groups"],
 			});
 		},

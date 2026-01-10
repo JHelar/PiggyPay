@@ -57,7 +57,7 @@ export function VerifyCode() {
 
 	return (
 		<View style={styles.container}>
-			<Text variant="headline">
+			<Text variant="headline" style={styles.heading}>
 				<Trans>Verify</Trans>
 			</Text>
 			{isPending && <Spinner />}
@@ -95,6 +95,9 @@ const styles = StyleSheet.create((theme) => ({
 	container: {
 		flex: 1,
 		rowGap: theme.gap(4),
+	},
+	heading: {
+		textAlign: "center",
 	},
 	helpText: {
 		marginBottom: theme.gap(2),

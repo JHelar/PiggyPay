@@ -63,7 +63,7 @@ export function ProfileScreen({ query }: ProfileScreenProps) {
 	);
 }
 
-const styles = StyleSheet.create((theme) => ({
+const styles = StyleSheet.create((theme, rt) => ({
 	buttons: {
 		flex: 1,
 		justifyContent: "flex-end",
@@ -72,6 +72,7 @@ const styles = StyleSheet.create((theme) => ({
 	container: {
 		rowGap: theme.gap(4),
 		flex: 1,
+		paddingBottom: rt.insets.bottom,
 	},
 	content: {
 		rowGap: theme.gap(2),

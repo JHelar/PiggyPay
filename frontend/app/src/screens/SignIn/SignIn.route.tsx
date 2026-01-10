@@ -11,7 +11,7 @@ export const SignInRouteOptions: ExtendedStackNavigationOptions = {
 	headerLeft() {
 		const router = useRouter();
 		return (
-			<Button variant="ghost" onPress={() => router.back()}>
+			<Button variant="ghost" header onPress={() => router.back()}>
 				<Trans>Cancel</Trans>
 			</Button>
 		);

@@ -35,7 +35,7 @@ export function EmailSubmit() {
 
 	return (
 		<View style={styles.container}>
-			<Text variant="headline">
+			<Text variant="headline" style={styles.heading}>
 				<Trans>Enter email</Trans>
 			</Text>
 			<View style={styles.content}>
@@ -64,6 +64,9 @@ const styles = StyleSheet.create((theme) => ({
 	container: {
 		flex: 1,
 		rowGap: theme.gap(6),
+	},
+	heading: {
+		textAlign: "center",
 	},
 	content: {
 		flex: 1,

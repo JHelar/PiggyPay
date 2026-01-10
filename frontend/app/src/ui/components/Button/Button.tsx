@@ -13,9 +13,10 @@ export function Button({
 	style: containerStyles,
 	icon,
 	loading = false,
+	header = false,
 	...a11yProps
 }: ButtonProps) {
-	styles.useVariants({ variant });
+	styles.useVariants({ variant, header });
 
 	const Icon = renderSlot(icon, {
 		style: styles.icon,

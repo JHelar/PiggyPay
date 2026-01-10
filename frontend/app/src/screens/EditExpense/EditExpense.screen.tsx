@@ -77,7 +77,12 @@ export function EditExpenseScreen({ query }: EditExpenseScreenProps) {
 				control={form.control}
 				label={t`Cost`}
 				name="expense_cost"
-				input={<TextInput keyboardType="numbers-and-punctuation" />}
+				input={
+					<TextInput
+						autoCorrect={false}
+						keyboardType="numbers-and-punctuation"
+					/>
+				}
 			/>
 			<Button
 				onPress={onDelete}
