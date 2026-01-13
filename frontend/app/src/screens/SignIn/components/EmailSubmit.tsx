@@ -53,7 +53,7 @@ export function EmailSubmit() {
 					}
 				/>
 				<Button onPress={onSubmit}>
-					<Trans>Submit</Trans>
+					<Trans>Sign in or Register</Trans>
 				</Button>
 			</View>
 		</View>

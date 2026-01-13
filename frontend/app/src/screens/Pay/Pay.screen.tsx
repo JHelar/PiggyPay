@@ -10,6 +10,7 @@ import {
 	type Transaction,
 	TransactionState,
 } from "@/api/transaction";
+import { queryClient } from "@/query";
 import { Button } from "@/ui/components/Button";
 import { ProgressStepper } from "@/ui/components/ProgressStepper";
 import { Text } from "@/ui/components/Text";
@@ -55,6 +56,9 @@ export function PayScreen({ query, groupId }: PayScreenProps) {
 					groupId,
 				});
 				if (transactionId === transactions.at(-1)?.transaction_id.toString()) {
+					await queryClient.invalidateQueries({
+						queryKey: ["groups", { id: groupId }],
+					});
 					router.back();
 				} else {
 					flatListRef.current?.scrollToIndex({

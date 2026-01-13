@@ -8,7 +8,6 @@ import (
 	"strconv"
 
 	"github.com/JHelar/PiggyPay.git/internal/db/generated"
-	"github.com/JHelar/PiggyPay.git/pkg/stream"
 	"github.com/JHelar/PiggyPay.git/pkg/utils"
 	"github.com/gofiber/fiber/v2"
 )
@@ -340,6 +339,9 @@ func checkGroupReadyState(groupId int64, api *ApiContext) {
 		log.Printf("checkGroupReadyState failed to create receipts: %v", err.Error())
 		return
 	}
+
+	// Notify members
+	notifyGroupMembers(groupId, members, ctx, api)
 }
 
 func checkGroupResolvedState(groupId int64, api *ApiContext) {
@@ -367,12 +369,5 @@ func checkGroupResolvedState(groupId int64, api *ApiContext) {
 	}
 
 	// Notify members
-	for _, member := range members {
-		group, err := getGroupForUser(member.UserID, groupId, ctx, api)
-		if err != nil {
-			log.Printf("checkGroupResolvedState failed to get group for member")
-		}
-		message := stream.NewMessage(stream.MessageEventGroup, group)
-		api.Pool.SendMessage(member.UserID, message)
-	}
+	notifyGroupMembers(groupId, members, ctx, api)
 }

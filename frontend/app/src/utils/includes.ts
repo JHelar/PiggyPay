@@ -5,13 +5,19 @@
  * @param searchValue
  * @returns type narrow `searchValue` to be a value of `array`
  */
-export function includes<const Values extends readonly string[]>(
+export function includes<
+	const Values extends readonly any[],
+	Search = Values[number] extends string ? string & {} : number,
+>(
 	array: Values,
-	searchValue: Values[number] | (string & {}),
+	searchValue: Values[number] | Search,
 ): searchValue is Values[number];
-export function includes<const Values extends string[]>(
+export function includes<
+	const Values extends any[],
+	Search = Values[number] extends string ? string & {} : number,
+>(
 	array: Values,
-	searchValue: Values[number] | (string & {}),
+	searchValue: Values[number] | Search,
 ): searchValue is Values[number] {
 	return array.includes(searchValue);
 }
