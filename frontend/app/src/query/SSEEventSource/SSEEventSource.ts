@@ -90,11 +90,6 @@ export class SSEEventSource<
 			"X-Requested-With": "XMLHttpRequest",
 		};
 
-		const accessToken = getAccessToken();
-		if (accessToken) {
-			defaultHeaders["Authorization"] = `Bearer ${accessToken}`;
-		}
-
 		this.headers = {
 			...defaultHeaders,
 			...options.headers,
@@ -146,6 +141,10 @@ export class SSEEventSource<
 				if (value !== undefined && value !== null) {
 					this._xhr.setRequestHeader(key, value);
 				}
+			}
+			const accessToken = getAccessToken();
+			if (accessToken) {
+				this._xhr.setRequestHeader("Authorization", `Bearer ${accessToken}`);
 			}
 
 			if (this.lastEventId !== null) {
@@ -261,6 +260,10 @@ export class SSEEventSource<
 	}
 
 	_handleEvent(response: string) {
+		if (response === "") {
+			console.log(`SSEResponse: "${response}"`);
+			return;
+		}
 		if (this.lineEndingCharacter === null) {
 			const detectedNewlineChar = this._detectNewlineChar(response);
 			if (detectedNewlineChar !== null) {

@@ -2,8 +2,9 @@ import { SplashScreen } from "expo-router";
 import * as SecureStore from "expo-secure-store";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
+import { createUserStreamSource } from "@/api/stream";
 import { getUser } from "@/api/user";
-import { queryClient } from "@/query";
+import { queryClient, type SSEEventSource } from "@/query";
 
 export const AuthState = {
 	INITIALIZING: "AuthState(INITIALIZING)",
@@ -16,6 +17,7 @@ export type AuthState = typeof AuthState;
 type AuthStoreState = {
 	state: AuthState[keyof AuthState];
 	accessToken?: string;
+	source?: SSEEventSource<any, any>;
 };
 
 SplashScreen.preventAutoHideAsync();
@@ -40,7 +42,10 @@ export const useAuth = create<AuthStoreState>()(
 						queryClient
 							.fetchQuery(getUser())
 							.then((data) => {
-								useAuth.setState({ state: AuthState.AUTHORIZED });
+								useAuth.setState({
+									state: AuthState.AUTHORIZED,
+									source: createUserStreamSource(),
+								});
 							})
 							.catch(() => {
 								useAuth.setState({
@@ -78,11 +83,13 @@ export function authorize(accessToken: string) {
 	useAuth.setState({
 		state: AuthState.AUTHORIZED,
 		accessToken,
+		source: createUserStreamSource(),
 	});
 	queryClient.prefetchQuery(getUser());
 }
 
 export function unauthorize() {
+	useAuth.getState().source?.close();
 	useAuth.setState({
 		state: AuthState.UNAUTHORIZED,
 		accessToken: undefined,

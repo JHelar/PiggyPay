@@ -1,8 +1,10 @@
 import { queryClient, SSEEventSource } from "@/query";
+import { buildApiUrl } from "@/query/fetch";
 import { Group } from "./group";
 
-export function createUserStream() {
-	const source = new SSEEventSource("user/stream", {
+export function createUserStreamSource() {
+	const url = buildApiUrl("user/sse");
+	const source = new SSEEventSource(url, {
 		debug: true,
 		events: {
 			group: Group,
@@ -15,4 +17,6 @@ export function createUserStream() {
 			() => event.data,
 		);
 	});
+
+	return source;
 }

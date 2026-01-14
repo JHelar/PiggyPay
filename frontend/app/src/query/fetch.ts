@@ -5,6 +5,10 @@ import { NetworkError } from "@/components/ErrorBoundary";
 const BASE_URL = "http://127.0.0.1:8080";
 const API_PATH = "api/v1";
 
+export function buildApiUrl(path: string) {
+	return new URL(`${API_PATH}/${path}`, BASE_URL);
+}
+
 type FetchOptions = {
 	headers?: Record<string, string>;
 	query?: Record<string, string>;
@@ -16,8 +20,7 @@ type FetchJSONOptions<Output extends z.ZodType | undefined> = FetchOptions & {
 };
 
 export async function fetchRaw(path: string, options: FetchOptions) {
-	const fullPath = `${API_PATH}/${path}`;
-	const url = new URL(fullPath, BASE_URL);
+	const url = buildApiUrl(path);
 
 	if (options.query) {
 		Object.entries(options.query).forEach(([key, value]) =>
