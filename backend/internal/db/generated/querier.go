@@ -14,12 +14,14 @@ type Querier interface {
 	CreateExistingUserSession(ctx context.Context, arg CreateExistingUserSessionParams) (string, error)
 	CreateGroup(ctx context.Context, arg CreateGroupParams) (Group, error)
 	CreateMemberTransaction(ctx context.Context, arg CreateMemberTransactionParams) error
+	CreateNewUserRefreshSession(ctx context.Context, arg CreateNewUserRefreshSessionParams) (string, error)
 	CreateNewUserSession(ctx context.Context, arg CreateNewUserSessionParams) (string, error)
 	CreateReceipt(ctx context.Context, arg CreateReceiptParams) (CreateReceiptRow, error)
 	CreateSignInToken(ctx context.Context, arg CreateSignInTokenParams) error
 	CreateUser(ctx context.Context, arg CreateUserParams) (CreateUserRow, error)
 	DeleteGroupMember(ctx context.Context, arg DeleteGroupMemberParams) error
 	DeleteUser(ctx context.Context, id int64) error
+	DeleteUserRefreshSessionById(ctx context.Context, id string) error
 	DeleteUserSessionById(ctx context.Context, id string) error
 	GetExpenseById(ctx context.Context, arg GetExpenseByIdParams) (GetExpenseByIdRow, error)
 	GetGroupExpenses(ctx context.Context, arg GetGroupExpensesParams) ([]GetGroupExpensesRow, error)
@@ -34,6 +36,7 @@ type Querier interface {
 	GetUserById(ctx context.Context, id int64) (GetUserByIdRow, error)
 	GetUserGroupTransaction(ctx context.Context, arg GetUserGroupTransactionParams) (GetUserGroupTransactionRow, error)
 	GetUserGroupTransactions(ctx context.Context, arg GetUserGroupTransactionsParams) ([]GetUserGroupTransactionsRow, error)
+	GetUserRefreshSessionById(ctx context.Context, id string) (UserRefreshSession, error)
 	GetUserSessionById(ctx context.Context, id string) (GetUserSessionByIdRow, error)
 	PayUserGroupTransaction(ctx context.Context, arg PayUserGroupTransactionParams) (GroupMemberTransaction, error)
 	RemoveExpense(ctx context.Context, arg RemoveExpenseParams) error

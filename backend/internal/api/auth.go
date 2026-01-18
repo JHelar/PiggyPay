@@ -13,11 +13,18 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
+const (
+	HeaderRefresh = "PS-Refresh"
+	HeaderToken   = "PS-Token"
+)
+
 type UserSession struct {
-	Bearer string `reqHeader:"Authorization"`
+	Bearer  string `reqHeader:"Authorization"`
+	Refresh string `reqHeader:"PS-Refresh"`
 }
 
-const SESSION_EXPIRE_TIME = time.Minute * 30
+const SESSION_EXPIRE_TIME = time.Minute * 10
+const REFRESH_SESSION_EXPIRE_TIME = time.Hour * 24 * 365 // Year long refresh token
 const SIGN_IN_TOKEN_EXPIRE_TIME = time.Minute * 10
 
 const BEARER = "Bearer "
@@ -53,12 +60,53 @@ func verifyUserSession(c *fiber.Ctx, api *ApiContext) error {
 	}
 
 	if session.ExpiresAt.Before(time.Now()) {
+
 		log.Printf("Session expired: %s\n", sessionId)
+
+		refresh, refreshErr := db.Queries.GetUserRefreshSessionById(ctx, header.Refresh)
+
 		if err := db.Queries.DeleteUserSessionById(ctx, sessionId); err != nil {
 			log.Println(err)
 		}
+		if refreshErr != nil {
+			log.Printf("Missing refresh token")
+			return fiber.ErrUnauthorized
+		}
 
-		return fiber.ErrUnauthorized
+		// Refresh the refresh token on every use, in other words delete it independent on outcome
+		db.Queries.DeleteUserRefreshSessionById(ctx, refresh.ID)
+		if refresh.UserSessionID != sessionId {
+			// If refresh token references the incorrect session id, return
+			log.Printf("Invalid refresh token")
+			return fiber.ErrUnauthorized
+		}
+		if refresh.ExpiresAt.Before(time.Now()) {
+			log.Printf("Refresh token expired")
+			return fiber.ErrUnauthorized
+		}
+
+		// Refresh session and token
+		log.Println("Refreshing session and token")
+		newUserSessionId, err := db.Queries.CreateNewUserSession(ctx, generated.CreateNewUserSessionParams{
+			UserID:    session.UserID,
+			Email:     session.Email,
+			ExpiresAt: time.Now().Add(SESSION_EXPIRE_TIME),
+		})
+		if err != nil {
+			log.Println(err.Error())
+			return fiber.ErrUnauthorized
+		}
+		newRefreshToken, err := db.Queries.CreateNewUserRefreshSession(ctx, generated.CreateNewUserRefreshSessionParams{
+			UserSessionID: newUserSessionId,
+			ExpiresAt:     time.Now().Add(REFRESH_SESSION_EXPIRE_TIME),
+		})
+		if err != nil {
+			log.Println(err.Error())
+			return fiber.ErrUnauthorized
+		}
+
+		c.Response().Header.Add(HeaderRefresh, newRefreshToken)
+		c.Response().Header.Add(HeaderToken, newUserSessionId)
 	}
 
 	log.Printf("Session found: (Email: %s, UserId: %d)\n", session.Email.String, session.UserID.Int64)
@@ -156,6 +204,22 @@ func verifyUserSignIn(c *fiber.Ctx, api *ApiContext) error {
 	}
 
 	log.Printf("New session(%s) created", session)
+
+	newRefreshToken, err := db.Queries.CreateNewUserRefreshSession(ctx, generated.CreateNewUserRefreshSessionParams{
+		UserSessionID: session,
+		ExpiresAt:     time.Now().Add(REFRESH_SESSION_EXPIRE_TIME),
+	})
+	if err != nil {
+		log.Println(err.Error())
+		return fiber.ErrUnauthorized
+	}
+	if err != nil {
+		log.Printf("Error creating refresh token (%v) verify user sign in", err.Error())
+		return fiber.ErrUnauthorized
+	}
+
+	c.Response().Header.Add(HeaderRefresh, newRefreshToken)
+	c.Response().Header.Add(HeaderToken, session)
 
 	return c.JSON(fiber.Map{
 		"session":  session,

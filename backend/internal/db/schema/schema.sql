@@ -15,11 +15,23 @@ CREATE TABLE IF NOT EXISTS users (
 
 CREATE TABLE IF NOT EXISTS user_sessions (
     id TEXT PRIMARY KEY DEFAULT (lower(hex(randomblob(16)))),
+
     user_id INTEGER UNIQUE,
     email TEXT UNIQUE,
 
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     expires_at TIMESTAMP NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS user_refresh_sessions (
+    id TEXT PRIMARY KEY DEFAULT (lower(hex(randomblob(16)))),
+    user_session_id TEXT UNIQUE NOT NULL,
+
+
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    expires_at TIMESTAMP NOT NULL,
+
+    FOREIGN KEY (user_session_id) REFERENCES user_sessions(id) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS user_sign_in_tokens (

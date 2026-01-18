@@ -68,6 +68,13 @@ type User struct {
 	LastSeenAt  time.Time `json:"last_seen_at"`
 }
 
+type UserRefreshSession struct {
+	ID            string    `json:"id"`
+	UserSessionID string    `json:"user_session_id"`
+	CreatedAt     time.Time `json:"created_at"`
+	ExpiresAt     time.Time `json:"expires_at"`
+}
+
 type UserSession struct {
 	ID        string         `json:"id"`
 	UserID    sql.NullInt64  `json:"user_id"`

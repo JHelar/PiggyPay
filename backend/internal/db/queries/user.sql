@@ -12,6 +12,11 @@ INSERT INTO user_sessions (user_id, email, expires_at) VALUES (?, ?, ?)
     ON CONFLICT (email) DO UPDATE SET expires_at=excluded.expires_at
     RETURNING id;
 
+-- name: CreateNewUserRefreshSession :one
+INSERT INTO user_refresh_sessions (user_session_id, expires_at) VALUES (?, ?)
+    ON CONFLICT (user_session_id) DO UPDATE SET expires_at=excluded.expires_at
+    RETURNING id;
+
 -- name: CreateExistingUserSession :one
 INSERT INTO user_sessions (user_id, email, expires_at) VALUES (?, ?, ?)
     ON CONFLICT (user_id) DO UPDATE SET 
@@ -30,8 +35,16 @@ UPDATE user_sessions
 SELECT id, user_id, email, expires_at FROM user_sessions
     WHERE id=?;
 
+-- name: GetUserRefreshSessionById :one
+SELECT * FROM user_refresh_sessions
+    WHERE id=?;
+
 -- name: DeleteUserSessionById :exec
 DELETE FROM user_sessions
+    WHERE id=?;
+
+-- name: DeleteUserRefreshSessionById :exec
+DELETE FROM user_refresh_sessions
     WHERE id=?;
 
 -- name: GetUserByEmail :one

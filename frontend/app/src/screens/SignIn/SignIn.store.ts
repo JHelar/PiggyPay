@@ -36,7 +36,7 @@ const SignInStateMachine: Record<
 			if (payload.VerifyCode?.newUser) {
 				return "NewUser";
 			} else if (payload.VerifyCode?.sessionId) {
-				authorize(payload.VerifyCode.sessionId);
+				authorize();
 				return "success";
 			}
 			return "failure";
@@ -47,7 +47,7 @@ const SignInStateMachine: Record<
 	NewUser: {
 		next(payload) {
 			if (payload?.NewUser?.user && payload.VerifyCode?.sessionId) {
-				authorize(payload.VerifyCode.sessionId);
+				authorize();
 				return "success";
 			}
 			return "failure";

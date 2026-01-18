@@ -31,6 +31,24 @@ func (q *Queries) CreateExistingUserSession(ctx context.Context, arg CreateExist
 	return id, err
 }
 
+const createNewUserRefreshSession = `-- name: CreateNewUserRefreshSession :one
+INSERT INTO user_refresh_sessions (user_session_id, expires_at) VALUES (?, ?)
+    ON CONFLICT (user_session_id) DO UPDATE SET expires_at=excluded.expires_at
+    RETURNING id
+`
+
+type CreateNewUserRefreshSessionParams struct {
+	UserSessionID string    `json:"user_session_id"`
+	ExpiresAt     time.Time `json:"expires_at"`
+}
+
+func (q *Queries) CreateNewUserRefreshSession(ctx context.Context, arg CreateNewUserRefreshSessionParams) (string, error) {
+	row := q.db.QueryRowContext(ctx, createNewUserRefreshSession, arg.UserSessionID, arg.ExpiresAt)
+	var id string
+	err := row.Scan(&id)
+	return id, err
+}
+
 const createNewUserSession = `-- name: CreateNewUserSession :one
 INSERT INTO user_sessions (user_id, email, expires_at) VALUES (?, ?, ?)
     ON CONFLICT (email) DO UPDATE SET expires_at=excluded.expires_at
@@ -114,6 +132,16 @@ func (q *Queries) DeleteUser(ctx context.Context, id int64) error {
 	return err
 }
 
+const deleteUserRefreshSessionById = `-- name: DeleteUserRefreshSessionById :exec
+DELETE FROM user_refresh_sessions
+    WHERE id=?
+`
+
+func (q *Queries) DeleteUserRefreshSessionById(ctx context.Context, id string) error {
+	_, err := q.db.ExecContext(ctx, deleteUserRefreshSessionById, id)
+	return err
+}
+
 const deleteUserSessionById = `-- name: DeleteUserSessionById :exec
 DELETE FROM user_sessions
     WHERE id=?
@@ -184,6 +212,23 @@ func (q *Queries) GetUserById(ctx context.Context, id int64) (GetUserByIdRow, er
 		&i.LastName,
 		&i.PhoneNumber,
 		&i.Email,
+	)
+	return i, err
+}
+
+const getUserRefreshSessionById = `-- name: GetUserRefreshSessionById :one
+SELECT id, user_session_id, created_at, expires_at FROM user_refresh_sessions
+    WHERE id=?
+`
+
+func (q *Queries) GetUserRefreshSessionById(ctx context.Context, id string) (UserRefreshSession, error) {
+	row := q.db.QueryRowContext(ctx, getUserRefreshSessionById, id)
+	var i UserRefreshSession
+	err := row.Scan(
+		&i.ID,
+		&i.UserSessionID,
+		&i.CreatedAt,
+		&i.ExpiresAt,
 	)
 	return i, err
 }

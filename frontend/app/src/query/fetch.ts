@@ -1,5 +1,5 @@
 import z from "zod";
-import { getAccessToken } from "@/auth/auth.store";
+import { getAuthHeaders, updateTokens } from "@/auth/auth.store";
 import { NetworkError } from "@/components/ErrorBoundary";
 
 const BASE_URL = "http://127.0.0.1:8080";
@@ -28,10 +28,12 @@ export async function fetchRaw(path: string, options: FetchOptions) {
 		);
 	}
 
-	const accessToken = getAccessToken();
-	if (accessToken) {
-		options.headers ??= {};
-		options.headers["Authorization"] = `Bearer ${accessToken}`;
+	const authHeaders = getAuthHeaders();
+	if (authHeaders) {
+		options.headers = {
+			...(options.headers ?? {}),
+			...authHeaders,
+		};
 	}
 
 	const response = await fetch(url, options);
@@ -40,6 +42,14 @@ export async function fetchRaw(path: string, options: FetchOptions) {
 			response.status,
 			new Error(`[Fetch] path(${path}) with message "${response.statusText}"`),
 		);
+	}
+	const refreshToken = response.headers.get("PS-Refresh");
+	const accessToken = response.headers.get("PS-Token");
+	if (refreshToken && accessToken) {
+		updateTokens({
+			refreshToken,
+			accessToken,
+		});
 	}
 
 	return response;

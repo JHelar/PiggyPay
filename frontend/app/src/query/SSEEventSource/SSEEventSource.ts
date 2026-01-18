@@ -1,5 +1,5 @@
 import type { ZodType } from "zod";
-import { getAccessToken } from "@/auth/auth.store";
+import { getAuthHeaders } from "@/auth/auth.store";
 import { assertIsError } from "@/utils/asserts";
 import { includes } from "@/utils/includes";
 import type {
@@ -142,9 +142,11 @@ export class SSEEventSource<
 					this._xhr.setRequestHeader(key, value);
 				}
 			}
-			const accessToken = getAccessToken();
-			if (accessToken) {
-				this._xhr.setRequestHeader("Authorization", `Bearer ${accessToken}`);
+			const authHeaders = getAuthHeaders();
+			if (authHeaders) {
+				for (const [key, value] of Object.entries(authHeaders)) {
+					this._xhr.setRequestHeader(key, value);
+				}
 			}
 
 			if (this.lastEventId !== null) {

@@ -17,6 +17,7 @@ export type AuthState = typeof AuthState;
 type AuthStoreState = {
 	state: AuthState[keyof AuthState];
 	accessToken?: string;
+	refreshToken?: string;
 	source?: SSEEventSource<any, any>;
 };
 
@@ -26,6 +27,7 @@ export const useAuth = create<AuthStoreState>()(
 		(set, get) => ({
 			state: AuthState.INITIALIZING,
 			accessToken: undefined,
+			refreshToken: undefined,
 		}),
 		{
 			name: "auth-store",
@@ -68,21 +70,40 @@ export const useAuth = create<AuthStoreState>()(
 			partialize(state) {
 				return {
 					accessToken: state.accessToken,
+					refreshToken: state.refreshToken,
 				};
 			},
 		},
 	),
 );
 
-export function getAccessToken() {
+export function getAuthHeaders() {
 	const state = useAuth.getState();
-	return state.accessToken;
+	if (state.accessToken && state.refreshToken) {
+		return {
+			Authorization: `Bearer ${state.accessToken}`,
+			"PS-Refresh": state.refreshToken,
+		};
+	}
 }
 
-export function authorize(accessToken: string) {
+type UpdateTokensArguments = {
+	accessToken: string;
+	refreshToken: string;
+};
+export function updateTokens({
+	accessToken,
+	refreshToken,
+}: UpdateTokensArguments) {
+	useAuth.setState({
+		accessToken,
+		refreshToken,
+	});
+}
+
+export function authorize() {
 	useAuth.setState({
 		state: AuthState.AUTHORIZED,
-		accessToken,
 		source: createUserStreamSource(),
 	});
 	queryClient.prefetchQuery(getUser());
