@@ -30,6 +30,9 @@ export function Logo(props: PublicGroupProps) {
 	const piggy = useDerivedValue(() => {
 		return [
 			{
+				skewY: interpolate(progress.value, [0, 0.9, 1], [0, 0.15, 0]),
+			},
+			{
 				translateX: interpolate(
 					progress.value,
 					[0, 1],
@@ -41,6 +44,9 @@ export function Logo(props: PublicGroupProps) {
 
 	const split = useDerivedValue(() => {
 		return [
+			{
+				skewY: interpolate(progress.value, [0, 0.9, 1], [0, -0.1, 0]),
+			},
 			{
 				translateX: interpolate(
 					progress.value,
